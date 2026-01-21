@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/api/auth-api";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export default function LoginPage() {
 
     try {
       const user = await loginUser(id, pw);
-      router.push("/main");
+      router.push("/scenarios");
     } catch (error) {
       setError(error.message);
     } finally {
@@ -84,7 +85,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-xs text-gray-400">
-            문제가 있으면 관리자에게 문의하세요.
+            관리자 문의 : 02-0000-0000
           </p>
         </div>
       </div>

@@ -18,6 +18,38 @@ import {
 import Header from "./Header";
 import Link from "next/link";
 
+import { Home, Calendar, Inbox, Settings, Columns3Cog } from "lucide-react";
+
+const sections = [
+  {
+    title: "설계 엔진",
+    icon: Columns3Cog,
+    items: [
+      { label: "주문 항목 생성", href: "/scenarios" },
+      { label: "시뮬레이션 결과", href: "/simulations" },
+    ],
+  },
+  {
+    title: "생산 계획",
+    icon: Calendar,
+    items: [{ label: "프로덕션 타임라인", href: "/schedules" }],
+  },
+  {
+    title: "게시판",
+    icon: Inbox,
+    items: [
+      { label: "공지사항", href: "/announcements" },
+      { label: "자료실", href: "/resources" },
+      { label: "사원 게시판", href: "/forum" },
+    ],
+  },
+  {
+    title: "관리",
+    icon: Settings,
+    items: [{ label: "사원 관리", href: "/management" }],
+  },
+];
+
 export default function SideBar({ children }) {
   return (
     <SidebarProvider>
@@ -25,74 +57,32 @@ export default function SideBar({ children }) {
         <Sidebar>
           <SidebarContent>
             <SidebarMenu>
-              <Collapsible defaultOpen>
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>설계 엔진</SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <Link href="/scenarios">주문 항목 생성</Link>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <Link href="/simulations">시뮬레이션 결과</Link>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {sections.map((section) => {
+                const Icon = section.icon;
 
-              <Collapsible defaultOpen>
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>생산 계획</SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <Link href="/schedules">프로덕션 타임라인</Link>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+                return (
+                  <Collapsible key={section.title} defaultOpen>
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <span>{section.title}</span>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
 
-              <Collapsible defaultOpen>
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>게시판</SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <Link href="/announcements">공지사항</Link>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <Link href="/resources">자료실</Link>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <Link href="/forum">사원 게시판</Link>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-
-              <Collapsible defaultOpen>
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>관리</SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <Link href="/management">사원 관리</Link>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {section.items.map((item) => (
+                            <SidebarMenuSubItem key={item.href}>
+                              <Link href={item.href}>{item.label}</Link>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              })}
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
