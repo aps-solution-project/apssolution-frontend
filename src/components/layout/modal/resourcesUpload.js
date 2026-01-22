@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -11,11 +9,14 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileSpreadsheet, CheckCircle2, Save } from "lucide-react";
+import { upLoadFiles } from "@/api/page-api";
+import { useToken } from "@/stores/account-store";
 
 const message = ["레시피를 업로드해주세요"];
 
 export default function ResoucesUpload({ open, onClose }) {
   const fileInputRef = useRef(null);
+  const token = useToken((state) => state.token);
 
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -66,21 +67,26 @@ export default function ResoucesUpload({ open, onClose }) {
       return;
     }
 
-    setProgress(80);
+    if (!token) {
+      setError("로그인이 필요합니다.");
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      setProgress(80);
 
-    await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+      await upLoadFiles(file, token);
 
-    setTimeout(() => {
-      setProgress(100);
-      onClose();
-      reset();
-    }, 600);
+      setTimeout(() => {
+        setProgress(100);
+        onClose();
+        reset();
+      }, 600);
+    } catch (e) {
+      setError(e.message);
+      setUploadError(true);
+      setTimeout(() => setUploadError(false), 1000);
+    }
   };
 
   const reset = () => {

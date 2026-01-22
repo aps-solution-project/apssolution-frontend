@@ -9,6 +9,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { upLoadFiles } from "@/api/page-api";
+import { useToken } from "@/stores/account-store";
 
 const message = ["시나리오에 올바른 제품명을 기재해 주세요."];
 
@@ -20,6 +22,8 @@ export default function FilesUpload({ open, onClose }) {
   const [columns, setColumns] = useState([]);
   const [error, setError] = useState("");
   const [uploadError, setUploadError] = useState(false);
+
+  const token = useToken((state) => state.token);
 
   const isExcelFile = (file) =>
     file.type ===
@@ -57,27 +61,28 @@ export default function FilesUpload({ open, onClose }) {
 
   const handleSave = async () => {
     if (!file) {
-      setError("파일을 업로드한 후 다음을 눌러주세요.");
+      setError("파일을 업로드해주세요.");
       setUploadError(true);
       setTimeout(() => setUploadError(false), 1000);
       return;
     }
 
-    setProgress(80);
+    if (!token) {
+      setError("로그인이 필요합니다.");
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    setTimeout(() => {
+    try {
+      setProgress(80);
+      await upLoadFiles(file, token);
       setProgress(100);
       onClose();
       reset();
-    }, 600);
+    } catch (e) {
+      setError(e.message);
+      setUploadError(true);
+      setTimeout(() => setUploadError(false), 1000);
+    }
   };
 
   const reset = () => {
@@ -170,8 +175,7 @@ export default function FilesUpload({ open, onClose }) {
 
           <button
             onClick={handleSave}
-            className="rounded-lg bg-indigo-800 px-4 py-2 text-sm font-medium text-white
-                       hover:bg-indigo-500"
+            className="rounded-lg bg-indigo-800 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
           >
             다음
           </button>
