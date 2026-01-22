@@ -18,8 +18,8 @@ export const useAccount = create(
     },
     {
       name: "account", /// localStorage key
-    }
-  )
+    },
+  ),
 );
 
 export const useToken = create(
@@ -39,6 +39,6 @@ export const useToken = create(
     },
     {
       name: "token", // localStorage key
-    }
-  )
+    },
+  ),
 );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/api/auth-api";
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   const token = useToken((state) => state.token);
   const setToken = useToken((state) => state.setToken);
-
+  const setAccount = useAccount((state) => state.setAccount);
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
 
@@ -32,8 +32,7 @@ export default function LoginPage() {
       const user = await loginUser(id, pw);
 
       setToken(user.token);
-      localStorage.setItem("token", user.token);
-
+      setAccount({ id: user.accountId, name: user.accountName });
       router.push("/scenarios");
     } catch (error) {
       setError(error.message);
@@ -84,7 +83,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-indigo-600 py-3 text-white"
+              className="
+  mt-6 w-full rounded-xl
+  bg-linear-to-r from-blue-600 via-indigo-500 to-purple-500
+  py-3 text-sm font-semibold text-white
+  shadow-md
+  hover:brightness-120
+  disabled:opacity-60 disabled:cursor-not-allowed
+"
             >
               로그인
             </button>

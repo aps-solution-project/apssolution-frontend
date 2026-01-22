@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Menu } from "lucide-react";
+import { Menu, LogOut, UserCog } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
-import Link from "next/link";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,19 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { LogOut, UserCog } from "lucide-react";
+import { useAccount, useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
+  const router = useRouter();
+
+  const account = useAccount((state) => state.account);
+  const clearToken = useToken((state) => state.clearToken);
+
+  const handleLogout = () => {
+    clearToken();
+    router.push("/Login");
+  };
 
   return (
-    <header
-      className="
-        sticky top-0 z-50
-        h-16 w-full
-        border-b bg-background
-      "
-    >
+    <header className="sticky top-0 z-50 h-16 w-full border-b bg-background">
       <div className="flex h-full items-center gap-3 px-4 sm:gap-4">
         <Button
           variant="ghost"
@@ -41,7 +45,7 @@ export default function Header() {
         <div className="ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">마이페이지</Button>
+              <Button variant="outline">{account?.name || "사용자"}</Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
@@ -49,15 +53,17 @@ export default function Header() {
                 <DropdownMenuItem>
                   Settings
                   <DropdownMenuShortcut>
-                    <UserCog />
+                    <UserCog className="h-4 w-4" />
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <p className="text-red-500">Logout</p>
+
+              <DropdownMenuItem onClick={handleLogout}>
+                <span className="text-red-500">Logout</span>
                 <DropdownMenuShortcut>
-                  <LogOut />
+                  <LogOut className="h-4 w-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
             </DropdownMenuContent>
