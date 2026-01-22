@@ -8,6 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import FilesUpload from "@/components/layout/modal/filesUpload";
+import { Button } from "@/components/ui/button";
+import { FileInput } from "lucide-react";
+import { useState } from "react";
 
 const invoices = [
   {
@@ -55,8 +59,16 @@ const invoices = [
 ];
 
 export default function ScenariosPage() {
+  const [modal, setModal] = useState(false);
   return (
     <div className="space-y-4">
+      <Button
+        onClick={() => setModal(true)}
+        className="bg-indigo-900 hover:bg-indigo-700 cursor-pointer"
+      >
+        새 프로세스 추가 <FileInput />
+      </Button>
+
       <div className="h-40 rounded bg-white shadow">
         <Table>
           <TableCaption>A list of your recent invoices.</TableCaption>
@@ -87,6 +99,7 @@ export default function ScenariosPage() {
             </TableRow>
           </TableFooter>
         </Table>
+        <FilesUpload open={modal} onClose={() => setModal(false)} />
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 //로그인 api
+
+//const addr = "http://192.168.0.14:8080"
 export const loginUser = async (id, pw) => {
-  return fetch("http://192.168.0.56:8080" + "/login", {
+  return fetch("http://192.168.0.14:8080" + "/api/accounts/login", {
     method: "POST",
     headers: defaultHeader,
     body: JSON.stringify({ id, pw }),

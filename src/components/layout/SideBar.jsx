@@ -18,7 +18,7 @@ import {
 import Header from "./Header";
 import Link from "next/link";
 
-import { Home, Calendar, Inbox, Settings, Columns3Cog } from "lucide-react";
+import { Calendar, Inbox, Settings, Columns3Cog } from "lucide-react";
 
 const sections = [
   {
