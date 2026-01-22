@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -8,11 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, Save } from "lucide-react";
 
-const message = ["시나리오에 올바른 제품명을 기재해 주세요."];
+const message = ["레시피를 업로드해주세요"];
 
-export default function FilesUpload({ open, onClose }) {
+export default function ResoucesUpload({ open, onClose }) {
   const fileInputRef = useRef(null);
 
   const [file, setFile] = useState(null);
@@ -44,7 +46,8 @@ export default function FilesUpload({ open, onClose }) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    setColumns(json[0] || []);
+    const headerRow = json[0] || [];
+    setColumns(headerRow);
     setProgress(60);
   };
 
@@ -57,7 +60,7 @@ export default function FilesUpload({ open, onClose }) {
 
   const handleSave = async () => {
     if (!file) {
-      setError("파일을 업로드한 후 다음을 눌러주세요.");
+      setError("파일을 업로드해주세요.");
       setUploadError(true);
       setTimeout(() => setUploadError(false), 1000);
       return;
@@ -93,7 +96,7 @@ export default function FilesUpload({ open, onClose }) {
       <DialogContent className="sm:max-w-120 rounded-2xl">
         <DialogHeader>
           <DialogTitle>
-            <p className="text-stone-600">워크 프로세스</p>
+            <p className="text-stone-600">파일 업로드</p>
           </DialogTitle>
         </DialogHeader>
 
@@ -136,7 +139,9 @@ export default function FilesUpload({ open, onClose }) {
           />
         </div>
 
-        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+        {error && (
+          <p className="mt-2 text-sm font-medium text-red-500">{error}</p>
+        )}
 
         {file && (
           <div className="mt-4 flex items-center gap-3 rounded-lg border bg-muted px-4 py-3">
@@ -148,12 +153,17 @@ export default function FilesUpload({ open, onClose }) {
         {progress > 0 && <Progress value={progress} className="mt-4" />}
 
         {columns.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {message.map((m) => (
-              <Badge key={m} className="bg-gray-100 text-gray-600">
-                {m}
-              </Badge>
-            ))}
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              {message.map((col) => (
+                <Badge
+                  key={col}
+                  className="bg-gray-100 text-gray-600 hover:bg-gray-100"
+                >
+                  {col}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
 
@@ -170,10 +180,16 @@ export default function FilesUpload({ open, onClose }) {
 
           <button
             onClick={handleSave}
-            className="rounded-lg bg-indigo-800 px-4 py-2 text-sm font-medium text-white
-                       hover:bg-indigo-500"
+            className="
+              flex items-center gap-2
+              rounded-lg bg-indigo-800 px-4 py-2
+              text-sm font-medium text-white
+              hover:bg-indigo-500
+              whitespace-nowrap
+            "
           >
-            다음
+            저장
+            <Save className="h-4 w-4" />
           </button>
         </div>
       </DialogContent>
