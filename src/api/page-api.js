@@ -22,6 +22,7 @@ export async function upLoadFiles(file, token) {
 
 //품목 파일 전체조회 api
 export const getProducts = async (token) => {
+  if (!token) throw new Error("No token");
   const response = await fetch(`${URL}/api/products`, {
     method: "GET",
     headers: {

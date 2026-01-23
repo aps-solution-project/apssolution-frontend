@@ -17,27 +17,16 @@ import {
 } from "@/components/ui/table";
 import { FileInput, MoreHorizontalIcon } from "lucide-react";
 import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
-import { getProducts } from "@/api/page-api";
+import { useResourcesStore } from "@/stores/resources-store";
 
 export default function ResourcesPage() {
   const [modal, setModal] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const { products, loading, fetchProducts } = useResourcesStore();
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        setProducts(data.products);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   return (
     <div className="space-y-4">
@@ -64,7 +53,6 @@ export default function ResourcesPage() {
               <TableHead className="w-[15%]">제품명</TableHead>
               <TableHead className="w-[40%]">설명</TableHead>
               <TableHead className="w-[30%]">업로드 날짜</TableHead>
-
               <TableHead className="w-[15%] text-center">설정</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,7 +60,7 @@ export default function ResourcesPage() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
+                <TableCell colSpan={4} className="text-center">
                   불러오는 중...
                 </TableCell>
               </TableRow>
@@ -80,45 +68,44 @@ export default function ResourcesPage() {
 
             {!loading && products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
+                <TableCell colSpan={4} className="text-center">
                   등록된 자료가 없습니다.
                 </TableCell>
               </TableRow>
             )}
 
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell className="font-medium truncate">
-                  {product.name}
-                </TableCell>
+            {!loading &&
+              products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium truncate">
+                    {product.name}
+                  </TableCell>
 
-                <TableCell className="text-muted-foreground truncate">
-                  {product.description}
-                </TableCell>
+                  <TableCell className="text-muted-foreground truncate">
+                    {product.description}
+                  </TableCell>
 
-                <TableCell>{product.createdAt?.slice(0, 10)}</TableCell>
+                  <TableCell>{product.createdAt?.slice(0, 10)}</TableCell>
 
-                <TableCell>-</TableCell>
+                  <TableCell className="text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
 
-                <TableCell className="text-center">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <MoreHorizontalIcon />
-                      </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>수정</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive">
-                        삭제
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>수정</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive">
+                          삭제
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>
