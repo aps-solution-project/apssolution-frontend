@@ -3,42 +3,41 @@ import { persist } from "zustand/middleware";
 
 export const useAccount = create(
   persist(
-    function (set) {
-      return {
-        account: null, // 현재 로그인한 계정 정보 저장
+    (set) => ({
+      account: null,
+      role: null,
+      accountName: null,
 
-        clearAccount: function () {
-          set({ account: null }); // 계정 정보 삭제
-        },
+      clearAccount: () =>
+        set({
+          account: null,
+          role: null,
+          accountName: null,
+        }),
 
-        setAccount: function (newAccount) {
-          set({ account: newAccount }); // 계정 정보 설정
-        },
-      };
-    },
+      setAccount: (newAccount) =>
+        set({
+          account: newAccount,
+          role: newAccount?.role ?? null,
+          accountName: newAccount?.accountName ?? null,
+        }),
+    }),
     {
-      name: "account", /// localStorage key
+      name: "account",
     },
   ),
 );
 
 export const useToken = create(
   persist(
-    function (set) {
-      return {
-        token: null, // 로그인 토큰 저장
+    (set) => ({
+      token: null,
 
-        clearToken: function () {
-          set({ token: null }); // 토큰 삭제
-        },
-
-        setToken: function (newToken) {
-          set({ token: newToken }); // 토큰 저장
-        },
-      };
-    },
+      clearToken: () => set({ token: null }),
+      setToken: (newToken) => set({ token: newToken }),
+    }),
     {
-      name: "token", // localStorage key
+      name: "token",
     },
   ),
 );

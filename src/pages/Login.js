@@ -12,6 +12,7 @@ export default function LoginPage() {
   const token = useToken((state) => state.token);
   const setToken = useToken((state) => state.setToken);
   const setAccount = useAccount((state) => state.setAccount);
+
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
 
@@ -32,8 +33,11 @@ export default function LoginPage() {
       const user = await loginUser(id, pw);
 
       setToken(user.token);
-      setAccount({ id: user.accountId, name: user.accountName });
-      router.push("/scenarios");
+      setAccount({
+        id: user.accountId,
+        name: user.accountName,
+        role: user.role,
+      });
     } catch (error) {
       setError(error.message);
     } finally {
@@ -83,14 +87,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="
-  mt-6 w-full rounded-xl
-  bg-linear-to-r from-blue-600 via-indigo-500 to-purple-500
-  py-3 text-sm font-semibold text-white
-  shadow-md
-  hover:brightness-120
-  disabled:opacity-60 disabled:cursor-not-allowed
-"
+              className="mt-6 w-full rounded-xl bg-linear-to-r from-blue-600 via-indigo-500 to-purple-500 py-3 text-sm font-semibold text-white shadow-md hover:brightness-120 disabled:opacity-60"
             >
               로그인
             </button>
