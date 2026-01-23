@@ -21,11 +21,12 @@ export default function Header() {
   const router = useRouter();
 
   const account = useAccount((state) => state.account);
-  const clearToken = useToken((state) => state.clearToken);
-
+  const { clearToken } = useToken();
+  const { clearAccount } = useAccount();
   const handleLogout = () => {
     clearToken();
-    router.push("/Login");
+    clearAccount();
+    router.push("/login");
   };
 
   return (
