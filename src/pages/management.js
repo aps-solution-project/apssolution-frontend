@@ -1,11 +1,8 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -27,131 +24,76 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Search } from "lucide-react";
 
-/* =========================
-   데이터
-========================= */
-const data = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-];
+import { getAllAccounts, deleteAccount } from "@/api/auth-api";
+import { useToken } from "@/stores/account-store";
 
-/* =========================
-   컬럼 정의
-========================= */
-export const columns = [
+const columns = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: "accountId",
+    header: "사원번호",
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "accountName",
+    header: "이름",
+  },
+  {
+    accessorKey: "role",
+    header: "권한",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <span className="capitalize">{row.getValue("role")}</span>
     ),
   },
   {
-    accessorKey: "email",
+    accessorKey: "accountEmail",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Email
-        <ArrowUpDown />
+        이메일 <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "workedAt",
+    header: "입사일",
     cell: ({ row }) => {
-      const amount = Number(row.getValue("amount"));
-
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      const date = row.getValue("workedAt");
+      return date ? new Date(date).toLocaleDateString() : "-";
     },
   },
   {
-    id: "actions",
-    enableHiding: false,
+    accessorKey: "resignedAt",
+    header: "퇴사일자",
     cell: ({ row }) => {
-      const payment = row.original;
+      const date = row.getValue("resignedAt");
+      return date ? new Date(date).toLocaleDateString() : "-";
+    },
+  },
+  {
+    id: "option",
+    header: "옵션",
+    cell: ({ row }) => {
+      const account = row.original;
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
-              >
-                Copy payment ID
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuGroup>
-              <DropdownMenuItem>View customer</DropdownMenuItem>
-              <DropdownMenuItem>View payment details</DropdownMenuItem>
-            </DropdownMenuGroup>
+            <DropdownMenuLabel>옵션</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="text-red-500"
+              onClick={() => account.onResign(account.id)}
+            >
+              퇴사 처리
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -159,72 +101,81 @@ export const columns = [
   },
 ];
 
-/* =========================
-   테이블 컴포넌트
-========================= */
-export default function managementPage() {
+export default function ManagementPage() {
+  const token = useToken((state) => state.token);
+
+  const [data, setData] = React.useState([]);
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [rowSelection, setRowSelection] = React.useState({});
+
+  const handleResign = async (accountId) => {
+    if (!confirm("정말 퇴사 처리하시겠습니까?")) return;
+
+    try {
+      await deleteAccount(accountId, token);
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === accountId
+            ? { ...item, resignedAt: new Date().toISOString() }
+            : item,
+        ),
+      );
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!token) return;
+
+    const fetchAccounts = async () => {
+      try {
+        const res = await getAllAccounts(token);
+        setData(
+          res.accounts.map((account) => ({
+            ...account,
+            onResign: handleResign,
+          })),
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchAccounts();
+  }, [token]);
 
   const table = useReactTable({
     data,
     columns,
+    state: {
+      sorting,
+      columnFilters,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
   });
+
+  if (!token) return null;
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={table.getColumn("email")?.getFilterValue() ?? ""}
-          onChange={(e) =>
-            table.getColumn("email")?.setFilterValue(e.target.value)
-          }
-          className="max-w-sm"
-        />
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center gap-2 py-4">
+        <div className="relative">
+          <Input
+            placeholder="사원번호 검색"
+            value={table.getColumn("accountId")?.getFilterValue() ?? ""}
+            onChange={(e) =>
+              table.getColumn("accountId")?.setFilterValue(e.target.value)
+            }
+            className="w-55 pl-8 pr-3 text-sm text-right"
+          />
+          <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-md border">
@@ -234,12 +185,10 @@ export default function managementPage() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -249,10 +198,7 @@ export default function managementPage() {
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -265,41 +211,13 @@ export default function managementPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
+                <TableCell colSpan={columns.length} className="text-center">
+                  사원 정보가 없습니다.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   );

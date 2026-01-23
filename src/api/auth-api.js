@@ -15,6 +15,40 @@ export const loginUser = async (accountId, pw) => {
   });
 };
 
+//본인 정보 수정
+export const updateMyAccount = async (accountId, data, token) => {
+  return fetch(`${URL}/api/accounts/${accountId}/edit`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("내 정보 수정에 실패했습니다.");
+    }
+    return response.json();
+  });
+};
+
+// 비밀번호 변경
+export const changeMyPassword = async (accountId, data, token) => {
+  return fetch(`${URL}/api/accounts/${accountId}/pw`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("비밀번호 변경에 실패했습니다.");
+    }
+    return response.json();
+  });
+};
+
 //사원 추가하기
 export const createAccount = async (data) => {
   return fetch(`${URL}/api/accounts`, {
@@ -34,7 +68,7 @@ export const createAccount = async (data) => {
 //사원 정보 수정 (ADMIN전용)
 export const updateEmployeeAccount = async (accountId, data, token) => {
   return fetch(`${URL}/api/accounts/${accountId}`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -48,44 +82,10 @@ export const updateEmployeeAccount = async (accountId, data, token) => {
   });
 };
 
-//본인 정보 수정
-export const updateMyAccount = async (accountId, data, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}/edit`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("내 정보 수정에 실패했습니다.");
-    }
-    return response.json();
-  });
-};
-
-// 비밀번호 변경
-export const changeMyPassword = async (accountId, data, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}/pw`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("비밀번호 변경에 실패했습니다.");
-    }
-    return response.json();
-  });
-};
-
 // 사원 퇴사 처리
 export const deleteAccount = async (accountId, token) => {
   return fetch(`${URL}/api/accounts/${accountId}/resign`, {
-    method: "PUT",
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
