@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { loginUser } from "@/api/auth-api";
 import { useAccount, useToken } from "@/stores/account-store";
 
@@ -15,12 +15,6 @@ export default function LoginPage() {
 
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
-
-  useEffect(() => {
-    if (token) {
-      router.replace("/scenarios");
-    }
-  }, [token, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -38,6 +32,9 @@ export default function LoginPage() {
         name: user.accountName,
         role: user.role,
       });
+
+      const redirect = router.query.redirect || "/scenarios";
+      router.replace(redirect);
     } catch (error) {
       setError(error.message);
     } finally {

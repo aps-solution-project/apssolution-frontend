@@ -7,7 +7,7 @@ export const useAccount = create(
       account: null,
       role: null,
       accountName: null,
-
+      flag: false,
       clearAccount: () =>
         set({
           account: null,
@@ -24,6 +24,9 @@ export const useAccount = create(
     }),
     {
       name: "account",
+      onRehydrateStorage: () => () => {
+        useAccount.setState({ flag: true });
+      },
     },
   ),
 );
@@ -32,12 +35,17 @@ export const useToken = create(
   persist(
     (set) => ({
       token: null,
-
+      flag: false,
       clearToken: () => set({ token: null }),
       setToken: (newToken) => set({ token: newToken }),
     }),
     {
       name: "token",
+      skipHydration: true,
+      onRehydrateStorage: () => () => {
+        console.log("rehydrated!!");
+        useToken.setState({ flag: true });
+      },
     },
   ),
 );

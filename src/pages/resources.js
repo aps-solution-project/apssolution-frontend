@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,13 +17,32 @@ import {
 } from "@/components/ui/table";
 import { FileInput, MoreHorizontalIcon } from "lucide-react";
 import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
+import { getProducts } from "@/api/page-api";
 
 export default function ResourcesPage() {
   const [modal, setModal] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data.products);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-stone-600">자료실</h1>
+
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
@@ -44,44 +63,62 @@ export default function ResourcesPage() {
             <TableRow>
               <TableHead className="w-[15%]">제품명</TableHead>
               <TableHead className="w-[40%]">설명</TableHead>
-              <TableHead className="w-[15%]">업로드 날짜</TableHead>
-              <TableHead className="w-[15%]">담당</TableHead>
-              <TableHead className="w-[8%] text-center">설정</TableHead>
+              <TableHead className="w-[30%]">업로드 날짜</TableHead>
+
+              <TableHead className="w-[15%] text-center">설정</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            <TableRow>
-              <TableCell className="font-medium truncate">
-                블랙 올리브 포카치아
-              </TableCell>
+            {loading && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  불러오는 중...
+                </TableCell>
+              </TableRow>
+            )}
 
-              <TableCell className="text-muted-foreground">
-                데크오븐용 포카치아 레시피 (48시간 저온 숙성)
-              </TableCell>
+            {!loading && products.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  등록된 자료가 없습니다.
+                </TableCell>
+              </TableRow>
+            )}
 
-              <TableCell>2026-01-20</TableCell>
-              <TableCell>존 도</TableCell>
+            {products.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="font-medium truncate">
+                  {product.name}
+                </TableCell>
 
-              <TableCell className="text-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <MoreHorizontalIcon />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
+                <TableCell className="text-muted-foreground truncate">
+                  {product.description}
+                </TableCell>
 
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>수정</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">
-                      삭제
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
+                <TableCell>{product.createdAt?.slice(0, 10)}</TableCell>
+
+                <TableCell>-</TableCell>
+
+                <TableCell className="text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="size-8">
+                        <MoreHorizontalIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>수정</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive">
+                        삭제
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
