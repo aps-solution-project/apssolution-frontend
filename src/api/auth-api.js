@@ -18,11 +18,12 @@ export const loginUser = async (accountId, pw) => {
 
 //사원 추가
 
-export const createAccount = async (data) => {
+export const createAccount = async (data, token) => {
   return fetch(`${URL}/api/accounts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   }).then((response) => {
