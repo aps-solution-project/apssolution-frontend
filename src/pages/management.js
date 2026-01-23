@@ -28,7 +28,6 @@ import {
 
 import { getAllAccounts, deleteAccount, createAccount } from "@/api/auth-api";
 import { useToken, useAccount } from "@/stores/account-store";
-import { useRouter } from "next/navigation";
 
 const columns = [
   { accessorKey: "accountId", header: "사원번호" },
@@ -85,72 +84,22 @@ const columns = [
 ];
 
 export default function ManagementPage() {
-  const router = useRouter();
   const token = useToken((state) => state.token);
-  const account = useAccount((state) => state.account);
+  const loginAccount = useAccount((state) => state.account);
 
-  if (!account) return null;
-
-  const isAdmin = account.role === "ADMIN";
+  if (!loginAccount) return null;
+  const isAdmin = loginAccount.role === "ADMIN";
 
   const [data, setData] = React.useState([]);
-  const [columnFilters, setColumnFilters] = React.useState([]);
   const [sorting, setSorting] = React.useState([]);
+  const [columnFilters, setColumnFilters] = React.useState([]);
   const [isAdding, setIsAdding] = React.useState(false);
 
   const [newAccount, setNewAccount] = React.useState({
-    accountId: "",
-    accountName: "",
-    accountEmail: "",
+    name: "",
+    email: "",
     role: "WORKER",
-    workedAt: new Date().toISOString().slice(0, 10),
   });
-
-  const handleAddRow = () => {
-    if (!isAdmin) {
-      alert("ADMIN만 가능합니다.");
-      return;
-    }
-    setIsAdding(true);
-  };
-
-  const handleSave = async () => {
-    try {
-      const res = await createAccount(newAccount, token);
-      setData((prev) => [{ ...res.account, onDelete: handleDelete }, ...prev]);
-      setIsAdding(false);
-      setNewAccount({
-        accountId: "",
-        accountName: "",
-        accountEmail: "",
-        role: "WORKER",
-        workedAt: new Date().toISOString().slice(0, 10),
-      });
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  const handleDelete = async (accountId) => {
-    if (!isAdmin) {
-      alert("ADMIN만 가능합니다.");
-      return;
-    }
-    if (!confirm("정말 퇴사 처리하시겠습니까?")) return;
-
-    await deleteAccount(accountId, token);
-
-    setData((prev) =>
-      prev.map((item) =>
-        item.accountId === accountId
-          ? {
-              ...item,
-              resignedAt: new Date().toISOString(),
-            }
-          : item,
-      ),
-    );
-  };
 
   React.useEffect(() => {
     if (!token) return;
@@ -167,6 +116,57 @@ export default function ManagementPage() {
 
     fetchAccounts();
   }, [token]);
+
+  const handleSave = async () => {
+    if (!isAdmin) {
+      alert("ADMIN만 가능합니다.");
+      return;
+    }
+
+    try {
+      const res = await createAccount(
+        {
+          name: newAccount.name,
+          email: newAccount.email,
+          role: newAccount.role,
+        },
+        token,
+      );
+
+      setData((prev) => [{ ...res, onDelete: handleDelete }, ...prev]);
+
+      alert(
+        "사원 계정이 생성되었습니다.\n임시 비밀번호는 입력한 이메일로 발송되었습니다.",
+      );
+
+      setIsAdding(false);
+      setNewAccount({
+        name: "",
+        email: "",
+        role: "WORKER",
+      });
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const handleDelete = async (accountId) => {
+    if (!isAdmin) {
+      alert("ADMIN만 가능합니다.");
+      return;
+    }
+    if (!confirm("정말 퇴사 처리하시겠습니까?")) return;
+
+    await deleteAccount(accountId, token);
+
+    setData((prev) =>
+      prev.map((item) =>
+        item.accountId === accountId
+          ? { ...item, resignedAt: new Date().toISOString() }
+          : item,
+      ),
+    );
+  };
 
   const table = useReactTable({
     data,
@@ -195,7 +195,6 @@ export default function ManagementPage() {
         </div>
       </div>
 
-      {/* 테이블 */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -216,67 +215,49 @@ export default function ManagementPage() {
           <TableBody>
             {isAdding && (
               <TableRow className="bg-muted/50">
+                <TableCell className="text-muted-foreground">
+                  자동 생성
+                </TableCell>
+
                 <TableCell>
                   <Input
-                    value={newAccount.accountId}
+                    placeholder="사원 이름"
+                    value={newAccount.name}
                     onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        accountId: e.target.value,
-                      })
+                      setNewAccount({ ...newAccount, name: e.target.value })
                     }
                   />
                 </TableCell>
-                <TableCell>
-                  <Input
-                    value={newAccount.accountName}
-                    onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        accountName: e.target.value,
-                      })
-                    }
-                  />
-                </TableCell>
+
                 <TableCell>
                   <select
                     className="border rounded px-2 py-1"
                     value={newAccount.role}
                     onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        role: e.target.value,
-                      })
+                      setNewAccount({ ...newAccount, role: e.target.value })
                     }
                   >
                     <option value="WORKER">WORKER</option>
                     <option value="ADMIN">ADMIN</option>
                   </select>
                 </TableCell>
+
                 <TableCell>
                   <Input
-                    value={newAccount.accountEmail}
+                    placeholder="이메일 (ex: example@naver.com)"
+                    value={newAccount.email}
                     onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        accountEmail: e.target.value,
-                      })
+                      setNewAccount({ ...newAccount, email: e.target.value })
                     }
                   />
                 </TableCell>
-                <TableCell>
-                  <Input
-                    type="date"
-                    value={newAccount.workedAt}
-                    onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        workedAt: e.target.value,
-                      })
-                    }
-                  />
+
+                <TableCell className="text-muted-foreground">
+                  자동 설정
                 </TableCell>
+
                 <TableCell>-</TableCell>
+
                 <TableCell>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleSave}>
@@ -308,7 +289,7 @@ export default function ManagementPage() {
       </div>
 
       <div className="flex justify-end mt-4">
-        <Button variant="outline" onClick={handleAddRow}>
+        <Button variant="outline" onClick={() => setIsAdding(true)}>
           + 사원 추가하기
         </Button>
       </div>
