@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Editor from "@/components/ui/editor";
 
 export default function AnnouncementsCreatePage() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function AnnouncementsCreatePage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+
+          <Editor value={content} onChange={setContent} />
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => router.back()}>

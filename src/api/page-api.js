@@ -62,3 +62,5 @@ export const getProducts = async (token) => {
 
   return response.json();
 };
+
+//공지사항 api
