@@ -1,4 +1,4 @@
-import { getProducts } from "@/api/page-api";
+import { getProducts } from "@/api/product-api";
 import { useToken } from "@/stores/account-store";
 import { create } from "zustand";
 

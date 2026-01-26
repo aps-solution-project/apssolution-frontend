@@ -1,4 +1,4 @@
-import { upLoadFiles } from "@/api/page-api";
+import { upLoadFiles } from "@/api/product-api";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,

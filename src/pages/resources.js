@@ -1,4 +1,4 @@
-import { bulkUpsertProducts } from "@/api/page-api";
+import { bulkUpsertProducts } from "@/api/product-api";
 import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
 import { Button } from "@/components/ui/button";
 import {
