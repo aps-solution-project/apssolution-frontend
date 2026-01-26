@@ -51,21 +51,23 @@ export const updateEmployeeAccount = async (accountId, data, token) => {
   });
 };
 
-//본인 정보 수정
+// 본인 정보 수정
 export const updateMyAccount = async (accountId, data, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}/edit`, {
+  const response = await fetch(`${URL}/api/accounts/${accountId}/edit`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("내 정보 수정에 실패했습니다.");
-    }
-    return response.json();
   });
+
+  if (!response.ok) {
+    const msg = await response.text();
+    throw new Error(msg || "내 정보 수정에 실패했습니다.");
+  }
+
+  return response.json();
 };
 
 // 비밀번호 변경
