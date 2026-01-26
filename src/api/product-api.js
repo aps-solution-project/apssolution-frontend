@@ -1,6 +1,6 @@
 const URL = "http://192.168.0.17:8080";
 //파일 업로드 api
-export async function upLoadFiles(file, token) {
+async function upLoadFiles(file, token) {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -21,7 +21,7 @@ export async function upLoadFiles(file, token) {
 }
 
 //파일 저장 api
-export async function bulkUpsertProducts(products, token) {
+async function bulkUpsertProducts(products, token) {
   const response = await fetch(`${URL}/api/products`, {
     method: "PUT",
     headers: {
@@ -47,10 +47,9 @@ export async function bulkUpsertProducts(products, token) {
 }
 
 //품목 파일 전체조회 api
-export const getProducts = async (token) => {
+const getProducts = async (token) => {
   if (!token) throw new Error("No token");
   const response = await fetch(`${URL}/api/products`, {
-    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -63,4 +62,34 @@ export const getProducts = async (token) => {
   return response.json();
 };
 
-//공지사항 api
+async function getProduct(token, productId) {
+  const resp = await fetch(`${URL}/api/products/${productId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error("상품 조회에 실패했습니다.");
+  }
+  return resp.json();
+}
+
+async function getProductTasks(token, productId) {
+  const resp = await fetch(`${URL}/api/products/${productId}/tasks`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error("상품 작업 조회에 실패했습니다.");
+  }
+  return resp.json();
+}
+
+export {
+  bulkUpsertProducts,
+  getProduct,
+  getProducts,
+  getProductTasks,
+  upLoadFiles,
+};

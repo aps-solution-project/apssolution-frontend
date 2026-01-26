@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { bulkUpsertProducts } from "@/api/product-api";
+import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,11 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
-import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
-import { useResourcesStore } from "@/stores/resources-store";
-import { bulkUpsertProducts } from "@/api/page-api";
 import { useToken } from "@/stores/account-store";
+import { useResourcesStore } from "@/stores/resources-store";
+import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ResourcesPage() {
   const [modal, setModal] = useState(false);
