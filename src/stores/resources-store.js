@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { getProducts } from "@/api/page-api";
+import { getProducts } from "@/api/product-api";
 import { useToken } from "@/stores/account-store";
+import { create } from "zustand";
 
 export const useResourcesStore = create((set) => ({
   products: [],
