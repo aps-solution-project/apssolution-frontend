@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +139,10 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
           <DialogTitle className="text-lg font-semibold">
             프로필 설정
           </DialogTitle>
+
+          <DialogDescription className="text-xs text-muted-foreground">
+            이메일과 프로필 이미지를 변경할 수 있습니다.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center space-y-2">
