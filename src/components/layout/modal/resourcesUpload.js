@@ -14,7 +14,7 @@ import { useToken } from "@/stores/account-store";
 
 const message = ["레시피를 업로드해주세요"];
 
-export default function ResoucesUpload({ open, onClose }) {
+export default function ResoucesUpload({ open, onClose, onAddPending }) {
   const fileInputRef = useRef(null);
   const token = useToken((state) => state.token);
 
@@ -47,8 +47,7 @@ export default function ResoucesUpload({ open, onClose }) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    const headerRow = json[0] || [];
-    setColumns(headerRow);
+    setColumns(json[0] || []);
     setProgress(60);
   };
 
@@ -63,7 +62,6 @@ export default function ResoucesUpload({ open, onClose }) {
     if (!file) {
       setError("파일을 업로드해주세요.");
       setUploadError(true);
-      setTimeout(() => setUploadError(false), 1000);
       return;
     }
 
@@ -75,17 +73,19 @@ export default function ResoucesUpload({ open, onClose }) {
     try {
       setProgress(80);
 
-      await upLoadFiles(file, token);
+      const parsed = await upLoadFiles(file, token);
+
+      onAddPending(parsed.products);
+
+      setProgress(100);
 
       setTimeout(() => {
-        setProgress(100);
         onClose();
         reset();
-      }, 600);
+      }, 400);
     } catch (e) {
       setError(e.message);
       setUploadError(true);
-      setTimeout(() => setUploadError(false), 1000);
     }
   };
 
@@ -102,7 +102,7 @@ export default function ResoucesUpload({ open, onClose }) {
       <DialogContent className="sm:max-w-120 rounded-2xl">
         <DialogHeader>
           <DialogTitle>
-            <p className="text-stone-600">파일 업로드</p>
+            <p className="text-stone-600">파일 추가</p>
           </DialogTitle>
         </DialogHeader>
 
@@ -194,7 +194,7 @@ export default function ResoucesUpload({ open, onClose }) {
               whitespace-nowrap
             "
           >
-            저장
+            파일 추가
             <Save className="h-4 w-4" />
           </button>
         </div>

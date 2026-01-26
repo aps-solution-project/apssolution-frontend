@@ -38,7 +38,7 @@ const sections = [
     title: "게시판",
     icon: Inbox,
     items: [
-      { label: "공지사항", href: "/announcements" },
+      { label: "공지사항", href: "/notice/announcements" },
       { label: "자료실", href: "/resources" },
       { label: "사원 게시판", href: "/forum" },
     ],

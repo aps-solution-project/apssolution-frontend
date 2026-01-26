@@ -15,18 +15,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileInput, MoreHorizontalIcon } from "lucide-react";
+import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
 import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
 import { useResourcesStore } from "@/stores/resources-store";
+import { bulkUpsertProducts } from "@/api/page-api";
+import { useToken } from "@/stores/account-store";
 
 export default function ResourcesPage() {
   const [modal, setModal] = useState(false);
+  const [pendingProducts, setPendingProducts] = useState([]);
 
+  const token = useToken((state) => state.token);
   const { products, loading, fetchProducts } = useResourcesStore();
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // 저장 버튼
+  const handleFinalSave = async () => {
+    if (pendingProducts.length === 0) return;
+
+    try {
+      await bulkUpsertProducts([...products, ...pendingProducts], token);
+
+      setPendingProducts([]);
+      fetchProducts();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -38,13 +56,24 @@ export default function ResourcesPage() {
             레시피 자료를 확인할 수 있습니다.
           </p>
 
-          <Button
-            onClick={() => setModal(true)}
-            className="bg-indigo-900 hover:bg-indigo-700"
-          >
-            새 레시피 추가
-            <FileInput className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setModal(true)}
+              className="bg-indigo-900 hover:bg-indigo-500"
+            >
+              파일 추가
+              <FileInput className="ml-2 h-4 w-4" />
+            </Button>
+
+            <Button
+              onClick={handleFinalSave}
+              disabled={pendingProducts.length === 0}
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+            >
+              저장
+              <Save className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <Table className="table-fixed w-full">
@@ -66,14 +95,28 @@ export default function ResourcesPage() {
               </TableRow>
             )}
 
-            {!loading && products.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  등록된 자료가 없습니다.
+            {/* 저장 대기 데이터 */}
+            {pendingProducts.map((product, idx) => (
+              <TableRow key={`pending-${idx}`} className="bg-emerald-50">
+                <TableCell className="font-medium truncate">
+                  {product.name}
+                </TableCell>
+
+                <TableCell className="text-muted-foreground truncate">
+                  {product.description}
+                </TableCell>
+
+                <TableCell className="text-emerald-700 font-medium">
+                  저장 대기
+                </TableCell>
+
+                <TableCell className="text-center text-emerald-600">
+                  신규
                 </TableCell>
               </TableRow>
-            )}
+            ))}
 
+            {/* 기존 데이터 */}
             {!loading &&
               products.map((product) => (
                 <TableRow key={product.id}>
@@ -110,7 +153,13 @@ export default function ResourcesPage() {
         </Table>
       </div>
 
-      <ResoucesUpload open={modal} onClose={() => setModal(false)} />
+      <ResoucesUpload
+        open={modal}
+        onClose={() => setModal(false)}
+        onAddPending={(list) =>
+          setPendingProducts((prev) => [...prev, ...list])
+        }
+      />
     </div>
   );
 }
