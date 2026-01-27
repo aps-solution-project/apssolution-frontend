@@ -1,22 +1,23 @@
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
+import { Button } from "@/components/ui/button";
 import Color from "@tiptap/extension-color";
-import { TextStyle } from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  ImageIcon,
-  LinkIcon,
   Highlighter,
+  ImageIcon,
+  Italic,
+  LinkIcon,
   Paintbrush,
+  Underline as UnderlineIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 const COLORS = [
   "#000000",
@@ -37,23 +38,42 @@ export default function Editor({ value, onChange }) {
       Highlight.configure({ multicolor: true }),
       Link.configure({ openOnClick: false }),
       Image,
-      TextAlign.configure({ types: ["heading", "paragraph", "image"] }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
-    content: value,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    content: value || "",
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
   });
+
+  /** ✅ 외부 value 변경 시 에디터 내용 동기화 */
+  useEffect(() => {
+    if (!editor) return;
+    const current = editor.getHTML();
+    if (value !== current) {
+      editor.commands.setContent(value || "");
+    }
+  }, [value, editor]);
 
   if (!editor) return null;
 
+  /** ✅ 이미지 삽입 */
   const addImage = () => {
     const url = prompt("이미지 URL 입력");
-    if (url) editor.chain().focus().setImage({ src: url }).run();
+    if (!url) return;
+    editor.chain().focus().setImage({ src: url }).run();
   };
 
+  /** ✅ 링크 삽입 (프로토콜 자동 보정) */
   const addLink = () => {
-    const url = prompt("링크 입력");
-    if (url) editor.chain().focus().setLink({ href: url }).run();
+    let url = prompt("링크 입력");
+    if (!url) return;
+
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    editor.chain().focus().setLink({ href: url }).run();
   };
 
   return (
@@ -62,9 +82,11 @@ export default function Editor({ value, onChange }) {
         <Btn onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold size={16} />
         </Btn>
+
         <Btn onClick={() => editor.chain().focus().toggleItalic().run()}>
           <Italic size={16} />
         </Btn>
+
         <Btn onClick={() => editor.chain().focus().toggleUnderline().run()}>
           <UnderlineIcon size={16} />
         </Btn>
@@ -81,6 +103,7 @@ export default function Editor({ value, onChange }) {
         {COLORS.map((c) => (
           <button
             key={c}
+            type="button"
             className="w-5 h-5 rounded-full border"
             style={{ background: c }}
             onClick={() => editor.chain().focus().setColor(c).run()}
@@ -110,9 +133,10 @@ export default function Editor({ value, onChange }) {
   );
 }
 
+/** ✅ form 내부에서도 submit 안 되도록 type="button" 필수 */
 function Btn({ children, onClick }) {
   return (
-    <Button size="icon" variant="ghost" onClick={onClick}>
+    <Button type="button" size="icon" variant="ghost" onClick={onClick}>
       {children}
     </Button>
   );

@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
-import { DialogDescription } from "@radix-ui/react-dialog";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -80,11 +79,7 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
     try {
       setLoading(true);
 
-      await changeMyPassword(
-        account.id,
-        { oldPw, newPw, newPwConfirm },
-        token,
-      );
+      await changeMyPassword(account.id, { oldPw, newPw, newPwConfirm }, token);
 
       setOldPw("");
       setNewPw("");

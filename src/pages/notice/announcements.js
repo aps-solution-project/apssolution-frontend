@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { getNotices } from "@/api/notice-page";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -9,28 +8,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function AnnouncementsPage() {
   const router = useRouter();
   const [notices, setNotices] = useState([]);
-
+  const { token } = useToken();
   // 임시 데이터 (API 붙이면 제거)
   useEffect(() => {
-    setNotices([
-      {
-        id: 1,
-        title: "시스템 점검 안내",
-        writer_id: "admin01",
-        created_at: "2026-01-20",
-      },
-      {
-        id: 2,
-        title: "설 연휴 운영 일정 공지",
-        writer_id: "admin02",
-        created_at: "2026-01-18",
-      },
-    ]);
-  }, []);
+    if (!token) return;
+    getNotices(token).then((obj) => {
+      console.log(obj.notices);
+      setNotices(obj.notices);
+    });
+  }, [token]);
 
   return (
     <div className="space-y-6">
@@ -60,9 +53,11 @@ export default function AnnouncementsPage() {
             >
               <TableCell>{notice.id}</TableCell>
               <TableCell className="font-medium">{notice.title}</TableCell>
-              <TableCell>{notice.writer_id}</TableCell>
+              <TableCell>{notice.writer.id}</TableCell>
               <TableCell>
-                {new Date(notice.created_at).toLocaleDateString()}
+                <span>
+                  {notice.createdAt.split("T")[0]}
+                </span>
               </TableCell>
             </TableRow>
           ))}
