@@ -8,7 +8,7 @@ async function upsertTasks(token, tasks) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      tasks: tasks, // 👈 이게 핵심
+      tasks: tasks,
     }),
   });
 
@@ -55,7 +55,7 @@ async function parseTaskXls(token, data) {
     body: formData,
   });
   if (!resp.ok) {
-    throw new Error("엑셀 파싱에 실패했습니다.");
+    throw new Error("엑셀 등록에 실패했습니다.");
   }
   return resp.json();
 }
