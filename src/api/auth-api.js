@@ -36,19 +36,20 @@ export const createAccount = async (data, token) => {
 
 //직원 정보 수정 (ADMIN)
 export const updateEmployeeAccount = async (accountId, data, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}`, {
+  const response = await fetch(`${URL}/api/accounts/${accountId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("직원 정보 수정에 실패했습니다.");
-    }
-    return response.json();
   });
+
+  if (!response.ok) {
+    throw new Error("직원 정보 수정 실패");
+  }
+
+  return response.text();
 };
 
 // 본인 정보 수정

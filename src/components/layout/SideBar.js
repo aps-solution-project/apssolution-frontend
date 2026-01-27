@@ -18,7 +18,7 @@ import {
 import Header from "./Header";
 import Link from "next/link";
 
-import { Calendar, Inbox, Settings, Columns3Cog } from "lucide-react";
+import { Inbox, Settings, Columns3Cog } from "lucide-react";
 
 const sections = [
   {
@@ -26,14 +26,10 @@ const sections = [
     icon: Columns3Cog,
     items: [
       { label: "주문 항목 생성", href: "/scenarios" },
-      { label: "시뮬레이션 결과", href: "/simulations" },
+      { label: "시뮬레이션 결과(gantt임시 페이지)", href: "/simulations" },
     ],
   },
-  {
-    title: "생산 계획",
-    icon: Calendar,
-    items: [{ label: "프로덕션 타임라인", href: "/schedules" }],
-  },
+
   {
     title: "게시판",
     icon: Inbox,

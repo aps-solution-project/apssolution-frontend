@@ -11,9 +11,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
-import { DialogDescription } from "@radix-ui/react-dialog";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -80,11 +80,7 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
     try {
       setLoading(true);
 
-      await changeMyPassword(
-        account.id,
-        { oldPw, newPw, newPwConfirm },
-        token,
-      );
+      await changeMyPassword(account.id, { oldPw, newPw, newPwConfirm }, token);
 
       setOldPw("");
       setNewPw("");
@@ -113,9 +109,7 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
     getAccountDetail(token, account.id).then((obj) => {
       setEmail(obj.email || "");
 
-      // 프로필 이미지 URL 처리
       if (obj.profileImageUrl) {
-        // obj.profileImageUrl이 /apssolution/... 형식이면 호스트 붙이기
         const url = obj.profileImageUrl.startsWith("http")
           ? obj.profileImageUrl
           : `http://192.168.0.17:8080${obj.profileImageUrl}`;
@@ -125,13 +119,13 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
         setPreview(null);
       }
 
-      setProfileImage(null); // 초기에는 새 파일 없음
+      setProfileImage(null);
     });
   }, [account, token, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl p-4 space-y-4 bg-white shadow-lg border text-sm">
+      <DialogContent className="max-w-70 rounded-br-lg p-9 space-y-1 bg-stone-50 shadow-lg border text-sm">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             프로필 설정
