@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import { loginUser } from "@/api/auth-api";
 import { useAccount, useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,11 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    clearToken();
+    clearAccount();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[url('/images/login-bp-01-01.jpg')] bg-cover bg-center">

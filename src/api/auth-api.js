@@ -52,21 +52,20 @@ export const updateEmployeeAccount = async (accountId, data, token) => {
 };
 
 // 본인 정보 수정
-export const updateMyAccount = async (accountId, data, token) => {
+export const updateMyAccount = async (accountId, formData, token) => {
   const response = await fetch(`${URL}/api/accounts/${accountId}/edit`, {
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data),
+    body: formData,
   });
 
   if (!response.ok) {
     const msg = await response.text();
     throw new Error(msg || "내 정보 수정에 실패했습니다.");
   }
-
+  window.alert("프로필이 수정되었습니다. 다시 로그인해주세요.");
   return response.json();
 };
 
@@ -117,8 +116,7 @@ export const getAllAccounts = async (token) => {
   });
 };
 
-//사원 상세 조회
-export const getAccountDetail = async (accountId, token) => {
+export function getAccountDetail(token, accountId) {
   return fetch(`${URL}/api/accounts/${accountId}`, {
     method: "GET",
     headers: {
@@ -130,4 +128,4 @@ export const getAccountDetail = async (accountId, token) => {
     }
     return response.json();
   });
-};
+}
