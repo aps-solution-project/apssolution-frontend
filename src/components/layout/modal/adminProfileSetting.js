@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
@@ -17,7 +16,7 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
-export default function ProfileEditModal({ open, onOpenChange, account }) {
+export default function AdminProfileEditModal({ open, onOpenChange, account }) {
   const token = useToken((s) => s.token);
   const setAccount = useAccount((s) => s.setAccount);
   const router = useRouter();
