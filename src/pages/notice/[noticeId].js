@@ -17,8 +17,6 @@ export default function AnnouncementDetailPage() {
 
     getNotice(token, noticeId).then((obj) => {
       setNotice(obj);
-      console.log(obj);
-      console.log("http://192.168.0.17:8080" + obj.attachments[0].fileUrl);
     });
   }, [noticeId, token]);
 
@@ -61,6 +59,21 @@ export default function AnnouncementDetailPage() {
           />
         </CardContent>
       </Card>
+      <div>
+        {notice.attachments.length > 0 && (
+          <div>
+            {notice.attachments.map((file, index) => (
+              <div key={index} className="mb-2">
+                <a
+                  href={`http://192.168.0.17:8080/api/notices/files/download?path=${file.fileUrl.replace("/apssolution/notices/", "")}`}
+                >
+                  {file.fileName} - 다운로드({file.fileUrl})
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
