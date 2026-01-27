@@ -9,9 +9,8 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  const token = useToken((state) => state.token);
-  const setToken = useToken((state) => state.setToken);
-  const setAccount = useAccount((state) => state.setAccount);
+  const { token, setToken, clearToken } = useToken();
+  const { account, setAccount, clearAccount } = useAccount();
 
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
