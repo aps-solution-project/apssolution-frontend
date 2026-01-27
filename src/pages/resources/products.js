@@ -1,21 +1,21 @@
 import { bulkUpsertProducts } from "@/api/product-api";
+import { getProductTasks } from "@/api/product-api";
 import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
+import ProductEditModal from "@/components/layout/modal/productEdit";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useToken } from "@/stores/account-store";
 import { useResourcesStore } from "@/stores/resources-store";
 import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
@@ -25,6 +25,11 @@ export default function ResourcesPage() {
   const [modal, setModal] = useState(false);
   const [pendingProducts, setPendingProducts] = useState([]);
 
+  const [tasksMap, setTasksMap] = useState({});
+
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+
   const token = useToken((state) => state.token);
   const { products, loading, fetchProducts } = useResourcesStore();
 
@@ -32,126 +37,191 @@ export default function ResourcesPage() {
     fetchProducts();
   }, [fetchProducts]);
 
-  // 저장 버튼
+  /* ================= 저장 ================= */
+
   const handleFinalSave = async () => {
     if (pendingProducts.length === 0) return;
 
-    try {
-      await bulkUpsertProducts([...products, ...pendingProducts], token);
+    await bulkUpsertProducts([...products, ...pendingProducts], token);
 
-      setPendingProducts([]);
-      fetchProducts();
-    } catch (e) {
-      alert(e.message);
-    }
+    setPendingProducts([]);
+    fetchProducts();
   };
+
+  /* ================= 공정 불러오기 ================= */
+
+  const loadTasks = async (productId) => {
+    if (tasksMap[productId]) return;
+
+    const data = await getProductTasks(productId, token);
+
+    setTasksMap((prev) => ({
+      ...prev,
+      [productId]: data.tasks || [],
+    }));
+  };
+
+  const gridCols = "grid grid-cols-[15%_40%_30%_15%] w-full items-center";
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-stone-600">자료실</h1>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            레시피 자료를 확인할 수 있습니다.
-          </p>
+      <div className="rounded-lg border bg-white shadow-sm">
+        {/* ================= ACTION BAR ================= */}
 
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setModal(true)}
-              className="bg-indigo-900 hover:bg-indigo-500"
-            >
-              파일 추가
-              <FileInput className="ml-2 h-4 w-4" />
-            </Button>
+        <div className="flex justify-end gap-2 px-4 py-3 border-b bg-white">
+          <Button
+            size="sm"
+            onClick={() => setModal(true)}
+            className="bg-indigo-900 hover:bg-indigo-500"
+          >
+            파일 추가
+            <FileInput className="ml-1 h-4 w-4" />
+          </Button>
 
-            <Button
-              onClick={handleFinalSave}
-              disabled={pendingProducts.length === 0}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
-            >
-              저장
-              <Save className="ml-2 h-4 w-4" />
-            </Button>
+          <Button
+            size="sm"
+            onClick={handleFinalSave}
+            disabled={pendingProducts.length === 0}
+            className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+          >
+            저장
+            <Save className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* ================= HEADER ================= */}
+
+        <div className="border-b bg-stone-50 px-4 py-2 text-sm font-medium text-stone-600">
+          <div className={gridCols}>
+            <div>제품명</div>
+            <div>설명</div>
+            <div>업로드 날짜</div>
+            <div className="text-center">설정</div>
           </div>
         </div>
 
-        <Table className="table-fixed w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[15%]">제품명</TableHead>
-              <TableHead className="w-[40%]">설명</TableHead>
-              <TableHead className="w-[30%]">업로드 날짜</TableHead>
-              <TableHead className="w-[15%] text-center">설정</TableHead>
-            </TableRow>
-          </TableHeader>
+        {/* ================= PRODUCT LIST ================= */}
 
-          <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  불러오는 중...
-                </TableCell>
-              </TableRow>
-            )}
+        <Accordion type="multiple" className="w-full">
+          {loading && (
+            <div className="py-6 text-center text-muted-foreground">
+              불러오는 중...
+            </div>
+          )}
 
-            {/* 저장 대기 데이터 */}
-            {pendingProducts.map((product, idx) => (
-              <TableRow key={`pending-${idx}`} className="bg-emerald-50">
-                <TableCell className="font-medium truncate">
-                  {product.name}
-                </TableCell>
+          {!loading &&
+            products.map((product) => (
+              <AccordionItem
+                key={product.id}
+                value={product.id}
+                className="border-b"
+              >
+                <AccordionTrigger className="px-4 py-2 hover:bg-stone-50 transition">
+                  <div
+                    className={gridCols}
+                    onClick={() => loadTasks(product.id)}
+                  >
+                    <div className="font-medium truncate">{product.name}</div>
 
-                <TableCell className="text-muted-foreground truncate">
-                  {product.description}
-                </TableCell>
+                    <div className="truncate text-muted-foreground pl-4">
+                      {product.description}
+                    </div>
 
-                <TableCell className="text-emerald-700 font-medium">
-                  저장 대기
-                </TableCell>
+                    <div className="pl-4">
+                      {product.createdAt?.slice(0, 10)}
+                    </div>
 
-                <TableCell className="text-center text-emerald-600">
-                  신규
-                </TableCell>
-              </TableRow>
+                    {/* ===== ACTION MENU ===== */}
+                    <div
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <MoreHorizontalIcon />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingProduct(product);
+                              setEditOpen(true);
+                            }}
+                          >
+                            수정
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={async () => {
+                              const filtered = products.filter(
+                                (p) => p.id !== product.id,
+                              );
+
+                              await bulkUpsertProducts(filtered, token);
+                              fetchProducts();
+                            }}
+                          >
+                            삭제
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+
+                {/* ================= TASK AREA ================= */}
+
+                <AccordionContent className="bg-stone-50 px-6 py-4 space-y-2">
+                  {!tasksMap[product.id] && (
+                    <div className="text-sm text-muted-foreground">
+                      공정 불러오는 중...
+                    </div>
+                  )}
+
+                  {tasksMap[product.id]?.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex justify-between rounded-md border bg-white px-4 py-2 text-sm hover:bg-stone-50 transition"
+                    >
+                      <div>
+                        <div className="font-medium">
+                          {task.seq}. {task.name}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {task.description}
+                        </div>
+                      </div>
+
+                      <div className="text-right text-xs text-stone-500">
+                        <div>{task.toolCategory.name}</div>
+                        <div>{task.duration}분</div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {tasksMap[product.id]?.length === 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      등록된 공정 없음
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-
-            {/* 기존 데이터 */}
-            {!loading &&
-              products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium truncate">
-                    {product.name}
-                  </TableCell>
-
-                  <TableCell className="text-muted-foreground truncate">
-                    {product.description}
-                  </TableCell>
-
-                  <TableCell>{product.createdAt?.slice(0, 10)}</TableCell>
-
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8">
-                          <MoreHorizontalIcon />
-                        </Button>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>수정</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive">
-                          삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+        </Accordion>
       </div>
+
+      {/* ================= UPLOAD MODAL ================= */}
 
       <ResoucesUpload
         open={modal}
@@ -159,6 +229,23 @@ export default function ResourcesPage() {
         onAddPending={(list) =>
           setPendingProducts((prev) => [...prev, ...list])
         }
+      />
+
+      {/* ================= EDIT MODAL ================= */}
+
+      <ProductEditModal
+        open={editOpen}
+        product={editingProduct}
+        onClose={() => setEditOpen(false)}
+        onSaved={async (data) => {
+          const updated = products.map((p) =>
+            p.id === editingProduct.id ? { ...p, ...data } : p,
+          );
+
+          await bulkUpsertProducts(updated, token);
+          fetchProducts();
+          setEditOpen(false);
+        }}
       />
     </div>
   );

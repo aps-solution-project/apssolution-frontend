@@ -22,28 +22,28 @@ async function upLoadFiles(file, token) {
 
 //파일 저장 api
 async function bulkUpsertProducts(products, token) {
-  const response = await fetch(`${URL}/api/products`, {
+  const payload = {
+    products: products.map((p) => ({
+      id: p.id, // 기존이면 수정
+      toolId: p.toolId, // 공정 장비 기준
+      categoryId: p.categoryId,
+      description: p.description,
+      name: p.name,
+    })),
+  };
+
+  const resp = await fetch(`${URL}/api/products`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      products: products.map((p) => ({
-        productId: p.id,
-        name: p.name,
-        description: p.description,
-        created_at: p.created_at,
-      })),
-    }),
+    body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Bulk upsert failed");
-  }
+  if (!resp.ok) throw new Error("제품 저장 실패");
 
-  return response.json();
+  return resp.json();
 }
 
 //품목 파일 전체조회 api
@@ -74,7 +74,7 @@ async function getProduct(token, productId) {
   return resp.json();
 }
 
-async function getProductTasks(token, productId) {
+async function getProductTasks(productId, token) {
   const resp = await fetch(`${URL}/api/products/${productId}/tasks`, {
     headers: {
       Authorization: `Bearer ${token}`,
