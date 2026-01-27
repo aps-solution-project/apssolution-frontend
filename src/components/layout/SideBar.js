@@ -39,7 +39,9 @@ const sections = [
     icon: Inbox,
     items: [
       { label: "공지사항", href: "/notice/announcements" },
-      { label: "자료실", href: "/resources" },
+      { label: "자료실", href: "/resources/products" },
+      { label: "작업 관리", href: "/resources/tasks" },
+      { label: "도구 관리", href: "/resources/tools" },
       { label: "사원 게시판", href: "/forum" },
     ],
   },

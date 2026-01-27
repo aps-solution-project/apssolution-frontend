@@ -16,7 +16,6 @@ import {
 
 import { useAccount, useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
-
 import ProfileEditModal from "./modal/profileSetting";
 
 export default function Header() {
