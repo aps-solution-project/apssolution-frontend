@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Menu, LogOut, UserCog } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
+import { LogOut, Menu, UserCog } from "lucide-react";
+import { useState } from "react";
 
 import {
   DropdownMenu,

@@ -43,7 +43,6 @@ export const useToken = create(
       name: "token",
       skipHydration: true,
       onRehydrateStorage: () => () => {
-        console.log("rehydrated!!");
         useToken.setState({ flag: true });
       },
     },
