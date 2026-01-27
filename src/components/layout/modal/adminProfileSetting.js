@@ -1,33 +1,25 @@
-import {
-  changeMyPassword,
-  getAccountDetail,
-  updateMyAccount,
-} from "@/api/auth-api";
+import { getAccountDetail, updateEmployeeAccount } from "@/api/auth-api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useAccount, useToken } from "@/stores/account-store";
-import { DialogDescription } from "@radix-ui/react-dialog";
-import { useRouter } from "next/router";
+import { useToken } from "@/stores/account-store";
 import { useEffect, useMemo, useState } from "react";
 
 export default function AdminProfileEditModal({ open, onOpenChange, account }) {
   const token = useToken((s) => s.token);
-  const setAccount = useAccount((s) => s.setAccount);
-  const router = useRouter();
 
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
-  const [profileImage, setProfileImage] = useState(null); // File 객체
-  const [preview, setPreview] = useState(null); // 미리보기용 Data URL
+  const [workedAt, setWorkedAt] = useState("");
 
-  const [oldPw, setOldPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [newPwConfirm, setNewPwConfirm] = useState("");
+  const [profileUrl, setProfileUrl] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -36,61 +28,24 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
     [email],
   );
 
-  const emailChanged = email !== account?.email || profileImage !== null;
-
-  const passwordValid = newPw.length >= 8 && newPw === newPwConfirm;
-
-  // 이미지 선택 시 File 객체 저장 + 미리보기
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setProfileImage(file);
-
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result);
-    reader.readAsDataURL(file);
-  };
-
-  const handleProfileSave = async () => {
+  const handleSave = async () => {
     if (!emailValid) return alert("이메일 형식이 올바르지 않습니다");
 
     try {
       setLoading(true);
 
-      const formData = new FormData();
-      formData.append("email", email);
-      if (profileImage) formData.append("profileImage", profileImage);
+      const payload = {
+        name,
+        email,
+        role,
+        workedAt,
+      };
 
-      await updateMyAccount(account.id, formData, token);
+      await updateEmployeeAccount(account.id, payload, token);
 
-      router.push("/login");
+      onOpenChange(false);
     } catch (e) {
-      alert(e.message || "프로필 수정 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordChange = async () => {
-    if (!oldPw) return alert("기존 비밀번호를 입력하세요");
-    if (!passwordValid) return alert("비밀번호는 8자 이상이고 일치해야 합니다");
-
-    try {
-      setLoading(true);
-
-      await changeMyPassword(
-        account.id,
-        { oldPw, newPw, newPwConfirm },
-        token,
-      );
-
-      setOldPw("");
-      setNewPw("");
-      setNewPwConfirm("");
-      alert("비밀번호가 변경되었습니다");
-    } catch (e) {
-      alert(e.message || "비밀번호 변경 중 오류가 발생했습니다.");
+      alert(e.message || "직원 정보 수정 실패");
     } finally {
       setLoading(false);
     }
@@ -110,42 +65,38 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
     if (!account?.id || !token || !open) return;
 
     getAccountDetail(token, account.id).then((obj) => {
+      setName(obj.name || "");
+      setRole(obj.role || "");
       setEmail(obj.email || "");
+      setWorkedAt(obj.workedAt?.slice(0, 10) || "");
 
-      // 프로필 이미지 URL 처리
       if (obj.profileImageUrl) {
-        // obj.profileImageUrl이 /apssolution/... 형식이면 호스트 붙이기
-        const url = obj.profileImageUrl.startsWith("http")
-          ? obj.profileImageUrl
-          : `http://192.168.0.17:8080${obj.profileImageUrl}`;
-        setPreview(url);
-        console.log("profile image url:", url);
+        setProfileUrl(
+          obj.profileImageUrl.startsWith("http")
+            ? obj.profileImageUrl
+            : `http://192.168.0.17:8080${obj.profileImageUrl}`,
+        );
       } else {
-        setPreview(null);
+        setProfileUrl(null);
       }
-
-      setProfileImage(null); // 초기에는 새 파일 없음
     });
   }, [account, token, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl p-4 space-y-4 bg-white shadow-lg border text-sm">
+      <DialogContent className="max-w-70 rounded-br-lg p-9 space-y-2 bg-stone-50 shadow border text-sm">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
-            프로필 설정
+            직원 정보 수정
           </DialogTitle>
-          <DialogDescription>
-            프로필 이미지와 이메일, 비밀번호를 수정할 수 있습니다.
-          </DialogDescription>
+          <DialogDescription>기본 정보만 수정 가능합니다.</DialogDescription>
         </DialogHeader>
 
-        {/* 프로필 이미지 */}
-        <div className="flex flex-col items-center space-y-2">
+        <div className="flex justify-center">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 shadow">
-            {preview ? (
+            {profileUrl ? (
               <img
-                src={preview}
+                src={profileUrl}
                 className="w-full h-full object-cover"
                 alt="profile"
               />
@@ -155,25 +106,35 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
               </div>
             )}
           </div>
-
-          <label className="cursor-pointer text-xs px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 transition">
-            사진 변경
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
         </div>
 
-        {/* 이메일 */}
-        <div className="space-y-1">
+        <div>
+          <p className="font-medium text-xs">이름</p>
+          <Input
+            className={inputStyle}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <p className="font-medium text-xs">권한</p>
+          <select
+            className={`${inputStyle} w-full px-2`}
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="">선택</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="WORKER">WORKER</option>
+          </select>
+        </div>
+
+        <div>
           <p className="font-medium text-xs">이메일</p>
           <Input
             className={inputStyle}
             value={email}
-            placeholder="이메일 입력"
             onChange={(e) => setEmail(e.target.value)}
           />
           {!emailValid && (
@@ -183,48 +144,23 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
           )}
         </div>
 
-        <Button
-          disabled={!emailChanged || !emailValid || loading}
-          className="w-full h-9 rounded-lg bg-black disabled:opacity-40"
-          onClick={handleProfileSave}
-        >
-          저장
-        </Button>
-
-        {/* 비밀번호 */}
-        <div className="border-t pt-3 space-y-2">
-          <p className="font-medium text-xs">비밀번호 변경</p>
-
+        <div>
+          <p className="font-medium text-xs">입사일자</p>
           <Input
+            type="date"
             className={inputStyle}
-            type="password"
-            placeholder="기존 비밀번호"
-            value={oldPw}
-            onChange={(e) => setOldPw(e.target.value)}
+            value={workedAt}
+            onChange={(e) => setWorkedAt(e.target.value)}
           />
-          <Input
-            className={inputStyle}
-            type="password"
-            placeholder="새 비밀번호"
-            value={newPw}
-            onChange={(e) => setNewPw(e.target.value)}
-          />
-          <Input
-            className={inputStyle}
-            type="password"
-            placeholder="새 비밀번호 확인"
-            value={newPwConfirm}
-            onChange={(e) => setNewPwConfirm(e.target.value)}
-          />
-
-          <Button
-            disabled={!passwordValid || loading}
-            className="w-full h-9 rounded-lg bg-indigo-500 text-white disabled:opacity-40"
-            onClick={handlePasswordChange}
-          >
-            변경
-          </Button>
         </div>
+
+        <Button
+          disabled={!emailValid || loading}
+          className="w-full h-9 rounded-lg bg-black disabled:opacity-40"
+          onClick={handleSave}
+        >
+          {loading ? "저장 중..." : "저장"}
+        </Button>
       </DialogContent>
     </Dialog>
   );
