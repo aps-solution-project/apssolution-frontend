@@ -12,10 +12,11 @@ import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function AnnouncementsPage() {
+export default function PostsPage() {
   const router = useRouter();
   const [notices, setNotices] = useState([]);
   const { token } = useToken();
+  
   // 임시 데이터 (API 붙이면 제거)
   useEffect(() => {
     if (!token) return;
@@ -27,9 +28,9 @@ export default function AnnouncementsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">공지사항</h1>
+        <h1 className="text-2xl font-bold">사원 게시판</h1>
         <Button onClick={() => router.push("/notice/announcements-create")}>
-          공지 작성
+          게시글 작성
         </Button>
       </div>
 
@@ -67,7 +68,7 @@ export default function AnnouncementsPage() {
                 colSpan={4}
                 className="text-center text-muted-foreground"
               >
-                등록된 공지사항이 없습니다.
+                등록된 게시글이 없습니다.
               </TableCell>
             </TableRow>
           )}

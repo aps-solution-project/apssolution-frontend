@@ -20,6 +20,7 @@ async function upsertTasks(token, tasks) {
 
 async function getTasks(token) {
   const resp = await fetch(`${serverAddr}/api/tasks`, {
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

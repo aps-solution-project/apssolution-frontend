@@ -40,21 +40,26 @@ export default function ToolManagementPage() {
     if (!file) return;
 
     try {
-      // 명세서에 따라 formData(file) 형태로 전송
       const data = await parseToolXls(file, token);
 
-      // 파싱된 데이터를 현재 리스트에 추가 (저장 전이므로 isSaved: false)
       const newItems = (data.tools || []).map((item) => ({
-        ...item,
+        id: item.id,
+
+        // ⭐ 프론트 표준 구조로 변환
+        categoryId: item.category?.id || "",
+        category: item.category ? { id: item.category.id } : { id: "" },
+
+        description: item.description || "",
+
         isSaved: false,
       }));
 
       setTools((prev) => [...prev, ...newItems]);
+
       alert(
         `${newItems.length}건의 데이터를 불러왔습니다. '전체 저장'을 눌러 확정하세요.`,
       );
 
-      // 같은 파일 재업로드 가능하도록 초기화
       e.target.value = "";
     } catch (err) {
       alert("엑셀 파싱 실패: " + err.message);
@@ -136,7 +141,7 @@ export default function ToolManagementPage() {
   };
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4">
       <h1 className="text-2xl font-bold text-stone-600">도구 관리</h1>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -157,16 +162,21 @@ export default function ToolManagementPage() {
             </Button>
 
             {/* 엑셀 추가 버튼 (Indigo) */}
-            <label className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium bg-indigo-900 hover:bg-indigo-500 text-white h-10 px-4 py-2 transition-colors">
-              <Input
-                type="file"
-                accept=".xls,.xlsx"
-                className="hidden"
-                onChange={handleExcelUpload}
-              />
-              엑셀 파일 추가
-              <FileInput className="ml-2 h-4 w-4" />
-            </label>
+            <Button
+              asChild
+              className="bg-indigo-900 hover:bg-indigo-500 text-white cursor-pointer"
+            >
+              <label>
+                <Input
+                  type="file"
+                  accept=".xls,.xlsx"
+                  className="hidden"
+                  onChange={handleExcelUpload}
+                />
+                엑셀 파일 추가
+                <FileInput className="ml-2 h-4 w-4" />
+              </label>
+            </Button>
 
             {/* 전체 저장 버튼 (Emerald) */}
             <Button
@@ -195,9 +205,7 @@ export default function ToolManagementPage() {
                 <TableHead className="text-stone-600 text-center">
                   설명
                 </TableHead>
-                <TableHead className="w-[50px] text-center text-stone-600">
-                  삭제
-                </TableHead>
+                <TableHead className="w-[50px] text-center text-stone-600"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,14 +242,14 @@ export default function ToolManagementPage() {
                     />
                   </TableCell>
 
-                  {/* 3. 카테고리 ID 셀 - 테두리 및 Mono 폰트 추가 */}
+                  {/* 3. 카테고리 ID 셀 - 테두리 추가 */}
                   <TableCell className="p-2">
                     <Input
                       value={tool.category?.id || ""}
                       onChange={(e) =>
                         handleInputChange(index, "categoryId", e.target.value)
                       }
-                      className={`h-9 text-center !font-mono !text-xs text-stone-500 rounded-md border border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
+                      className={`h-9 text-center !text-xs rounded-md border border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !tool.isSaved
                           ? "border-emerald-300 ring-1 ring-emerald-100"
                           : ""
@@ -283,7 +291,7 @@ export default function ToolManagementPage() {
               >
                 <TableCell
                   colSpan={5}
-                  className="text-center py-6 text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
+                  className="text-center text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
                 >
                   <Plus className="inline-block mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                   새 도구 추가

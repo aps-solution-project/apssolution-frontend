@@ -4,7 +4,7 @@ import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-export default function AnnouncementsCreatePage() {
+export default function PostsCreatePage() {
   const router = useRouter();
   const { token } = useToken();
 
