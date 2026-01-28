@@ -10,7 +10,7 @@ import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Search } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +20,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const PAGE_SIZE = 10;
 const GRID_COLS = "grid-cols-[15%_25%_35%_10%_5%]";
@@ -37,7 +38,7 @@ export default function ResourcesPage() {
   const router = useRouter();
 
   const isProducts = router.pathname === "/resources/products";
-  const isTools = router.pathname === "/resources/tools";
+  const isTools = router.pathname === "/resources/toolCategories";
 
   useEffect(() => {
     fetchProducts();
@@ -103,7 +104,7 @@ export default function ResourcesPage() {
             품목
           </Link>
           <Link
-            href="/resources/tools"
+            href="/resources/toolCategories"
             className={isTools ? "text-indigo-600" : "text-stone-400"}
           >
             카테고리
@@ -111,16 +112,19 @@ export default function ResourcesPage() {
         </div>
 
         <div className="flex gap-2 items-center">
-          <input
-            placeholder="검색..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="border rounded-lg px-3 py-2 text-sm w-64"
-          />
-
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="검색"
+              className="pl-9 w-56 h-9 rounded-xl border-stone-300
+                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
           <Button
             size="sm"
             disabled={!selectedId}
