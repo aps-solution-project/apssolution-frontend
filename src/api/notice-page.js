@@ -1,13 +1,17 @@
 const URL = "http://192.168.0.17:8080";
 
 async function createNotice(token, data) {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("content", data.content);
+  // formData.append("scenarioId", data.scenarioId);
+  // formData.append("attachment", data.attachment);
   const resp = await fetch(`${URL}/api/notices`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data),
+    body: formData,
   });
   if (!resp.ok) {
     throw new Error("공지사항 생성에 실패했습니다.");
