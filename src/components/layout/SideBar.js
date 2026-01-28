@@ -18,7 +18,13 @@ import {
 import Header from "./Header";
 import Link from "next/link";
 
-import { Inbox, Settings, Columns3Cog } from "lucide-react";
+import {
+  Inbox,
+  Settings,
+  Columns3Cog,
+  PackageCheck,
+  Wrench,
+} from "lucide-react";
 
 const sections = [
   {
@@ -36,18 +42,21 @@ const sections = [
     items: [
       { label: "공지사항", href: "/notice/announcements" },
       { label: "자료실", href: "/resources/products" },
-      { label: "작업 관리", href: "/resources/tasks" },
-      { label: "도구 관리", href: "/resources/tools" },
       { label: "사원 게시판", href: "/forum" },
     ],
   },
   {
-    title: "도구 (Tools)",
-    icon: Columns3Cog, // 적절한 아이콘으로 변경 가능
+    title: "도구",
+    icon: Wrench,
     items: [
       { label: "도구 관리", href: "/tools" },
       { label: "도구 카테고리 관리", href: "/tools/category" },
     ],
+  },
+  {
+    title: "작업 공정",
+    icon: PackageCheck,
+    items: [{ label: "작업 관리", href: "/tasks" }],
   },
   {
     title: "관리",
