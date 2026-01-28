@@ -1,53 +1,52 @@
 import { createNotice } from "@/api/notice-page";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Editor from "@/components/ui/editor";
-import { Input } from "@/components/ui/input";
+import NoticeForm from "@/components/notice/NoticeForm";
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
 export default function AnnouncementsCreatePage() {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const { token } = useToken();
 
-  const handleSave = () => {
-    console.log({ title, content });
-    createNotice(token, { title, content }).then((obj) => {
-      console.log("Created notice:", obj);
-      window.alert("공지사항이 성공적으로 생성되었습니다.");
-      router.push("/notice/announcements");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [files, setFiles] = useState([]);
+
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+
+    // 파일 배열 추가
+    files.forEach((file) => {
+      formData.append("attachments", file);
     });
+
+    try {
+      // createNotice가 FormData를 받도록 구성되어야 함
+      await createNotice(token, formData);
+      alert("공지사항이 생성되었습니다.");
+      router.push("/notice/announcements");
+    } catch (e) {
+      alert("생성 실패");
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">공지사항 작성</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>공지 작성</CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <Input
-            placeholder="공지 제목"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <Editor value={content} onChange={setContent} />
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => router.back()}>
-              취소
-            </Button>
-            <Button onClick={handleSave}>저장</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <NoticeForm
+        title={title}
+        setTitle={setTitle}
+        content={content}
+        setContent={setContent}
+        files={files}
+        setFiles={setFiles}
+        onSubmit={handleSave}
+        submitText="저장"
+        onCancel={() => router.back()}
+      />
     </div>
   );
 }

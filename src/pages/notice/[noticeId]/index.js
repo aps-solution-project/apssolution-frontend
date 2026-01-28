@@ -40,7 +40,10 @@ export default function AnnouncementDetailPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => router.back()}>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/notice/announcements")}
+        >
           ← 목록으로
         </Button>
 
@@ -60,7 +63,10 @@ export default function AnnouncementDetailPage() {
           <div className="flex justify-between">
             <CardTitle className="text-2xl">{notice.title}</CardTitle>
             {isWriter && (
-              <Button variant="outline">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/notice/${noticeId}/edit`)}
+              >
                 <SquarePen />
               </Button>
             )}
@@ -94,7 +100,44 @@ export default function AnnouncementDetailPage() {
           />
         </CardContent>
       </Card>
-      <div>
+      {/* 첨부 파일 섹션 */}
+      <Card className="mt-4">
+        <CardHeader className="py-2">
+          <CardTitle className="text-sm font-semibold flex items-center">
+            첨부 파일 ({notice.attachments ? notice.attachments.length : 0})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {notice.attachments && notice.attachments.length > 0 ? (
+            notice.attachments.map((file, index) => {
+              const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
+                file.fileUrl.replace("/apssolution/notices/", ""),
+              )}`;
+
+              return (
+                <div
+                  key={index}
+                  className="flex items-center p-2 rounded-md border bg-muted/50"
+                >
+                  <span className="text-blue-500 mr-2">📎</span>
+                  <a
+                    href={downloadUrl}
+                    className="text-sm font-medium hover:underline text-blue-600 truncate flex-1"
+                  >
+                    {file.fileName}
+                  </a>
+                </div>
+              );
+            })
+          ) : (
+            // 파일이 없을 때 보여줄 안내 문구
+            <div className="text-center py-4 text-sm text-gray-400 italic">
+              첨부된 파일이 없습니다.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {/* <div>
         {notice.attachments.length > 0 && (
           <div>
             {notice.attachments.map((file, index) => (
@@ -108,7 +151,7 @@ export default function AnnouncementDetailPage() {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -20,7 +20,6 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     if (!token) return;
     getNotices(token).then((obj) => {
-      console.log(obj.notices);
       setNotices(obj.notices);
     });
   }, [token]);
