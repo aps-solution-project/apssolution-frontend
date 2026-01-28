@@ -34,7 +34,7 @@ export default function AnnouncementDetailPage() {
           <p className="text-sm text-muted-foreground">
             <Avatar className="size-15 h-10 mr-2 inline-block">
               <AvatarImage
-                src={"http://192.168.0.17:8080" + notice.writer.profileImageUrl}
+                src={"http://192.168.0.20:8080" + notice.writer.profileImageUrl}
               />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
@@ -65,7 +65,7 @@ export default function AnnouncementDetailPage() {
             {notice.attachments.map((file, index) => (
               <div key={index} className="mb-2">
                 <a
-                  href={`http://192.168.0.17:8080/api/notices/files/download?path=${file.fileUrl.replace("/apssolution/notices/", "")}`}
+                  href={`http://192.168.0.20:8080/api/notices/files/download?path=${file.fileUrl.replace("/apssolution/notices/", "")}`}
                 >
                   {file.fileName} - 다운로드({file.fileUrl})
                 </a>

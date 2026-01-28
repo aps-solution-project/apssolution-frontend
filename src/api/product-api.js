@@ -1,4 +1,4 @@
-const URL = "http://192.168.0.17:8080";
+const URL = "http://192.168.0.20:8080";
 //파일 업로드 api
 async function upLoadFiles(file, token) {
   const formData = new FormData();

@@ -5,25 +5,39 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { useResourcesStore } from "@/stores/resources-store";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+
+const PAGE_SIZE = 10;
+const GRID_COLS = "grid-cols-[15%_25%_35%_10%_5%]";
 
 export default function ResourcesPage() {
   const [tasksMap, setTasksMap] = useState({});
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState(null);
 
   const token = useToken((state) => state.token);
   const { products, loading, fetchProducts } = useResourcesStore();
-
   const router = useRouter();
+
+  const isProducts = router.pathname === "/resources/products";
+  const isTools = router.pathname === "/resources/tools";
 
   useEffect(() => {
     fetchProducts();
@@ -33,129 +47,219 @@ export default function ResourcesPage() {
     if (tasksMap[productId]) return;
 
     const data = await getProductTasks(productId, token);
-
     setTasksMap((prev) => ({
       ...prev,
       [productId]: data.tasks || [],
     }));
   };
 
-  const gridCols = "grid grid-cols-[20%_65%_15%] w-full items-center";
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+    setPage(1);
+  };
 
-  const active = "text-indigo-400 font-semibold";
-  const normal = "text-stone-500 hover:text-indigo-600 transition";
+  const processed = useMemo(() => {
+    const filtered = products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.toLowerCase()),
+    );
+
+    return filtered.sort((a, b) => {
+      const v1 = a[sortKey];
+      const v2 = b[sortKey];
+      if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+      if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+      return 0;
+    });
+  }, [products, search, sortKey, sortDir]);
+
+  const totalPages = Math.ceil(processed.length / PAGE_SIZE);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const pageData = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return processed.slice(start, start + PAGE_SIZE);
+  }, [processed, page]);
 
   return (
-    <div className="space-y-3">
-      <Breadcrumb>
-        <BreadcrumbList className="text-lg">
-          <BreadcrumbItem>
-            <Link
-              href="/resources/products"
-              className={
-                router.pathname === "/resources/products" ? active : normal
-              }
-            >
-              품목
-            </Link>
-          </BreadcrumbItem>
-
-          <BreadcrumbSeparator> | </BreadcrumbSeparator>
-
-          <BreadcrumbItem>
-            <Link
-              href="/resources/tools"
-              className={
-                router.pathname === "/resources/tools" ? active : normal
-              }
-            >
-              도구
-            </Link>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="rounded-lg border bg-white w-[95%] md:w-[70%] xl:w-[80%] mx-auto shadow-sm">
-        <div className="border-b bg-stone-50 px-4 py-2 text-sm font-medium text-stone-600">
-          <div className={gridCols}>
-            <div>제품명</div>
-            <div>설명</div>
-            <div>업로드 날짜</div>
-          </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-8 text-sm font-medium">
+          <Link
+            href="/resources/products"
+            className={isProducts ? "text-indigo-600" : "text-stone-400"}
+          >
+            품목
+          </Link>
+          <Link
+            href="/resources/tools"
+            className={isTools ? "text-indigo-600" : "text-stone-400"}
+          >
+            카테고리
+          </Link>
         </div>
 
-        <Accordion type="multiple" className="w-full">
-          {loading && (
-            <div className="py-6 text-center text-muted-foreground">
-              불러오는 중...
-            </div>
-          )}
+        <div className="flex gap-2 items-center">
+          <input
+            placeholder="검색..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2 text-sm w-64"
+          />
 
-          {!loading &&
-            products.map((product) => (
-              <AccordionItem
-                key={product.id}
-                value={product.id}
-                className="border-b"
+          <Button
+            size="sm"
+            disabled={!selectedId}
+            onClick={() =>
+              selectedId && router.push(`/resources/products/${selectedId}`)
+            }
+            className="flex gap-1"
+          >
+            <Pencil size={14} />
+            수정
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+      >
+        <Header label="ID" onClick={() => toggleSort("id")} />
+        <Header label="제품명" onClick={() => toggleSort("name")} />
+        <Header label="설명" onClick={() => toggleSort("description")} />
+        <Header label="상태" onClick={() => toggleSort("active")} />
+        <Header label="등록일" onClick={() => toggleSort("createdAt")} />
+      </div>
+
+      <Accordion type="multiple" className="border border-t-0 rounded-b-lg">
+        {loading && (
+          <div className="py-10 text-center text-stone-400">불러오는 중...</div>
+        )}
+
+        {!loading &&
+          pageData.map((product) => (
+            <AccordionItem
+              key={product.id}
+              value={String(product.id)}
+              className="border-b last:border-b-0"
+            >
+              <AccordionTrigger
+                onClick={() => {
+                  setSelectedId(product.id);
+                  loadTasks(product.id);
+                }}
+                className={`px-6 py-3 transition ${
+                  selectedId === product.id
+                    ? "bg-indigo-50"
+                    : "hover:bg-slate-50"
+                }`}
               >
-                <AccordionTrigger
-                  className="px-4 py-6 hover:bg-stone-50 transition"
-                  onClick={() => loadTasks(product.id)}
+                <div
+                  className={`grid ${GRID_COLS} w-full text-sm items-center`}
                 >
-                  <div className={gridCols}>
-                    <div className="font-medium truncate">{product.name}</div>
+                  <div className="text-stone-500">{product.id}</div>
+                  <div className="font-medium truncate">{product.name}</div>
+                  <div className="text-stone-500 truncate pr-3">
+                    {product.description}
+                  </div>
+                  <div>
+                    {product.active ? (
+                      <span className="text-emerald-600 text-xs font-medium">
+                        ● Active
+                      </span>
+                    ) : (
+                      <span className="text-rose-500 text-xs font-medium">
+                        ● Inactive
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-stone-400 text-xs">
+                    {product.createdAt?.slice(0, 10)}
+                  </div>
+                </div>
+              </AccordionTrigger>
 
-                    <div className="truncate text-muted-foreground pl-4">
-                      {product.description}
+              <AccordionContent className="bg-slate-50/40">
+                {tasksMap[product.id]?.map((task) => (
+                  <div
+                    key={task.id}
+                    className="mx-6 my-2 bg-white rounded-lg px-4 py-3 shadow-sm flex justify-between"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {task.seq}. {task.name}
+                      </div>
+                      <div className="text-xs text-stone-400">
+                        {task.description}
+                      </div>
                     </div>
 
-                    <div className="pl-4">
-                      {product.createdAt?.slice(0, 10)}
+                    <div className="text-xs text-stone-500 text-right space-y-1">
+                      <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded">
+                        Tool {task.toolCategoryId}
+                      </span>
+                      <div>{task.duration} min</div>
                     </div>
                   </div>
-                </AccordionTrigger>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+      </Accordion>
 
-                <AccordionContent className="bg-stone-50 px-6 py-4 space-y-2">
-                  {!tasksMap[product.id] && (
-                    <div className="text-sm text-muted-foreground">
-                      공정 불러오는 중...
-                    </div>
-                  )}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+            </PaginationItem>
 
-                  {tasksMap[product.id]?.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex justify-between rounded-md border bg-white px-4 py-2 text-sm hover:bg-stone-50 transition"
-                    >
-                      <div>
-                        <div className="font-medium">
-                          {task.seq}. {task.name}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {task.description}
-                        </div>
-                      </div>
-
-                      <div className="text-right text-xs text-stone-500">
-                        <div className="text-right text-xs text-stone-500">
-                          <div>{task.toolCategoryId}</div>
-
-                          <div>{task.duration}분</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {tasksMap[product.id]?.length === 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      등록된 공정 없음
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={page === i + 1}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
             ))}
-        </Accordion>
-      </div>
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+    </div>
+  );
+}
+
+function Header({ label, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 select-none"
+    >
+      {label}
     </div>
   );
 }

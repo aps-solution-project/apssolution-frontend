@@ -1,4 +1,4 @@
-const URL = "http://192.168.0.14:8080";
+const URL = "http://192.168.0.20:8080";
 
 // 도구 카테고리 생성
 export async function createToolCategory(data, token) {

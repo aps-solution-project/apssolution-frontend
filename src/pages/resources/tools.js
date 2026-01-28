@@ -1,227 +1,129 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useToken } from "@/stores/account-store";
+import { getToolCategories } from "@/api/tool-api";
+
 import {
-  getToolCategories,
-  createToolCategory,
-  deleteToolCategory,
-} from "@/api/tool-api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Plus, Trash2, Save, RefreshCw } from "lucide-react";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+
+const GRID_COLS = "grid-cols-[25%_55%_20%]";
+const PAGE_SIZE = 10;
 
 export default function ToolCategoryPage() {
   const token = useToken((state) => state.token);
   const [categories, setCategories] = useState([]);
+  const [page, setPage] = useState(1);
 
   const router = useRouter();
 
-  const active = "text-indigo-400 font-semibold";
-  const normal = "text-stone-500 hover:text-indigo-600 transition";
+  const isProducts = router.pathname === "/resources/products";
+  const isTools = router.pathname === "/resources/tools";
 
   useEffect(() => {
     if (token) loadCategories();
   }, [token]);
 
   const loadCategories = async () => {
-    try {
-      const data = await getToolCategories(token);
-      const list = (data.categoryList || data || []).map((cat) => ({
-        ...cat,
-        isSaved: true,
-      }));
-      setCategories(list);
-    } catch (err) {
-      console.error("로드 실패:", err);
-    }
+    const data = await getToolCategories(token);
+    const list = data.categoryList || data || [];
+    setCategories(list);
+    setPage(1);
   };
 
-  const handleInputChange = (index, field, value) => {
-    const updated = [...categories];
-    updated[index][field] = value;
-    updated[index].isSaved = false;
-    setCategories(updated);
-  };
+  const totalPages = Math.ceil(categories.length / PAGE_SIZE);
 
-  const handleAddRow = () => {
-    setCategories([...categories, { id: "", name: "", isSaved: false }]);
-  };
-
-  const handleDelete = async (index, categoryId) => {
-    if (!categoryId) {
-      setCategories(categories.filter((_, i) => i !== index));
-      return;
-    }
-
-    if (confirm(`[${categoryId}] 카테고리를 삭제하시겠습니까?`)) {
-      try {
-        await deleteToolCategory(categoryId, token);
-        loadCategories();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-  };
-
-  const handleSaveAll = async () => {
-    const targets = categories.filter((c) => !c.isSaved);
-    if (targets.length === 0) return alert("수정된 내용이 없습니다.");
-
-    try {
-      for (const cat of targets) {
-        await createToolCategory({ categoryId: cat.id, name: cat.name }, token);
-      }
-      loadCategories();
-    } catch (err) {
-      alert("저장 중 오류: " + err.message);
-    }
-  };
+  const pageData = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return categories.slice(start, start + PAGE_SIZE);
+  }, [categories, page]);
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center gap-2 text-lg">
-        <Link
-          href="/resources/products"
-          className={
-            router.pathname === "/resources/products" ? active : normal
-          }
-        >
-          자료실
-        </Link>
-        <span className="text-stone-400">|</span>
-        <Link
-          href="/resources/tools"
-          className={router.pathname === "/resources/tools" ? active : normal}
-        >
-          도구
-        </Link>
+    <div className="space-y-4">
+      {/* ===== NAV ===== */}
+      <div className="flex justify-between items-center">
+        <div className="flex gap-8 text-sm font-medium">
+          <Link
+            href="/resources/products"
+            className={isProducts ? "text-indigo-600" : "text-stone-400"}
+          >
+            품목
+          </Link>
+          <Link
+            href="/resources/tools"
+            className={isTools ? "text-indigo-600" : "text-stone-400"}
+          >
+            카테고리
+          </Link>
+        </div>
       </div>
 
-      <h1 className="text-2xl font-bold text-stone-600">도구 카테고리 관리</h1>
+      {/* ===== HEADER ===== */}
+      <div
+        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+      >
+        <div>ID</div>
+        <div>카테고리명</div>
+        <div>상태</div>
+      </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            도구 분류를 위한 카테고리를 설정합니다.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={loadCategories}
-              className="border-stone-200 text-stone-600 hover:bg-stone-50"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              새로고침
-            </Button>
-            <Button
-              onClick={handleSaveAll}
-              className="bg-emerald-600 hover:bg-emerald-500"
-            >
-              저장
-              <Save className="ml-2 h-4 w-4" />
-            </Button>
+      {/* ===== LIST ===== */}
+      <div className="border border-t-0 rounded-b-lg divide-y">
+        {pageData.map((cat, index) => (
+          <div key={index} className="px-6 py-3 hover:bg-slate-50 transition">
+            <div className={`grid ${GRID_COLS} w-full text-sm items-center`}>
+              <div className="text-stone-500">{cat.id}</div>
+              <div className="font-medium truncate">{cat.name}</div>
+              <div className="text-stone-400 text-xs">등록됨</div>
+            </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* ===== TABLE ===== */}
-        <div className="rounded-md border">
-          <Table className="table-fixed w-full">
-            <TableHeader className="bg-stone-50">
-              <TableRow>
-                <TableHead className="w-[80px] text-center text-stone-600">
-                  상태
-                </TableHead>
-                <TableHead className="w-[40%] text-stone-600">
-                  카테고리 ID
-                </TableHead>
-                <TableHead className="text-stone-600">카테고리 이름</TableHead>
-                <TableHead className="w-[100px] text-center text-stone-600">
-                  삭제
-                </TableHead>
-              </TableRow>
-            </TableHeader>
+      {/* ===== PAGINATION ===== */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+            </PaginationItem>
 
-            <TableBody>
-              {categories.map((cat, index) => (
-                <TableRow
-                  key={index}
-                  className={`transition-colors ${
-                    !cat.isSaved ? "bg-emerald-50/40" : "hover:bg-stone-50/50"
-                  }`}
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={page === i + 1}
+                  onClick={() => setPage(i + 1)}
                 >
-                  <TableCell className="text-center p-2">
-                    {cat.isSaved ? (
-                      <span className="text-stone-400 text-xs font-bold">
-                        Y
-                      </span>
-                    ) : (
-                      <span className="text-emerald-600 text-xs font-bold">
-                        신규
-                      </span>
-                    )}
-                  </TableCell>
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
 
-                  <TableCell className="p-2">
-                    <Input
-                      value={cat.id}
-                      onChange={(e) =>
-                        handleInputChange(index, "id", e.target.value)
-                      }
-                      disabled={cat.isSaved}
-                      className={`h-9 text-center text-xs font-mono rounded-md border-stone-200 bg-white shadow-sm ${
-                        !cat.isSaved ? "border-emerald-300" : ""
-                      }`}
-                    />
-                  </TableCell>
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
-                  <TableCell className="p-2">
-                    <Input
-                      value={cat.name}
-                      onChange={(e) =>
-                        handleInputChange(index, "name", e.target.value)
-                      }
-                      className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm ${
-                        !cat.isSaved ? "border-emerald-300" : ""
-                      }`}
-                    />
-                  </TableCell>
-
-                  <TableCell className="text-center p-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(index, cat.id)}
-                      className="text-stone-300 hover:text-red-500 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              <TableRow
-                className="cursor-pointer hover:bg-stone-50 border-t-2 border-dashed"
-                onClick={handleAddRow}
-              >
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-6 text-stone-400"
-                >
-                  <Plus className="inline-block mr-2 h-5 w-5" />새 카테고리 추가
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+      {/* ===== ADD ===== */}
+      <div
+        onClick={() => router.push("/resources/tools/new")}
+        className="cursor-pointer text-center py-6 text-stone-400 hover:bg-slate-50 border border-dashed rounded-lg"
+      >
+        <Plus className="inline-block mr-2 h-5 w-5" />새 카테고리 추가
       </div>
     </div>
   );
