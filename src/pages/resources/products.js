@@ -1,8 +1,4 @@
-import { bulkUpsertProducts } from "@/api/product-api";
 import { getProductTasks } from "@/api/product-api";
-import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
-import ProductEditModal from "@/components/layout/modal/productEdit";
-import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
@@ -10,45 +6,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { useToken } from "@/stores/account-store";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useResourcesStore } from "@/stores/resources-store";
-import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
+import { useToken } from "@/stores/account-store";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function ResourcesPage() {
-  const [modal, setModal] = useState(false);
-  const [pendingProducts, setPendingProducts] = useState([]);
-
   const [tasksMap, setTasksMap] = useState({});
-
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [editOpen, setEditOpen] = useState(false);
 
   const token = useToken((state) => state.token);
   const { products, loading, fetchProducts } = useResourcesStore();
 
+  const router = useRouter();
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  /* ================= 저장 ================= */
-
-  const handleFinalSave = async () => {
-    if (pendingProducts.length === 0) return;
-
-    await bulkUpsertProducts([...products, ...pendingProducts], token);
-
-    setPendingProducts([]);
-    fetchProducts();
-  };
-
-  /* ================= 공정 불러오기 ================= */
 
   const loadTasks = async (productId) => {
     if (tasksMap[productId]) return;
@@ -61,48 +40,49 @@ export default function ResourcesPage() {
     }));
   };
 
-  const gridCols = "grid grid-cols-[15%_40%_30%_15%] w-full items-center";
+  const gridCols = "grid grid-cols-[20%_65%_15%] w-full items-center";
+
+  const active = "text-indigo-400 font-semibold";
+  const normal = "text-stone-500 hover:text-indigo-600 transition";
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-stone-600">자료실</h1>
+    <div className="space-y-3">
+      <Breadcrumb>
+        <BreadcrumbList className="text-lg">
+          <BreadcrumbItem>
+            <Link
+              href="/resources/products"
+              className={
+                router.pathname === "/resources/products" ? active : normal
+              }
+            >
+              품목
+            </Link>
+          </BreadcrumbItem>
 
-      <div className="rounded-lg border bg-white shadow-sm">
-        {/* ================= ACTION BAR ================= */}
+          <BreadcrumbSeparator> | </BreadcrumbSeparator>
 
-        <div className="flex justify-end gap-2 px-4 py-3 border-b bg-white">
-          <Button
-            size="sm"
-            onClick={() => setModal(true)}
-            className="bg-indigo-900 hover:bg-indigo-500"
-          >
-            파일 추가
-            <FileInput className="ml-1 h-4 w-4" />
-          </Button>
+          <BreadcrumbItem>
+            <Link
+              href="/resources/tools"
+              className={
+                router.pathname === "/resources/tools" ? active : normal
+              }
+            >
+              도구
+            </Link>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-          <Button
-            size="sm"
-            onClick={handleFinalSave}
-            disabled={pendingProducts.length === 0}
-            className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
-          >
-            저장
-            <Save className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* ================= HEADER ================= */}
-
+      <div className="rounded-lg border bg-white w-[95%] md:w-[70%] xl:w-[80%] mx-auto shadow-sm">
         <div className="border-b bg-stone-50 px-4 py-2 text-sm font-medium text-stone-600">
           <div className={gridCols}>
             <div>제품명</div>
             <div>설명</div>
             <div>업로드 날짜</div>
-            <div className="text-center">설정</div>
           </div>
         </div>
-
-        {/* ================= PRODUCT LIST ================= */}
 
         <Accordion type="multiple" className="w-full">
           {loading && (
@@ -118,11 +98,11 @@ export default function ResourcesPage() {
                 value={product.id}
                 className="border-b"
               >
-                <AccordionTrigger className="px-4 py-2 hover:bg-stone-50 transition">
-                  <div
-                    className={gridCols}
-                    onClick={() => loadTasks(product.id)}
-                  >
+                <AccordionTrigger
+                  className="px-4 py-6 hover:bg-stone-50 transition"
+                  onClick={() => loadTasks(product.id)}
+                >
+                  <div className={gridCols}>
                     <div className="font-medium truncate">{product.name}</div>
 
                     <div className="truncate text-muted-foreground pl-4">
@@ -132,55 +112,8 @@ export default function ResourcesPage() {
                     <div className="pl-4">
                       {product.createdAt?.slice(0, 10)}
                     </div>
-
-                    {/* ===== ACTION MENU ===== */}
-                    <div
-                      className="text-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                          >
-                            <MoreHorizontalIcon />
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingProduct(product);
-                              setEditOpen(true);
-                            }}
-                          >
-                            수정
-                          </DropdownMenuItem>
-
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={async () => {
-                              const filtered = products.filter(
-                                (p) => p.id !== product.id,
-                              );
-
-                              await bulkUpsertProducts(filtered, token);
-                              fetchProducts();
-                            }}
-                          >
-                            삭제
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
                   </div>
                 </AccordionTrigger>
-
-                {/* ================= TASK AREA ================= */}
 
                 <AccordionContent className="bg-stone-50 px-6 py-4 space-y-2">
                   {!tasksMap[product.id] && (
@@ -204,8 +137,11 @@ export default function ResourcesPage() {
                       </div>
 
                       <div className="text-right text-xs text-stone-500">
-                        <div>{task.toolCategory.name}</div>
-                        <div>{task.duration}분</div>
+                        <div className="text-right text-xs text-stone-500">
+                          <div>{task.toolCategoryId}</div>
+
+                          <div>{task.duration}분</div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -220,33 +156,6 @@ export default function ResourcesPage() {
             ))}
         </Accordion>
       </div>
-
-      {/* ================= UPLOAD MODAL ================= */}
-
-      <ResoucesUpload
-        open={modal}
-        onClose={() => setModal(false)}
-        onAddPending={(list) =>
-          setPendingProducts((prev) => [...prev, ...list])
-        }
-      />
-
-      {/* ================= EDIT MODAL ================= */}
-
-      <ProductEditModal
-        open={editOpen}
-        product={editingProduct}
-        onClose={() => setEditOpen(false)}
-        onSaved={async (data) => {
-          const updated = products.map((p) =>
-            p.id === editingProduct.id ? { ...p, ...data } : p,
-          );
-
-          await bulkUpsertProducts(updated, token);
-          fetchProducts();
-          setEditOpen(false);
-        }}
-      />
     </div>
   );
 }
