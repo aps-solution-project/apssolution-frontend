@@ -98,7 +98,7 @@ export default function ToolCategoryPage() {
   };
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4">
       <h1 className="text-2xl font-bold text-stone-600">도구 카테고리 관리</h1>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -132,15 +132,13 @@ export default function ToolCategoryPage() {
                 <TableHead className="w-[80px] text-center text-stone-600">
                   상태
                 </TableHead>
-                <TableHead className="w-[40%] text-stone-600">
+                <TableHead className="w-[40%] text-center text-stone-600">
                   카테고리 ID (영문)
                 </TableHead>
-                <TableHead className="text-stone-600">
+                <TableHead className="text-center text-stone-600">
                   카테고리 이름 (한글)
                 </TableHead>
-                <TableHead className="w-[100px] text-center text-stone-600">
-                  삭제
-                </TableHead>
+                <TableHead className="w-[100px] text-center text-stone-600"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -168,8 +166,7 @@ export default function ToolCategoryPage() {
                       onChange={(e) =>
                         handleInputChange(index, "id", e.target.value)
                       }
-                      disabled={cat.isSaved}
-                      className={`h-9 text-center text-xs font-mono rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
+                      className={`h-9 text-center text-xs rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !cat.isSaved ? "border-emerald-300" : ""
                       }`}
                     />
@@ -206,7 +203,7 @@ export default function ToolCategoryPage() {
               >
                 <TableCell
                   colSpan={4}
-                  className="text-center py-6 text-stone-400 group-hover:text-emerald-600 font-medium"
+                  className="text-center text-stone-400 group-hover:text-emerald-600 font-medium"
                 >
                   <Plus className="inline-block mr-2 h-5 w-5" /> 새 카테고리
                   추가
