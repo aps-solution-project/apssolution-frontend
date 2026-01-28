@@ -7,7 +7,7 @@ import { SquarePen } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function AnnouncementDetailPage() {
+export default function CommunityDetailPage() {
   const router = useRouter();
   const { noticeId } = router.query;
   const [notice, setNotice] = useState(null);
@@ -29,10 +29,10 @@ export default function AnnouncementDetailPage() {
 
   function handleDelete(e) {
     e.preventDefault();
-    if (!confirm("정말로 공지사항을 삭제하시겠습니까?")) return;
+    if (!confirm("정말로 게시글을 삭제하시겠습니까?")) return;
     console.log("Delete notice:", noticeId);
     deleteNotice(token, noticeId).then(() => {
-      window.alert("공지사항이 성공적으로 삭제되었습니다.");
+      window.alert("게시글이 성공적으로 삭제되었습니다.");
       router.push("/notice/announcements");
     });
   }
