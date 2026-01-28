@@ -112,7 +112,7 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
       if (obj.profileImageUrl) {
         const url = obj.profileImageUrl.startsWith("http")
           ? obj.profileImageUrl
-          : `http://192.168.0.17:8080${obj.profileImageUrl}`;
+          : `http://192.168.0.20:8080${obj.profileImageUrl}`;
         setPreview(url);
         console.log("profile image url:", url);
       } else {

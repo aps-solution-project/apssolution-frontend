@@ -48,15 +48,17 @@ export default function ToolCategoryPage() {
     setCategories(updated);
   };
 
-  // 3. 행 삽입 (추가)
   const handleAddRow = () => {
-    setCategories([...categories, { id: "", name: "", isSaved: false }]);
+    const newRow = {
+      id: "",
+      name: "",
+      isSaved: false,
+    };
+
+    setCategories([newRow, ...categories]);
   };
 
   // 4. 단건 삭제 (카테고리는 즉시 삭제 혹은 필터링 후 저장)
-  // 여기서는 편의상 "전체 저장" 버튼 없이 즉시 삭제 API를 호출하거나,
-  // 리스트에서만 빼고 나중에 한꺼번에 처리할 수 있습니다.
-  // 카테고리 특성상 '단건 처리'가 안전하므로 삭제는 즉시 호출로 구현해 드립니다.
   const handleDelete = async (index, categoryId) => {
     if (!categoryId) {
       // 새로 추가한 빈 행인 경우 리스트에서만 제거
@@ -64,11 +66,7 @@ export default function ToolCategoryPage() {
       return;
     }
 
-    if (
-      confirm(
-        `[${categoryId}] 카테고리를 삭제하시겠습니까?\n실제 삭제는 상단의 '저장' 버튼을 눌러야 반영됩니다.`,
-      )
-    ) {
+    if (confirm(`[${categoryId}] 카테고리를 삭제하시겠습니까?`)) {
       try {
         await deleteToolCategory(categoryId, token);
         alert("삭제되었습니다.");
@@ -79,21 +77,28 @@ export default function ToolCategoryPage() {
     }
   };
 
-  // 5. 저장 (수정되거나 새로 추가된 항목만 필터링해서 처리)
-  const handleSaveAll = async () => {
-    const targets = categories.filter((c) => !c.isSaved);
-    if (targets.length === 0) return alert("수정된 내용이 없습니다.");
+  // 5. 저장 (단 건 등록 로직으로 단순화)
+  const handleSave = async () => {
+    const newCat = categories.find((c) => !c.isSaved);
+
+    if (!newCat) return; // 혹은 alert("등록할 내용이 없습니다.");
+
+    if (!newCat.id.trim() || !newCat.name.trim()) {
+      alert("ID와 이름을 모두 입력해주세요.");
+      return;
+    }
 
     try {
-      // 카테고리는 벌크 업서트 API가 따로 없다면 반복문으로 처리하거나
-      // 현재는 createToolCategory를 순회하며 호출합니다.
-      for (const cat of targets) {
-        await createToolCategory({ categoryId: cat.id, name: cat.name }, token);
-      }
-      alert("모든 변경사항이 저장되었습니다.");
+      await createToolCategory(
+        { categoryId: newCat.id, name: newCat.name },
+        token,
+      );
+
+      alert("카테고리가 등록되었습니다.");
       loadCategories();
     } catch (err) {
-      alert("저장 중 오류: " + err.message);
+      console.error("저장 에러:", err);
+      alert("저장 중 오류: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -116,7 +121,7 @@ export default function ToolCategoryPage() {
               새로고침
             </Button>
             <Button
-              onClick={handleSaveAll}
+              onClick={handleSave}
               className="bg-emerald-600 hover:bg-emerald-500"
             >
               저장
@@ -142,6 +147,21 @@ export default function ToolCategoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {/* 1. 새 행 추가 버튼: 신규 데이터가 없을 때만 표시 */}
+              {!categories.some((cat) => !cat.isSaved) && (
+                <TableRow
+                  className="cursor-pointer hover:bg-emerald-50 border-b-2 border-dashed group transition-colors"
+                  onClick={handleAddRow}
+                >
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-stone-400 group-hover:text-emerald-600 font-medium py-4"
+                  >
+                    <Plus className="inline-block mr-2 h-5 w-5" /> 새 카테고리
+                    추가
+                  </TableCell>
+                </TableRow>
+              )}
               {categories.map((cat, index) => (
                 <TableRow
                   key={index}
@@ -162,12 +182,15 @@ export default function ToolCategoryPage() {
                   {/* 카테고리 ID 셀 - 테두리 추가 */}
                   <TableCell className="p-2">
                     <Input
+                      readOnly={cat.isSaved}
                       value={cat.id}
                       onChange={(e) =>
                         handleInputChange(index, "id", e.target.value)
                       }
-                      className={`h-9 text-center text-xs rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
-                        !cat.isSaved ? "border-emerald-300" : ""
+                      className={`h-9 text-center text-xs rounded-md border-stone-200 shadow-sm transition-all ${
+                        cat.isSaved
+                          ? "bg-stone-100 text-stone-500 cursor-not-allowed border-none shadow-none" // 저장된 상태: 회색 배경, 커서 금지
+                          : "bg-white border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" // 신규 상태
                       }`}
                     />
                   </TableCell>
@@ -175,12 +198,15 @@ export default function ToolCategoryPage() {
                   {/* 카테고리 이름 셀 - 테두리 추가 */}
                   <TableCell className="p-2">
                     <Input
+                      readOnly={cat.isSaved}
                       value={cat.name}
                       onChange={(e) =>
                         handleInputChange(index, "name", e.target.value)
                       }
-                      className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
-                        !cat.isSaved ? "border-emerald-300" : ""
+                      className={`h-9 text-center text-sm rounded-md border-stone-200 shadow-sm transition-all ${
+                        cat.isSaved
+                          ? "bg-stone-100 text-stone-500 cursor-not-allowed border-none shadow-none" // 저장된 상태
+                          : "bg-white border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" // 신규 상태
                       }`}
                     />
                   </TableCell>
@@ -190,25 +216,13 @@ export default function ToolCategoryPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(index, cat.id)}
-                      className="text-stone-300 hover:text-red-500 hover:bg-red-50"
+                      className="text-stone-300 hover:bg-red-50"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow
-                className="cursor-pointer hover:bg-stone-50 border-t-2 border-dashed group transition-colors"
-                onClick={handleAddRow}
-              >
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-stone-400 group-hover:text-emerald-600 font-medium"
-                >
-                  <Plus className="inline-block mr-2 h-5 w-5" /> 새 카테고리
-                  추가
-                </TableCell>
-              </TableRow>
             </TableBody>
           </Table>
         </div>

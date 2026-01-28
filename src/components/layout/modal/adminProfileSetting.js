@@ -74,7 +74,7 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
         setProfileUrl(
           obj.profileImageUrl.startsWith("http")
             ? obj.profileImageUrl
-            : `http://192.168.0.17:8080${obj.profileImageUrl}`,
+            : `http://192.168.0.20:8080${obj.profileImageUrl}`,
         );
       } else {
         setProfileUrl(null);

@@ -1,4 +1,4 @@
-const serverAddr = "http://192.168.0.17:8080";
+const serverAddr = "http://192.168.0.20:8080";
 
 async function postScenario(token, data) {
   const resp = await fetch(`${serverAddr}/api/scenarios`, {
