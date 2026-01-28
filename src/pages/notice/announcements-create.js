@@ -1,18 +1,25 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { Input } from "@/components/ui/input";
+import { createNotice } from "@/api/notice-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Editor from "@/components/ui/editor";
+import { Input } from "@/components/ui/input";
+import { useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
+import { useState } from "react";
 
 export default function AnnouncementsCreatePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const { token } = useToken();
 
   const handleSave = () => {
     console.log({ title, content });
-    router.push("/notice/announcements");
+    createNotice(token, { title, content }).then((obj) => {
+      console.log("Created notice:", obj);
+      window.alert("공지사항이 성공적으로 생성되었습니다.");
+      router.push("/notice/announcements");
+    });
   };
 
   return (

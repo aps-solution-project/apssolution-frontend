@@ -44,6 +44,7 @@ export default function Editor({ value, onChange }) {
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    immediatelyRender: false,
   });
 
   /** ✅ 외부 value 변경 시 에디터 내용 동기화 */
