@@ -1,4 +1,4 @@
-const URL = "http://192.168.0.10:8080";
+const URL = "http://192.168.0.20:8080";
 
 async function createNotice(token, data) {
   const formData = new FormData();

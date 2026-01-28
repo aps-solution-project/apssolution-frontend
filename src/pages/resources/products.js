@@ -1,165 +1,265 @@
-import { bulkUpsertProducts } from "@/api/product-api";
-import ResoucesUpload from "@/components/layout/modal/resourcesUpload";
-import { Button } from "@/components/ui/button";
+import { getProductTasks } from "@/api/product-api";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToken } from "@/stores/account-store";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useResourcesStore } from "@/stores/resources-store";
-import { FileInput, MoreHorizontalIcon, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useToken } from "@/stores/account-store";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+
+const PAGE_SIZE = 10;
+const GRID_COLS = "grid-cols-[15%_25%_35%_10%_5%]";
 
 export default function ResourcesPage() {
-  const [modal, setModal] = useState(false);
-  const [pendingProducts, setPendingProducts] = useState([]);
+  const [tasksMap, setTasksMap] = useState({});
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState(null);
 
   const token = useToken((state) => state.token);
   const { products, loading, fetchProducts } = useResourcesStore();
+  const router = useRouter();
+
+  const isProducts = router.pathname === "/resources/products";
+  const isTools = router.pathname === "/resources/tools";
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // 저장 버튼
-  const handleFinalSave = async () => {
-    if (pendingProducts.length === 0) return;
+  const loadTasks = async (productId) => {
+    if (tasksMap[productId]) return;
 
-    try {
-      await bulkUpsertProducts([...products, ...pendingProducts], token);
-
-      setPendingProducts([]);
-      fetchProducts();
-    } catch (e) {
-      alert(e.message);
-    }
+    const data = await getProductTasks(productId, token);
+    setTasksMap((prev) => ({
+      ...prev,
+      [productId]: data.tasks || [],
+    }));
   };
+
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+    setPage(1);
+  };
+
+  const processed = useMemo(() => {
+    const filtered = products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.toLowerCase()),
+    );
+
+    return filtered.sort((a, b) => {
+      const v1 = a[sortKey];
+      const v2 = b[sortKey];
+      if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+      if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+      return 0;
+    });
+  }, [products, search, sortKey, sortDir]);
+
+  const totalPages = Math.ceil(processed.length / PAGE_SIZE);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const pageData = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return processed.slice(start, start + PAGE_SIZE);
+  }, [processed, page]);
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-stone-600">자료실</h1>
-
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            레시피 자료를 확인할 수 있습니다.
-          </p>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setModal(true)}
-              className="bg-indigo-900 hover:bg-indigo-500"
-            >
-              파일 추가
-              <FileInput className="ml-2 h-4 w-4" />
-            </Button>
-
-            <Button
-              onClick={handleFinalSave}
-              disabled={pendingProducts.length === 0}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
-            >
-              저장
-              <Save className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+      <div className="flex justify-between items-center">
+        <div className="flex gap-8 text-sm font-medium">
+          <Link
+            href="/resources/products"
+            className={isProducts ? "text-indigo-600" : "text-stone-400"}
+          >
+            품목
+          </Link>
+          <Link
+            href="/resources/tools"
+            className={isTools ? "text-indigo-600" : "text-stone-400"}
+          >
+            카테고리
+          </Link>
         </div>
 
-        <Table className="table-fixed w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[15%]">제품명</TableHead>
-              <TableHead className="w-[40%]">설명</TableHead>
-              <TableHead className="w-[30%]">업로드 날짜</TableHead>
-              <TableHead className="w-[15%] text-center">설정</TableHead>
-            </TableRow>
-          </TableHeader>
+        <div className="flex gap-2 items-center">
+          <input
+            placeholder="검색..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="border rounded-lg px-3 py-2 text-sm w-64"
+          />
 
-          <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  불러오는 중...
-                </TableCell>
-              </TableRow>
-            )}
-
-            {/* 저장 대기 데이터 */}
-            {pendingProducts.map((product, idx) => (
-              <TableRow key={`pending-${idx}`} className="bg-emerald-50">
-                <TableCell className="font-medium truncate">
-                  {product.name}
-                </TableCell>
-
-                <TableCell className="text-muted-foreground truncate">
-                  {product.description}
-                </TableCell>
-
-                <TableCell className="text-emerald-700 font-medium">
-                  저장 대기
-                </TableCell>
-
-                <TableCell className="text-center text-emerald-600">
-                  신규
-                </TableCell>
-              </TableRow>
-            ))}
-
-            {/* 기존 데이터 */}
-            {!loading &&
-              products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium truncate">
-                    {product.name}
-                  </TableCell>
-
-                  <TableCell className="text-muted-foreground truncate">
-                    {product.description}
-                  </TableCell>
-
-                  <TableCell>{product.createdAt?.slice(0, 10)}</TableCell>
-
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8">
-                          <MoreHorizontalIcon />
-                        </Button>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>수정</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive">
-                          삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+          <Button
+            size="sm"
+            disabled={!selectedId}
+            onClick={() =>
+              selectedId && router.push(`/resources/products/${selectedId}`)
+            }
+            className="flex gap-1"
+          >
+            <Pencil size={14} />
+            수정
+          </Button>
+        </div>
       </div>
 
-      <ResoucesUpload
-        open={modal}
-        onClose={() => setModal(false)}
-        onAddPending={(list) =>
-          setPendingProducts((prev) => [...prev, ...list])
-        }
-      />
+      <div
+        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+      >
+        <Header label="ID" onClick={() => toggleSort("id")} />
+        <Header label="제품명" onClick={() => toggleSort("name")} />
+        <Header label="설명" onClick={() => toggleSort("description")} />
+        <Header label="상태" onClick={() => toggleSort("active")} />
+        <Header label="등록일" onClick={() => toggleSort("createdAt")} />
+      </div>
+
+      <Accordion type="multiple" className="border border-t-0 rounded-b-lg">
+        {loading && (
+          <div className="py-10 text-center text-stone-400">불러오는 중...</div>
+        )}
+
+        {!loading &&
+          pageData.map((product) => (
+            <AccordionItem
+              key={product.id}
+              value={String(product.id)}
+              className="border-b last:border-b-0"
+            >
+              <AccordionTrigger
+                onClick={() => {
+                  setSelectedId(product.id);
+                  loadTasks(product.id);
+                }}
+                className={`px-6 py-3 transition ${
+                  selectedId === product.id
+                    ? "bg-indigo-50"
+                    : "hover:bg-slate-50"
+                }`}
+              >
+                <div
+                  className={`grid ${GRID_COLS} w-full text-sm items-center`}
+                >
+                  <div className="text-stone-500">{product.id}</div>
+                  <div className="font-medium truncate">{product.name}</div>
+                  <div className="text-stone-500 truncate pr-3">
+                    {product.description}
+                  </div>
+                  <div>
+                    {product.active ? (
+                      <span className="text-emerald-600 text-xs font-medium">
+                        ● Active
+                      </span>
+                    ) : (
+                      <span className="text-rose-500 text-xs font-medium">
+                        ● Inactive
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-stone-400 text-xs">
+                    {product.createdAt?.slice(0, 10)}
+                  </div>
+                </div>
+              </AccordionTrigger>
+
+              <AccordionContent className="bg-slate-50/40">
+                {tasksMap[product.id]?.map((task) => (
+                  <div
+                    key={task.id}
+                    className="mx-6 my-2 bg-white rounded-lg px-4 py-3 shadow-sm flex justify-between"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {task.seq}. {task.name}
+                      </div>
+                      <div className="text-xs text-stone-400">
+                        {task.description}
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-stone-500 text-right space-y-1">
+                      <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded">
+                        Tool {task.toolCategoryId}
+                      </span>
+                      <div>{task.duration} min</div>
+                    </div>
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+      </Accordion>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={page === i + 1}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+    </div>
+  );
+}
+
+function Header({ label, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 select-none"
+    >
+      {label}
     </div>
   );
 }

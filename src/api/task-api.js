@@ -1,4 +1,4 @@
-const serverAddr = "http://192.168.0.10:8080";
+const serverAddr = "http://192.168.0.20:8080";
 
 async function upsertTasks(token, tasks) {
   const resp = await fetch(`${serverAddr}/api/tasks`, {
