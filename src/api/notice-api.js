@@ -1,11 +1,7 @@
 const URL = "http://192.168.0.20:8080";
 
-async function createNotice(token, data) {
-  const formData = new FormData();
-  formData.append("title", data.title);
-  formData.append("content", data.content);
-  // formData.append("scenarioId", data.scenarioId);
-  // formData.append("attachment", data.attachment);
+async function createNotice(token, formData) {
+  // 이미 formData가 밖에서 생성되어 들어오므로, 내부에서 새로 만들 필요가 없습니다.
   const resp = await fetch(`${URL}/api/notices`, {
     method: "POST",
     headers: {
@@ -13,6 +9,7 @@ async function createNotice(token, data) {
     },
     body: formData,
   });
+
   if (!resp.ok) {
     throw new Error("공지사항 생성에 실패했습니다.");
   }

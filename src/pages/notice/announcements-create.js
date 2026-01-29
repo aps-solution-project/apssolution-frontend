@@ -19,7 +19,7 @@ export default function AnnouncementsCreatePage() {
 
     // 파일 배열 추가
     files.forEach((file) => {
-      formData.append("attachments", file);
+      formData.append("attachment", file);
     });
 
     try {

@@ -1,5 +1,5 @@
-import { getPostDetail, editWorkerPost } from "@/api/community-api"; // ✅ 사원용 API로 교체
-import CommunityForm from "@/components/community/CommunityForm"; // ✅ 사원용 폼으로 교체
+import { getPostDetail, editWorkerPost } from "@/api/community-api"; //  사원용 API로 교체
+import CommunityForm from "@/components/community/CommunityForm"; //  사원용 폼으로 교체
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";

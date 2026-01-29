@@ -91,8 +91,18 @@ export default function NoticeForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-
-        <Editor value={content} onChange={setContent} />
+        <div
+          className="min-h-[400px] border rounded-md focus-within:ring-1 focus-within:ring-slate-400 cursor-text"
+          onClick={() => {
+            // 에디터의 빈 공간을 눌러도 포커싱이 되도록 강제 클릭 이벤트 (선택 사항)
+            const editorInput =
+              document.querySelector(".ql-editor") ||
+              document.querySelector('[contenteditable="true"]');
+            if (editorInput) editorInput.focus();
+          }}
+        >
+          <Editor value={content} onChange={setContent} />
+        </div>
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel}>
