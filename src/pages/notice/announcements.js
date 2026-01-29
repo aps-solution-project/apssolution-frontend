@@ -1,4 +1,4 @@
-import { getNotices } from "@/api/notice-page";
+import { getNotices } from "@/api/notice-api";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -27,8 +27,17 @@ export default function AnnouncementsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">공지사항</h1>
-        <Button onClick={() => router.push("/notice/announcements-create")}>
+        <div className="flex items-end gap-3">
+          <h1 className="text-2xl font-bold">공지사항</h1>
+          <span className="text-sm font-medium text-muted-foreground pb-1">
+            전체{" "}
+            <span className="text-blue-600 font-bold">{notices.length}</span>건
+          </span>
+        </div>
+        <Button
+          className="bg-indigo-900 hover:bg-indigo-500 text-white cursor-pointer"
+          onClick={() => router.push("/notice/announcements-create")}
+        >
           공지 작성
         </Button>
       </div>
@@ -54,9 +63,7 @@ export default function AnnouncementsPage() {
               <TableCell className="font-medium">{notice.title}</TableCell>
               <TableCell>{notice.writer.id}</TableCell>
               <TableCell>
-                <span>
-                  {notice.createdAt.split("T")[0]}
-                </span>
+                <span>{notice.createdAt.split("T")[0]}</span>
               </TableCell>
             </TableRow>
           ))}
