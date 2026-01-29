@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
-
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import Header from "./Header";
 import Link from "next/link";
 
@@ -63,6 +63,7 @@ const sections = [
 ];
 
 export default function SideBar({ children }) {
+  useAuthGuard();
   return (
     <SidebarProvider>
       <div className="flex h-screen w-screen">

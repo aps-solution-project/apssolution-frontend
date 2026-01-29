@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { LogOut, Menu, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import { useRouter } from "next/router";
 import ProfileEditModal from "./modal/profileSetting";
 
 export default function Header() {
+  useAuthGuard();
   const { toggleSidebar } = useSidebar();
   const router = useRouter();
 

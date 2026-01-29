@@ -12,6 +12,7 @@ import FilesUpload from "@/components/layout/modal/filesUpload";
 import { Button } from "@/components/ui/button";
 import { FileInput } from "lucide-react";
 import { useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 const invoices = [
   {
@@ -59,6 +60,7 @@ const invoices = [
 ];
 
 export default function ScenariosPage() {
+  useAuthGuard();
   const [modal, setModal] = useState(false);
   return (
     <div className="space-y-4">

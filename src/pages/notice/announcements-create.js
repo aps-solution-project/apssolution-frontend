@@ -3,8 +3,10 @@ import NoticeForm from "@/components/notice/NoticeForm";
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function AnnouncementsCreatePage() {
+  useAuthGuard();
   const router = useRouter();
   const { token } = useToken();
 

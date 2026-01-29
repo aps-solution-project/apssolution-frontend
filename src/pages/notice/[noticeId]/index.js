@@ -6,8 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { List, SquarePen } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function AnnouncementDetailPage() {
+  useAuthGuard();
   const router = useRouter();
   const { noticeId } = router.query;
   const [notice, setNotice] = useState(null);

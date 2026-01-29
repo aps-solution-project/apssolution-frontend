@@ -3,8 +3,10 @@ import CommunityForm from "@/components/community/CommunityForm"; // 새 컴포�
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function PostsCreatePage() {
+  useAuthGuard();
   const router = useRouter();
   const { token } = useToken();
 

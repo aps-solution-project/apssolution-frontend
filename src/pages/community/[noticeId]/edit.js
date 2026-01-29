@@ -3,8 +3,10 @@ import CommunityForm from "@/components/community/CommunityForm"; //  사원용 
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function CommunityEditPage() {
+  useAuthGuard(); // 사원 권한 확인
   const router = useRouter();
   const { noticeId } = router.query;
   const token = useToken((state) => state.token);
@@ -51,7 +53,7 @@ export default function CommunityEditPage() {
         files.forEach((file) => {
           if (file instanceof File) {
             // 백엔드 파라미터명이 'files'인지 'attachments'인지 확인 필요
-            formData.append("files", file); 
+            formData.append("files", file);
           }
         });
       }

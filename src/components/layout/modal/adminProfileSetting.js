@@ -85,6 +85,8 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
     });
   }, [account, token, open]);
 
+  if (!open || !account?.id) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-70 rounded-br-lg p-9 space-y-2 bg-stone-50 shadow border text-sm">
