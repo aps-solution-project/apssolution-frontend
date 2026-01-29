@@ -11,9 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
 
 export default function ToolManagementPage() {
+  useAuthGuard();
   const [tools, setTools] = useState([]);
   const token = useToken((state) => state.token);
 

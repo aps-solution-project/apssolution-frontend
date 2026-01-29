@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreHorizontal, Search } from "lucide-react";
+import { Loader2, MoreHorizontal, Search } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import {
   flexRender,
@@ -31,6 +32,8 @@ import { useEffect, useState } from "react";
 import AdminProfileEditModal from "@/components/layout/modal/adminProfileSetting";
 
 export default function ManagementPage() {
+  useAuthGuard();
+
   const token = useToken((state) => state.token);
   const loginAccount = useAccount((state) => state.account);
 
@@ -41,6 +44,7 @@ export default function ManagementPage() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [newAccount, setNewAccount] = useState({
     name: "",
@@ -140,6 +144,8 @@ export default function ManagementPage() {
       return;
     }
 
+    setIsSaving(true);
+
     try {
       const res = await createAccount(
         {
@@ -164,6 +170,8 @@ export default function ManagementPage() {
       });
     } catch (e) {
       alert(e.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -278,9 +286,17 @@ export default function ManagementPage() {
 
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={handleSave}>
-                      저장
+                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          저장 중...
+                        </span>
+                      ) : (
+                        "저장"
+                      )}
                     </Button>
+
                     <Button
                       size="sm"
                       variant="outline"

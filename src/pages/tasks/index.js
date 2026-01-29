@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
 
 /**
@@ -24,6 +24,7 @@ import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
  * - 벌크 저장
  */
 export default function TaskManagementPage() {
+  useAuthGuard();
   const token = useToken((state) => state.token);
   const [tasks, setTasks] = useState([]);
 

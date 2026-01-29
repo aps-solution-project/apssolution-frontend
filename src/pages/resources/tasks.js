@@ -3,6 +3,7 @@ import { getTasks } from "@/api/task-api";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import SearchBar from "@/components/layout/SearchBar";
 import TaskColumnFilter from "@/components/layout/TaskColumnFilter";
@@ -22,6 +23,7 @@ const PAGE_SIZE = 15;
 const GRID_COLS = "grid-cols-[12%_12%_17%_10%_10%_36%]";
 
 export default function TaskPage() {
+  useAuthGuard(); // <-- 페이지 접근시 토큰 인증
   const token = useToken((state) => state.token);
   const router = useRouter();
 

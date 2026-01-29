@@ -8,6 +8,7 @@ import {
 
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import SearchBar from "@/components/layout/SearchBar";
 
@@ -28,6 +29,7 @@ const GRID_COLS = "grid-cols-[25%_50%_15%_10%]";
 const PAGE_SIZE = 10;
 
 export default function ToolCategoryPage() {
+  useAuthGuard();
   const token = useToken((state) => state.token);
   const [categories, setCategories] = useState([]);
   const [page, setPage] = useState(1);

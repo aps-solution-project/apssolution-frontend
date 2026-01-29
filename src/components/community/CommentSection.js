@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, Send } from "lucide-react";
 import CommentItem from "./CommentItem"; // 분리한 컴포넌트 임포트
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function CommentSection({ noticeId }) {
+  useAuthGuard();
   const { token } = useToken();
   const { account } = useAccount();
   const [comments, setComments] = useState([]);

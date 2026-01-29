@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useResourcesStore } from "@/stores/resources-store";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
@@ -29,6 +30,8 @@ const GRID_COLS_HEADER = "grid-cols-[15%_25%_35%_10%_5%]";
 const GRID_COLS = "grid-cols-[15%_26%_35%_10%_5%]";
 
 export default function ResourcesPage() {
+  useAuthGuard(); // <-- 페이지 접근시 토큰 인증
+
   const [tasksMap, setTasksMap] = useState({});
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("name");
