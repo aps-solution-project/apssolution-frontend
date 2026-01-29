@@ -11,6 +11,9 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
+
+import SearchBar from "@/components/layout/SearchBar";
+
 import {
   Pagination,
   PaginationContent,
@@ -22,7 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 10;
-const GRID_COLS = "grid-cols-[15%_25%_35%_10%_5%]";
+const GRID_COLS_HEADER = "grid-cols-[15%_25%_35%_10%_5%]";
+const GRID_COLS = "grid-cols-[15%_26%_35%_10%_5%]";
 
 export default function ResourcesPage() {
   const [tasksMap, setTasksMap] = useState({});
@@ -37,7 +41,9 @@ export default function ResourcesPage() {
   const router = useRouter();
 
   const isProducts = router.pathname === "/resources/products";
+  const isCategories = router.pathname === "/resources/toolCategories";
   const isTools = router.pathname === "/resources/tools";
+  const isProcesses = router.pathname === "/resources/tasks";
 
   useEffect(() => {
     fetchProducts();
@@ -103,27 +109,37 @@ export default function ResourcesPage() {
             품목
           </Link>
           <Link
+            href="/resources/toolCategories"
+            className={isCategories ? "text-indigo-600" : "text-stone-400"}
+          >
+            카테고리
+          </Link>
+          <Link
             href="/resources/tools"
             className={isTools ? "text-indigo-600" : "text-stone-400"}
           >
-            카테고리
+            도구
+          </Link>
+          <Link
+            href="/resources/tasks"
+            className={isProcesses ? "text-indigo-600" : "text-stone-400"}
+          >
+            공정
           </Link>
         </div>
 
         <div className="flex gap-2 items-center">
-          <input
-            placeholder="검색..."
+          <SearchBar
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
+            onChange={(v) => {
+              setSearch(v);
               setPage(1);
             }}
-            className="border rounded-lg px-3 py-2 text-sm w-64"
+            placeholder="검색"
           />
 
           <Button
             size="sm"
-            disabled={!selectedId}
             onClick={() =>
               selectedId && router.push(`/resources/products/${selectedId}`)
             }
@@ -136,7 +152,7 @@ export default function ResourcesPage() {
       </div>
 
       <div
-        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+        className={`grid ${GRID_COLS_HEADER}  px-6 py-3 bg-slate-200 text-xs font-semibold`}
       >
         <Header label="ID" onClick={() => toggleSort("id")} />
         <Header label="제품명" onClick={() => toggleSort("name")} />
@@ -203,7 +219,7 @@ export default function ResourcesPage() {
                       <div className="font-medium">
                         {task.seq}. {task.name}
                       </div>
-                      <div className="text-xs text-stone-400">
+                      <div className="text-xs text-stone-600">
                         {task.description}
                       </div>
                     </div>
@@ -212,7 +228,9 @@ export default function ResourcesPage() {
                       <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded">
                         Tool {task.toolCategoryId}
                       </span>
-                      <div>{task.duration} min</div>
+                      <div className="px-2 py-1 text-stone-700">
+                        {task.duration} 분
+                      </div>
                     </div>
                   </div>
                 ))}

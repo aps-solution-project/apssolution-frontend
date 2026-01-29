@@ -18,6 +18,13 @@ export default function CommunityDetailPage() {
 
   useEffect(() => {
     if (!noticeId || !token) return;
+    getNotice(token, noticeId).then((obj) => {
+      setNotice(obj);
+      if (account.accountId === obj.writer.id) {
+        setIsWriter(true);
+      }
+    });
+  }, [noticeId, token]);
 
     // ✅ 사원 게시판용 상세 조회 API 호출
     getPostDetail(token, noticeId)
