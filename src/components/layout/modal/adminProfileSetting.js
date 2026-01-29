@@ -12,6 +12,9 @@ import { useToken } from "@/stores/account-store";
 import { useEffect, useMemo, useState } from "react";
 
 export default function AdminProfileEditModal({ open, onOpenChange, account }) {
+  console.log("account:", account);
+  console.log("accountId:", account?.accountId);
+
   const token = useToken((s) => s.token);
 
   const [name, setName] = useState("");
@@ -41,7 +44,7 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
         workedAt,
       };
 
-      await updateEmployeeAccount(account.accountId, payload, token);
+      await updateEmployeeAccount(account.id, payload, token);
 
       onOpenChange(false);
     } catch (e) {
@@ -62,9 +65,9 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
   `;
 
   useEffect(() => {
-    if (!account?.accountId || !token || !open) return;
+    if (!account?.id || !token || !open) return;
 
-    getAccountDetail(token, account.accountId).then((obj) => {
+    getAccountDetail(token, account.id).then((obj) => {
       setName(obj.name || "");
       setRole(obj.role || "");
       setEmail(obj.email || "");
