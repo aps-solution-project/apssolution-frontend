@@ -6,6 +6,11 @@ import {
   deleteToolCategory,
 } from "@/api/tool-api";
 
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+import SearchBar from "@/components/layout/SearchBar";
+
 import {
   Pagination,
   PaginationContent,
@@ -15,11 +20,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import { Plus, Trash2, Save, Search } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useRouter } from "next/router";
 
 const GRID_COLS = "grid-cols-[25%_50%_15%_10%]";
 const PAGE_SIZE = 10;
@@ -33,7 +36,9 @@ export default function ToolCategoryPage() {
   const router = useRouter();
 
   const isProducts = router.pathname === "/resources/products";
-  const isTools = router.pathname === "/resources/toolCategories";
+  const isCategories = router.pathname === "/resources/toolCategories";
+  const isTools = router.pathname === "/resources/tools";
+  const isProcesses = router.pathname === "/resources/tasks";
 
   useEffect(() => {
     if (token) loadCategories();
@@ -65,10 +70,7 @@ export default function ToolCategoryPage() {
     const newCat = categories.find((c) => !c.isSaved);
     if (!newCat) return;
 
-    if (!newCat.id.trim() || !newCat.name.trim()) {
-      alert("ID와 이름을 모두 입력해주세요.");
-      return;
-    }
+    if (!newCat.id.trim() || !newCat.name.trim()) return;
 
     await createToolCategory(
       { categoryId: newCat.id, name: newCat.name },
@@ -108,7 +110,7 @@ export default function ToolCategoryPage() {
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <div className="flex gap-7 text-sm font-medium">
+        <div className="flex gap-8 text-sm font-medium">
           <Link
             href="/resources/products"
             className={isProducts ? "text-indigo-600" : "text-stone-400"}
@@ -117,26 +119,33 @@ export default function ToolCategoryPage() {
           </Link>
           <Link
             href="/resources/toolCategories"
-            className={isTools ? "text-indigo-600" : "text-stone-400"}
+            className={isCategories ? "text-indigo-600" : "text-stone-400"}
           >
             카테고리
+          </Link>
+          <Link
+            href="/resources/tools"
+            className={isTools ? "text-indigo-600" : "text-stone-400"}
+          >
+            도구
+          </Link>
+          <Link
+            href="/resources/tasks"
+            className={isProcesses ? "text-indigo-600" : "text-stone-400"}
+          >
+            공정
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="카테고리 검색"
-              className="pl-9 w-56 h-9 rounded-xl border-stone-300
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+          <SearchBar
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setPage(1);
+            }}
+            placeholder="카테고리 검색"
+          />
 
           {categories.some((c) => !c.isSaved) && (
             <Button size="sm" onClick={handleSave}>
@@ -167,7 +176,7 @@ export default function ToolCategoryPage() {
                 cat.isSaved ? "hover:bg-slate-50" : "bg-emerald-50/40"
               }`}
             >
-              <div className={`grid ${GRID_COLS} w-full items-center gap-2`}>
+              <div className={`grid ${GRID_COLS} w-full items-center`}>
                 {cat.isSaved ? (
                   <>
                     <div className="text-sm text-stone-500">{cat.id}</div>
@@ -177,25 +186,29 @@ export default function ToolCategoryPage() {
                   </>
                 ) : (
                   <>
-                    <Input
-                      value={cat.id}
-                      onChange={(e) =>
-                        handleInputChange(realIndex, "id", e.target.value)
-                      }
-                      placeholder="카테고리 ID"
-                      className="h-9 rounded-lg text-sm border-stone-300
-                                 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                    />
+                    <div className="pr-30">
+                      <Input
+                        value={cat.id}
+                        onChange={(e) =>
+                          handleInputChange(realIndex, "id", e.target.value)
+                        }
+                        placeholder="카테고리 ID"
+                        className="h-8 rounded-lg text-sm border-stone-300
+      focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
 
-                    <Input
-                      value={cat.name}
-                      onChange={(e) =>
-                        handleInputChange(realIndex, "name", e.target.value)
-                      }
-                      placeholder="카테고리 이름"
-                      className="h-9 rounded-lg text-sm border-stone-300
-                                 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                    />
+                    <div className="pr-90">
+                      <Input
+                        value={cat.name}
+                        onChange={(e) =>
+                          handleInputChange(realIndex, "name", e.target.value)
+                        }
+                        placeholder="카테고리 이름"
+                        className="h-8 rounded-lg text-sm border-stone-300
+      focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -246,7 +259,7 @@ export default function ToolCategoryPage() {
         <div
           onClick={handleAddRow}
           className="cursor-pointer py-4 rounded-xl border border-dashed text-sm text-stone-400 text-center
-                   hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-400 transition"
+            hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-400 transition"
         >
           <Plus className="inline-block mr-1 h-5 w-5" />새 카테고리 추가
         </div>

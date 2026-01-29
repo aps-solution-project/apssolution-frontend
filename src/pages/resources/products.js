@@ -10,7 +10,10 @@ import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Search } from "lucide-react";
+import { Pencil } from "lucide-react";
+
+import SearchBar from "@/components/layout/SearchBar";
+
 import {
   Pagination,
   PaginationContent,
@@ -20,10 +23,10 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const PAGE_SIZE = 10;
-const GRID_COLS = "grid-cols-[15%_25%_35%_10%_5%]";
+const GRID_COLS_HEADER = "grid-cols-[15%_25%_35%_10%_5%]";
+const GRID_COLS = "grid-cols-[15%_26%_35%_10%_5%]";
 
 export default function ResourcesPage() {
   const [tasksMap, setTasksMap] = useState({});
@@ -38,7 +41,9 @@ export default function ResourcesPage() {
   const router = useRouter();
 
   const isProducts = router.pathname === "/resources/products";
-  const isTools = router.pathname === "/resources/toolCategories";
+  const isCategories = router.pathname === "/resources/toolCategories";
+  const isTools = router.pathname === "/resources/tools";
+  const isProcesses = router.pathname === "/resources/tasks";
 
   useEffect(() => {
     fetchProducts();
@@ -105,29 +110,36 @@ export default function ResourcesPage() {
           </Link>
           <Link
             href="/resources/toolCategories"
-            className={isTools ? "text-indigo-600" : "text-stone-400"}
+            className={isCategories ? "text-indigo-600" : "text-stone-400"}
           >
             카테고리
+          </Link>
+          <Link
+            href="/resources/tools"
+            className={isTools ? "text-indigo-600" : "text-stone-400"}
+          >
+            도구
+          </Link>
+          <Link
+            href="/resources/tasks"
+            className={isProcesses ? "text-indigo-600" : "text-stone-400"}
+          >
+            공정
           </Link>
         </div>
 
         <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="검색"
-              className="pl-9 w-56 h-9 rounded-xl border-stone-300
-                         focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+          <SearchBar
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setPage(1);
+            }}
+            placeholder="검색"
+          />
+
           <Button
             size="sm"
-            disabled={!selectedId}
             onClick={() =>
               selectedId && router.push(`/resources/products/${selectedId}`)
             }
@@ -140,7 +152,7 @@ export default function ResourcesPage() {
       </div>
 
       <div
-        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+        className={`grid ${GRID_COLS_HEADER}  px-6 py-3 bg-slate-200 text-xs font-semibold`}
       >
         <Header label="ID" onClick={() => toggleSort("id")} />
         <Header label="제품명" onClick={() => toggleSort("name")} />
@@ -207,7 +219,7 @@ export default function ResourcesPage() {
                       <div className="font-medium">
                         {task.seq}. {task.name}
                       </div>
-                      <div className="text-xs text-stone-400">
+                      <div className="text-xs text-stone-600">
                         {task.description}
                       </div>
                     </div>
@@ -216,7 +228,9 @@ export default function ResourcesPage() {
                       <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded">
                         Tool {task.toolCategoryId}
                       </span>
-                      <div>{task.duration} min</div>
+                      <div className="px-2 py-1 text-stone-700">
+                        {task.duration} 분
+                      </div>
                     </div>
                   </div>
                 ))}
