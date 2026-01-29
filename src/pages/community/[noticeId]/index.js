@@ -19,14 +19,14 @@ export default function CommunityDetailPage() {
   useEffect(() => {
     if (!noticeId || !token) return;
 
-    // ✅ 중첩된 useEffect를 하나로 통합 및 문법 교정
     getPostDetail(token, noticeId)
       .then((obj) => {
         setPost(obj);
+        const myId = account?.accountId;
 
-        // ✅ 백엔드 GetAccountDetailResponse 필드명인 accountId로 비교
-        // 게시글 작성자의 ID(obj.writer.accountId)와 로그인 세션 ID를 비교합니다.
-        if (account?.accountId === obj.writer?.accountId) {
+        const writerId = obj.writer?.id;
+
+        if (myId && writerId && String(myId) === String(writerId)) {
           setIsWriter(true);
         }
       })
