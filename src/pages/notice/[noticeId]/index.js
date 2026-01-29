@@ -1,9 +1,13 @@
-import { deleteNotice, getNotice } from "@/api/notice-page";
+import { deleteNotice, getNotice } from "@/api/notice-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccount, useToken } from "@/stores/account-store";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { SquarePen } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@radix-ui/react-avatar";
+import { SquarePen, List } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -44,7 +48,7 @@ export default function AnnouncementDetailPage() {
           variant="outline"
           onClick={() => router.push("/notice/announcements")}
         >
-          ← 목록으로
+          <List className="h-4 w-4" /> 목록으로
         </Button>
 
         {isWriter && (

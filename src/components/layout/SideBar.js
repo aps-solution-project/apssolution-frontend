@@ -42,7 +42,7 @@ const sections = [
     items: [
       { label: "공지사항", href: "/notice/announcements" },
       { label: "자료실", href: "/resources/products" },
-      { label: "사원 게시판", href: "/community/index" },
+      { label: "사원 게시판", href: "/community/posts" },
     ],
   },
   {

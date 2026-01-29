@@ -98,7 +98,12 @@ export default function NoticeForm({
           <Button variant="outline" onClick={onCancel}>
             취소
           </Button>
-          <Button onClick={onSubmit}>{submitText}</Button>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-500 shadow-sm"
+            onClick={onSubmit}
+          >
+            {submitText}
+          </Button>
         </div>
       </CardContent>
     </Card>

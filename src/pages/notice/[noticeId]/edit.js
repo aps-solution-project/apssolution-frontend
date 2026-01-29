@@ -1,4 +1,4 @@
-import { getNotice, editNotice } from "@/api/notice-page";
+import { getNotice, editNotice } from "@/api/notice-api";
 import NoticeForm from "@/components/notice/NoticeForm";
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
