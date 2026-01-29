@@ -66,25 +66,26 @@ export const updateMyAccount = async (accountId, formData, token) => {
     const msg = await response.text();
     throw new Error(msg || "내 정보 수정에 실패했습니다.");
   }
-  window.alert("프로필이 수정되었습니다. 다시 로그인해주세요.");
+
   return response.json();
 };
 
 // 비밀번호 변경
 export const changeMyPassword = async (accountId, data, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}/pw`, {
+  const response = await fetch(`${URL}/api/accounts/${accountId}/password`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("비밀번호 변경에 실패했습니다.");
-    }
-    return response.json();
   });
+
+  if (!response.ok) {
+    throw new Error("비밀번호 변경에 실패했습니다.");
+  }
+
+  return response.text();
 };
 
 //사원 퇴사 처리

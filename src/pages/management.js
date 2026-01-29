@@ -255,6 +255,7 @@ export default function ManagementPage() {
                     }
                   >
                     <option value="WORKER">WORKER</option>
+                    <option value="PLANNER">PLANNER</option>
                     <option value="ADMIN">ADMIN</option>
                   </select>
                 </TableCell>

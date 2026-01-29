@@ -48,10 +48,7 @@ const sections = [
   {
     title: "도구",
     icon: Wrench,
-    items: [
-      { label: "도구 관리", href: "/tools" },
-      { label: "도구 카테고리 관리", href: "/tools/category" },
-    ],
+    items: [{ label: "도구 관리", href: "/tools" }],
   },
   {
     title: "작업 공정",

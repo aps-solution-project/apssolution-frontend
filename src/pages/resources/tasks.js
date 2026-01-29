@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-import { getAllTools } from "@/api/tool-api";
+import { useEffect, useMemo, useState } from "react";
+import { getTasks } from "@/api/task-api";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
 import SearchBar from "@/components/layout/SearchBar";
+import TaskColumnFilter from "@/components/layout/TaskColumnFilter";
 
 import {
   Pagination,
@@ -14,19 +15,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 
 const PAGE_SIZE = 15;
-const GRID_COLS = "grid-cols-[20%_30%_50%]";
+const GRID_COLS = "grid-cols-[12%_12%_17%_10%_10%_36%]";
 
-export default function ToolPage() {
-  const [tools, setTools] = useState([]);
+export default function TaskPage() {
+  const token = useToken((state) => state.token);
+  const router = useRouter();
+
+  const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const token = useToken((state) => state.token);
-  const router = useRouter();
+  const [productFilter, setProductFilter] = useState([]);
+  const [toolFilter, setToolFilter] = useState([]);
 
   const isProducts = router.pathname === "/resources/products";
   const isCategories = router.pathname === "/resources/toolCategories";
@@ -36,19 +40,37 @@ export default function ToolPage() {
   useEffect(() => {
     if (!token) return;
 
-    getAllTools(token).then((data) => {
-      setTools(data.tools || []);
+    getTasks(token).then((data) => {
+      setTasks(data.tasks || []);
     });
   }, [token]);
 
-  const filtered = useMemo(() => {
-    return tools.filter(
-      (t) =>
-        t.id.toLowerCase().includes(search.toLowerCase()) ||
-        t.category?.id?.toLowerCase().includes(search.toLowerCase()) ||
-        (t.description || "").toLowerCase().includes(search.toLowerCase()),
+  const productOptions = useMemo(() => {
+    return Array.from(new Set(tasks.map((t) => t.productId))).filter(Boolean);
+  }, [tasks]);
+
+  const toolOptions = useMemo(() => {
+    return Array.from(new Set(tasks.map((t) => t.toolCategoryId))).filter(
+      Boolean,
     );
-  }, [tools, search]);
+  }, [tasks]);
+
+  const filtered = useMemo(() => {
+    return tasks.filter((t) => {
+      const keyword =
+        t.id + t.productId + t.toolCategoryId + t.name + (t.description || "");
+
+      const matchSearch = keyword.toLowerCase().includes(search.toLowerCase());
+
+      const matchProduct =
+        productFilter.length === 0 || productFilter.includes(t.productId);
+
+      const matchTool =
+        toolFilter.length === 0 || toolFilter.includes(t.toolCategoryId);
+
+      return matchSearch && matchProduct && matchTool;
+    });
+  }, [tasks, search, productFilter, toolFilter]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
@@ -105,7 +127,7 @@ export default function ToolPage() {
 
           <Button
             size="sm"
-            onClick={() => router.push("/tools")}
+            onClick={() => router.push("/tasks")}
             className="flex gap-1"
           >
             <Pencil size={14} />
@@ -115,30 +137,59 @@ export default function ToolPage() {
       </div>
 
       <div
-        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
+        className={`grid ${GRID_COLS} px-4 py-1.5 bg-slate-200 text-xs font-semibold leading-tight`}
       >
-        <div>도구 ID</div>
-        <div>카테고리 ID</div>
-        <div>설명</div>
+        <div className="flex items-center gap-1">ID</div>
+
+        <div className="flex items-center gap-1">
+          <TaskColumnFilter
+            label="제품"
+            options={productOptions}
+            selected={productFilter}
+            onChange={(v) => {
+              setProductFilter(v);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-1">
+          <TaskColumnFilter
+            label="도구"
+            options={toolOptions}
+            selected={toolFilter}
+            onChange={(v) => {
+              setToolFilter(v);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-1">순서</div>
+        <div className="flex items-center gap-1">작업명</div>
+        <div className="flex items-center gap-1">설명</div>
       </div>
 
       <div className="border border-t-0 rounded-b-lg overflow-hidden">
-        {pageData.map((tool) => (
+        {pageData.map((t) => (
           <div
-            key={tool.id}
-            className={`grid ${GRID_COLS} px-6 py-3 items-center text-sm border-b transition hover:bg-slate-50`}
+            key={t.id}
+            className={`grid ${GRID_COLS} px-6 py-3 items-center text-sm border-b hover:bg-slate-100`}
           >
-            <div className="text-stone-600 font-medium">{tool.id}</div>
-            <div className="text-stone-500">{tool.category?.id || "-"}</div>
-            <div className="text-stone-700 truncate">
-              {tool.description || "-"}
+            <div className="font-medium text-stone-600">{t.id}</div>
+            <div className="text-stone-600">{t.productId}</div>
+            <div className="text-stone-600">{t.toolCategoryId}</div>
+            <div>{t.seq}</div>
+            <div className="truncate">{t.name}</div>
+            <div className="text-stone-400 truncate">
+              {t.description || "-"}
             </div>
           </div>
         ))}
 
         {pageData.length === 0 && (
           <div className="py-12 text-center text-stone-400">
-            검색 결과가 없습니다.
+            조건에 맞는 공정이 없습니다.
           </div>
         )}
       </div>
