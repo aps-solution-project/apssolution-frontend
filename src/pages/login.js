@@ -23,14 +23,10 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const user = await loginUser(id, pw);
+      const result = await loginUser(id, pw);
 
-      setToken(user.token);
-      setAccount({
-        id: user.accountId,
-        name: user.accountName,
-        role: user.role,
-      });
+      setToken(result.token);
+      setAccount(result.account);
 
       const redirect = router.query.redirect || "/scenarios";
       router.replace(redirect);

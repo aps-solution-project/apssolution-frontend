@@ -41,7 +41,7 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
         workedAt,
       };
 
-      await updateEmployeeAccount(account.id, payload, token);
+      await updateEmployeeAccount(account.accountId, payload, token);
 
       onOpenChange(false);
     } catch (e) {
@@ -62,9 +62,9 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
   `;
 
   useEffect(() => {
-    if (!account?.id || !token || !open) return;
+    if (!account?.accountId || !token || !open) return;
 
-    getAccountDetail(token, account.id).then((obj) => {
+    getAccountDetail(token, account.accountId).then((obj) => {
       setName(obj.name || "");
       setRole(obj.role || "");
       setEmail(obj.email || "");
@@ -127,6 +127,7 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
             <option value="">선택</option>
             <option value="ADMIN">ADMIN</option>
             <option value="WORKER">WORKER</option>
+            <option value="PLANNER">PLANNER</option>
           </select>
         </div>
 

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { LogOut, Menu, UserCog } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   DropdownMenu,
@@ -22,9 +22,8 @@ export default function Header() {
   const { toggleSidebar } = useSidebar();
   const router = useRouter();
 
-  const account = useAccount((state) => state.account);
   const { clearToken } = useToken();
-  const { clearAccount } = useAccount();
+  const { account, setAccount, clearAccount } = useAccount();
 
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -34,6 +33,9 @@ export default function Header() {
     router.push("/login");
   };
 
+  useEffect(() => {
+    console.log("profileOpen changed:", profileOpen);
+  }, [profileOpen]);
   return (
     <>
       <header className="sticky top-0 z-50 h-16 w-full border-b bg-background">
@@ -83,6 +85,7 @@ export default function Header() {
         open={profileOpen}
         onOpenChange={setProfileOpen}
         account={account}
+        setAccount={setAccount}
       />
     </>
   );

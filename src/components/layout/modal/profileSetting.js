@@ -17,14 +17,18 @@ import { useAccount, useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
-export default function ProfileEditModal({ open, onOpenChange, account }) {
+export default function ProfileEditModal({
+  open,
+  onOpenChange,
+  account,
+  setAccount,
+}) {
   const token = useToken((s) => s.token);
-  const setAccount = useAccount((s) => s.setAccount);
   const router = useRouter();
 
   const [email, setEmail] = useState("");
-  const [profileImage, setProfileImage] = useState(null); // File 객체
-  const [preview, setPreview] = useState(null); // 미리보기용 Data URL
+  const [profileImage, setProfileImage] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -39,18 +43,17 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
 
   const emailChanged = email !== account?.email || profileImage !== null;
 
-  const passwordValid = newPw.length >= 8 && newPw === newPwConfirm;
+  const passwordValid = newPw.length >= 6 && newPw === newPwConfirm;
 
-  // 이미지 선택 시 File 객체 저장 + 미리보기
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setProfileImage(file);
-
     const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result);
+
     reader.readAsDataURL(file);
+    reader.onload = () => setPreview(reader.result);
   };
 
   const handleProfileSave = async () => {
@@ -63,9 +66,14 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
       formData.append("email", email);
       if (profileImage) formData.append("profileImage", profileImage);
 
-      await updateMyAccount(account.id, formData, token);
+      await updateMyAccount(account.accountId, formData, token);
 
-      router.push("/login");
+      const updated = await getAccountDetail(token, account.accountId);
+      setAccount(updated);
+
+      onOpenChange(false);
+
+      alert("프로필이 수정되었습니다");
     } catch (e) {
       alert(e.message || "프로필 수정 중 오류가 발생했습니다.");
     } finally {
@@ -75,12 +83,15 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
 
   const handlePasswordChange = async () => {
     if (!oldPw) return alert("기존 비밀번호를 입력하세요");
-    if (!passwordValid) return alert("비밀번호는 8자 이상이고 일치해야 합니다");
+    if (!passwordValid) return alert("비밀번호는 6자 이상이고 일치해야 합니다");
 
     try {
       setLoading(true);
-
-      await changeMyPassword(account.id, { oldPw, newPw, newPwConfirm }, token);
+      await changeMyPassword(
+        account.accountId,
+        { oldPw, newPw, newPwConfirm },
+        token,
+      );
 
       setOldPw("");
       setNewPw("");
@@ -104,9 +115,11 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
   `;
 
   useEffect(() => {
-    if (!account?.id || !token || !open) return;
+    console.log(account.accountId);
+    console.log(!account?.accountId, !token, !open);
+    if (!account?.accountId || !token || !open) return;
 
-    getAccountDetail(token, account.id).then((obj) => {
+    getAccountDetail(token, account.accountId).then((obj) => {
       setEmail(obj.email || "");
 
       if (obj.profileImageUrl) {
@@ -135,7 +148,6 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* 프로필 이미지 */}
         <div className="flex flex-col items-center space-y-2">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 shadow">
             {preview ? (
@@ -162,7 +174,6 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
           </label>
         </div>
 
-        {/* 이메일 */}
         <div className="space-y-1">
           <p className="font-medium text-xs">이메일</p>
           <Input
@@ -179,14 +190,12 @@ export default function ProfileEditModal({ open, onOpenChange, account }) {
         </div>
 
         <Button
-          disabled={!emailChanged || !emailValid || loading}
           className="w-full h-9 rounded-lg bg-black disabled:opacity-40"
           onClick={handleProfileSave}
         >
           저장
         </Button>
 
-        {/* 비밀번호 */}
         <div className="border-t pt-3 space-y-2">
           <p className="font-medium text-xs">비밀번호 변경</p>
 

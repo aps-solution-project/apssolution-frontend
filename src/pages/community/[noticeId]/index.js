@@ -19,7 +19,7 @@ export default function CommunityDetailPage() {
     if (!noticeId || !token) return;
     getNotice(token, noticeId).then((obj) => {
       setNotice(obj);
-      if (account.id === obj.writer.id) {
+      if (account.accountId === obj.writer.id) {
         setIsWriter(true);
       }
     });
