@@ -2,12 +2,8 @@ import { deleteNotice, getNotice } from "@/api/notice-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccount, useToken } from "@/stores/account-store";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@radix-ui/react-avatar";
-import { SquarePen, List } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { List, SquarePen } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
