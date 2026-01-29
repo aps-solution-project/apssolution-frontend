@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Textarea } from "@/components/ui/textarea";
 import { BotMessageSquare, Trash2, CornerDownRight } from "lucide-react";
 
@@ -12,6 +13,8 @@ export default function CommentItem({
   handlePost,
   handleDelete,
 }) {
+  useAuthGuard(); // 페이지 접근시 토큰 인증
+
   const [isReplyInputOpen, setIsReplyInputOpen] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   // 댓글 접기 상태 추가 (기본값: 펼쳐짐)

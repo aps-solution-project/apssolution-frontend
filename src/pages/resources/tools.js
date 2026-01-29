@@ -3,7 +3,7 @@ import { getAllTools } from "@/api/tool-api";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
-
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import SearchBar from "@/components/layout/SearchBar";
 
 import {
@@ -21,6 +21,7 @@ const PAGE_SIZE = 15;
 const GRID_COLS = "grid-cols-[20%_30%_50%]";
 
 export default function ToolPage() {
+  useAuthGuard();
   const [tools, setTools] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
