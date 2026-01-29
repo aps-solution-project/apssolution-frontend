@@ -70,6 +70,17 @@ export default function Header() {
                 </DropdownMenuGroup>
 
                 <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/myInformation/myProfile")}
+                  >
+                    마이페이지
+                    <DropdownMenuShortcut>
+                      <UserCog className="h-4 w-4" />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
 
                 <DropdownMenuItem onClick={handleLogout}>
                   <span className="text-red-500">Logout</span>

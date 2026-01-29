@@ -10,8 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToken } from "@/stores/account-store";
 import { useEffect, useMemo, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function AdminProfileEditModal({ open, onOpenChange, account }) {
+  useAuthGuard();
   console.log("account:", account);
   console.log("accountId:", account?.accountId);
 
