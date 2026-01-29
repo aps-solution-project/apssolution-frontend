@@ -1,50 +1,45 @@
-import { deleteWorkerPost, getPostDetail } from "@/api/community-api"; // ✅ 사원 게시판 전용 API로 교체
-import CommentSection2 from "@/components/community/CommentSection";
+import { deleteWorkerPost, getPostDetail } from "@/api/community-api";
+import CommentSection from "@/components/community/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccount, useToken } from "@/stores/account-store";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { SquarePen, List, Trash2, Baby, Bot } from "lucide-react"; // 아이콘 추가
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SquarePen, List, Trash2, Baby } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function CommunityDetailPage() {
   const router = useRouter();
   const { noticeId } = router.query;
-  const [post, setPost] = useState(null); // notice -> post로 명칭 변경
+  const [post, setPost] = useState(null);
   const { token } = useToken();
-  const { account } = useAccount();
+  const { account } = useAccount(); // 백엔드에서 보낸 GetAccountDetailResponse 객체
   const [isWriter, setIsWriter] = useState(false);
 
   useEffect(() => {
     if (!noticeId || !token) return;
-    getNotice(token, noticeId).then((obj) => {
-      setNotice(obj);
-      if (account.accountId === obj.writer.id) {
-        setIsWriter(true);
-      }
-    });
-  }, [noticeId, token]);
 
-    // ✅ 사원 게시판용 상세 조회 API 호출
+    // ✅ 중첩된 useEffect를 하나로 통합 및 문법 교정
     getPostDetail(token, noticeId)
       .then((obj) => {
         setPost(obj);
-        if (account?.id === obj.writer?.id) {
+
+        // ✅ 백엔드 GetAccountDetailResponse 필드명인 accountId로 비교
+        // 게시글 작성자의 ID(obj.writer.accountId)와 로그인 세션 ID를 비교합니다.
+        if (account?.accountId === obj.writer?.accountId) {
           setIsWriter(true);
         }
       })
       .catch((err) => {
         console.error("데이터 로드 실패:", err);
       });
-  }, [noticeId, token, account?.id]);
+  }, [noticeId, token, account?.accountId]);
 
   if (!post) return null;
 
   function handleDelete() {
     if (!confirm("정말로 이 게시글을 삭제하시겠습니까?")) return;
 
-    // ✅ 사원 게시판용 삭제 API 호출
     deleteWorkerPost(token, noticeId)
       .then(() => {
         window.alert("게시글이 삭제되었습니다.");
@@ -68,7 +63,7 @@ export default function CommunityDetailPage() {
 
         {isWriter && (
           <Button
-            variant="destructive" // UI 통일성을 위해 destructive 사용
+            variant="destructive"
             onClick={handleDelete}
             className="gap-2"
           >
@@ -87,7 +82,6 @@ export default function CommunityDetailPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                // ✅ 경로 수정: /notice -> /community
                 onClick={() => router.push(`/community/${noticeId}/edit`)}
               >
                 <SquarePen className="h-5 w-5 text-muted-foreground" />
@@ -96,22 +90,22 @@ export default function CommunityDetailPage() {
           </div>
 
           <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
-            <Avatar className="h-10 w-10 overflow-hidden rounded-full border bg-muted flex items-center justify-center">
+            <Avatar className="h-10 w-10 border shadow-sm">
               <AvatarImage
                 src={
                   post.writer?.profileImageUrl
                     ? `http://192.168.0.20:8080${post.writer.profileImageUrl}`
-                    : undefined // 이미지가 없으면 undefined를 줘서 Fallback이 나오게 함
+                    : undefined
                 }
+                className="object-cover"
               />
-              <AvatarFallback className="bg-gray-100 w-full h-full flex items-center justify-center">
-                {/* 텍스트 대신 루시드 아이콘을 넣습니다 */}
-                <Baby className="h-6 w-6 text-gray-400" />
+              <AvatarFallback className="bg-slate-50">
+                <Baby className="h-6 w-6 text-slate-300" />
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-foreground">{post.writer?.name}</p>
-              <p>
+              <p className="font-bold text-slate-900">{post.writer?.name}</p>
+              <p className="text-[12px]">
                 {new Date(post.createdAt).toLocaleString("ko-KR", {
                   year: "numeric",
                   month: "long",
@@ -126,23 +120,22 @@ export default function CommunityDetailPage() {
 
         <CardContent className="pt-8">
           <div
-            className="prose prose-slate max-w-none dark:prose-invert min-h-[200px]"
+            className="prose prose-slate max-w-none min-h-[200px]"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </CardContent>
       </Card>
 
-      {/* 첨부 파일 섹션 */}
-      <Card className="shadow-sm">
-        <CardHeader className="py-2 border-b bg-muted/10">
+      {/* 첨부 파일 섹션 - 가독성 개선 */}
+      <Card className="shadow-sm border-dashed">
+        <CardHeader className="py-3 border-b bg-muted/5">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             📎 첨부 파일 ({post.attachments?.length || 0})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-2 space-y-1">
+        <CardContent className="p-3 space-y-2">
           {post.attachments && post.attachments.length > 0 ? (
             post.attachments.map((file, index) => {
-              // 다운로드 경로 유지하되 가독성 개선
               const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
                 file.fileUrl.replace("/apssolution/notices/", ""),
               )}`;
@@ -150,33 +143,40 @@ export default function CommunityDetailPage() {
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
+                  className="flex items-center justify-between p-3 rounded-xl border bg-white hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-blue-500 font-bold text-lg">📁</span>
+                    <span className="text-lg">📁</span>
                     <a
                       href={downloadUrl}
-                      className="text-sm font-medium hover:underline text-blue-600 truncate"
+                      className="text-sm font-medium hover:underline text-slate-700 truncate"
                     >
                       {file.fileName}
                     </a>
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href={downloadUrl}>다운로드</a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-8 text-xs"
+                  >
+                    <a href={downloadUrl} download>
+                      다운로드
+                    </a>
                   </Button>
                 </div>
               );
             })
           ) : (
-            <div className="text-center py-6 text-sm text-muted-foreground italic">
+            <div className="text-center py-6 text-sm text-slate-400 italic">
               첨부된 파일이 없습니다.
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* 댓글 섹션 컴포넌트 */}
-      <CommentSection2 noticeId={noticeId} />
+      {/* 댓글 섹션 */}
+      <CommentSection noticeId={noticeId} />
     </div>
   );
 }
