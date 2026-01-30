@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useMasterStore } from "@/stores/master-store";
 
-export function useMasterData(loaders) {
+import { getProducts } from "@/api/product-api";
+import { getTasks } from "@/api/task-api";
+import { getTools } from "@/api/tool-api";
+import { getAccounts } from "@/api/auth-api";
+
+export function useMasterData() {
   const setAll = useMasterStore((state) => state.setAll);
 
   const [loading, setLoading] = useState(false);
@@ -15,10 +20,10 @@ export function useMasterData(loaders) {
         setLoading(true);
 
         const [products, tasks, tools, accounts] = await Promise.all([
-          loaders.getProducts(),
-          loaders.getTasks(),
-          loaders.getTools(),
-          loaders.getAccounts(),
+          getProducts(),
+          getTasks(),
+          getTools(),
+          getAccounts(),
         ]);
 
         if (!mounted) return;
