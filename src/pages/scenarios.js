@@ -1,4 +1,5 @@
 import { useMasterData } from "@/hooks/use-masterData";
+import ScenarioCreate from "@/scenarios/ScenariosCreate";
 
 export default function ScenariosPage() {
   const { loading } = useMasterData();

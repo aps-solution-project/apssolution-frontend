@@ -3,8 +3,8 @@ import { useMasterStore } from "@/stores/master-store";
 import { useScenario } from "@/hooks/use-scenario";
 
 export default function ScenarioCreate() {
-  const { products, tasks } = useMasterStore();
   const { createScenario, runSimulation } = useScenario();
+  const { products = [], tasks = [] } = useMasterStore();
 
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState(1);

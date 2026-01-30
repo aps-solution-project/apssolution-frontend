@@ -3,8 +3,8 @@ import { useMasterStore } from "@/stores/master-store";
 
 import { getProducts } from "@/api/product-api";
 import { getTasks } from "@/api/task-api";
-import { getTools } from "@/api/tool-api";
-import { getAccounts } from "@/api/auth-api";
+import { getAllTools } from "@/api/tool-api";
+import { getAllAccounts } from "@/api/auth-api";
 
 export function useMasterData() {
   const setAll = useMasterStore((state) => state.setAll);
@@ -22,8 +22,8 @@ export function useMasterData() {
         const [products, tasks, tools, accounts] = await Promise.all([
           getProducts(),
           getTasks(),
-          getTools(),
-          getAccounts(),
+          getAllTools(),
+          getAllAccounts(),
         ]);
 
         if (!mounted) return;
