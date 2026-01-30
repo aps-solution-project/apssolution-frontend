@@ -17,7 +17,6 @@ export const loginUser = async (accountId, pw) => {
 };
 
 //사원 추가
-
 export const createAccount = async (data, token) => {
   return fetch(`${URL}/api/accounts`, {
     method: "POST",
