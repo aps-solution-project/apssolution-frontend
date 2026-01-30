@@ -1,48 +1,29 @@
 import { useEffect, useState } from "react";
 import { useMasterStore } from "@/stores/master-store";
-
-import { getProducts } from "@/api/product-api";
-import { getTasks } from "@/api/task-api";
-import { getAllTools } from "@/api/tool-api";
-import { getAllAccounts } from "@/api/auth-api";
+import { fetcher } from "@/api/fetcher.api";
 
 export function useMasterData() {
-  const setAll = useMasterStore((state) => state.setAll);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const setAll = useMasterStore((s) => s.setAll);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    let mounted = true;
-
     async function load() {
-      try {
-        setLoading(true);
+      const productsRes = await fetcher.getProducts();
+      const tasksRes = await fetcher.getTasks();
+      const toolsRes = await fetcher.getAllTools();
+      const accountsRes = await fetcher.getAllAccounts();
 
-        const [products, tasks, tools, accounts] = await Promise.all([
-          getProducts(),
-          getTasks(),
-          getAllTools(),
-          getAllAccounts(),
-        ]);
+      setAll({
+        products: productsRes.products || productsRes.content || productsRes,
+        tasks: tasksRes.tasks || tasksRes.content || tasksRes,
+        tools: toolsRes.tools || toolsRes.content || toolsRes,
+        accounts: accountsRes.accounts || accountsRes.content || accountsRes,
+      });
 
-        if (!mounted) return;
-
-        setAll({ products, tasks, tools, accounts });
-      } catch (err) {
-        console.error(err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     }
 
     load();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  return { loading, error };
+  return { loading };
 }

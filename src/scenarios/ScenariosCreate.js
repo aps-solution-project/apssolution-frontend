@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useMasterStore } from "@/stores/master-store";
 import { useScenario } from "@/hooks/use-scenario";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import ScenarioResult from "./ScenarioResult";
 
 export default function ScenarioCreate() {
+  useAuthGuard();
+
   const { createScenario, runSimulation } = useScenario();
   const { products = [], tasks = [] } = useMasterStore();
 
@@ -37,10 +41,13 @@ export default function ScenarioCreate() {
       scenarioProduct: [buildScenarioProduct()],
     };
 
-    const token = localStorage.getItem("token");
-
-    const scenario = await createScenario(token, payload);
-    await runSimulation(token, scenario.id);
+    try {
+      const scenario = await createScenario(payload);
+      await runSimulation(scenario.id);
+    } catch (e) {
+      console.error(e);
+      alert("시나리오 생성 실패");
+    }
   };
 
   return (
@@ -53,7 +60,7 @@ export default function ScenarioCreate() {
         placeholder="시나리오 제목"
       />
 
-      <select onChange={(e) => setProductId(e.target.value)}>
+      <select value={productId} onChange={(e) => setProductId(e.target.value)}>
         <option value="">제품 선택</option>
         {products.map((p) => (
           <option key={p.id} value={p.id}>
@@ -64,17 +71,21 @@ export default function ScenarioCreate() {
 
       <input
         type="number"
+        min="1"
         value={qty}
         onChange={(e) => setQty(Number(e.target.value))}
       />
 
       <input
         type="number"
+        min="1"
         value={maxWorkerCount}
         onChange={(e) => setMaxWorkerCount(Number(e.target.value))}
       />
 
       <button onClick={handleCreate}>시나리오 생성 + 시뮬레이션</button>
+
+      <ScenarioResult />
     </div>
   );
 }

@@ -1,10 +1,4 @@
-import {
-  postScenario,
-  getScenarioResult,
-  simulateScenario,
-  getScenarios,
-} from "@/api/scenario-api";
-
+import { fetcher } from "@/api/fetcher.api";
 import { useScenarioStore } from "@/stores/scenario-store";
 
 export function useScenario() {
@@ -16,10 +10,10 @@ export function useScenario() {
     setError,
   } = useScenarioStore();
 
-  // 시나리오 목록 불러오기
-  const loadScenarios = async (token) => {
+  // 시나리오 목록
+  const loadScenarios = async () => {
     try {
-      const data = await getScenarios(token);
+      const data = await fetcher.getScenarios();
       setScenarios(data);
     } catch (e) {
       console.error(e);
@@ -27,9 +21,14 @@ export function useScenario() {
   };
 
   // 시나리오 생성
-  const createScenario = async (token, payload) => {
+  const createScenario = async (payload) => {
     try {
-      const scenario = await postScenario(token, payload);
+      const res = await fetcher.postScenario(payload);
+
+      const scenario = res.data || res.scenario || res;
+
+      console.log("created scenario 👉", scenario);
+
       setCurrentScenario(scenario);
       return scenario;
     } catch (e) {
@@ -38,16 +37,18 @@ export function useScenario() {
     }
   };
 
-  // 엔진 실행
-  const runSimulation = async (token, scenarioId) => {
+  // 시뮬레이션 실행
+  const runSimulation = async (scenarioId) => {
     try {
       startSimulation();
-      await simulateScenario(token, scenarioId);
-      const result = await getScenarioResult(token, scenarioId);
+
+      await fetcher.simulateScenario(scenarioId);
+
+      const result = await fetcher.getScenarioResult(scenarioId);
       setResult(result);
     } catch (e) {
       console.error(e);
-      setError();
+      setError(e);
     }
   };
 
