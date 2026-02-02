@@ -24,6 +24,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@stomp/stompjs": "^7.2.1",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.17.1",
     "@tiptap/extension-color": "^3.17.1",
@@ -56,6 +57,7 @@
     "react-dom": "19.2.3",
     "react-hotkeys-hook": "^5.2.3",
     "react-rnd": "^10.5.2",
+    "sockjs-client": "^1.6.1",
     "tailwind-merge": "^3.4.0",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.9"

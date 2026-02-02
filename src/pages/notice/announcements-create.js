@@ -1,18 +1,39 @@
 import { createNotice } from "@/api/notice-api";
 import NoticeForm from "@/components/notice/NoticeForm";
-import { useToken } from "@/stores/account-store";
+import { useToken, useAccount } from "@/stores/account-store";
 import { useRouter } from "next/router";
-import { useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useState, useEffect } from "react";
 
 export default function AnnouncementsCreatePage() {
   useAuthGuard();
   const router = useRouter();
-  const { token } = useToken();
+  const { account, role } = useAccount();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
+
+  useEffect(() => {
+    // 1. 하이드레이션(persist 데이터 로드)이 끝날 때까지 대기하거나
+    // account 정보가 들어올 때까지 기다립니다.
+    if (!account && !role) return;
+
+    // 2. role 값을 직접 확인 (useAccount에서 role을 따로 관리하므로 편리합니다)
+    const canCreate = role === "ADMIN" || role === "PLANNER";
+
+    console.log("현재 접속 역할:", role); // 디버깅용
+
+    if (!canCreate) {
+      alert("공지사항 작성 권한이 없습니다.");
+      router.replace("/notice/announcements");
+    }
+  }, [account, role, router]);
+
+  // 3. 권한이 없는 사용자는 화면 렌더링 자체를 차단
+  if (role !== "ADMIN" && role !== "PLANNER") {
+    return null;
+  }
 
   const handleSave = async () => {
     const formData = new FormData();

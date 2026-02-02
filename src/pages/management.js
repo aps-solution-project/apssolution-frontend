@@ -206,8 +206,8 @@ export default function ManagementPage() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <div className="relative">
+      <div className="flex items-center justify-between py-4">
+        <div className="relative w-64">
           <Input
             placeholder="사원번호 검색"
             value={table.getColumn("accountId")?.getFilterValue() ?? ""}
@@ -218,7 +218,15 @@ export default function ManagementPage() {
           />
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
+        <Button variant="outline" onClick={() => setIsAdding(true)}>
+          + 사원 추가하기
+        </Button>
       </div>
+      <AdminProfileEditModal
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        account={target}
+      />
 
       <div className="rounded-md border">
         <Table>
@@ -321,17 +329,6 @@ export default function ManagementPage() {
           </TableBody>
         </Table>
       </div>
-
-      <div className="flex justify-end mt-4">
-        <Button variant="outline" onClick={() => setIsAdding(true)}>
-          + 사원 추가하기
-        </Button>
-      </div>
-      <AdminProfileEditModal
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        account={target}
-      />
     </div>
   );
 }

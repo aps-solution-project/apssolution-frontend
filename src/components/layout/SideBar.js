@@ -58,7 +58,11 @@ const sections = [
   {
     title: "관리",
     icon: Settings,
-    items: [{ label: "사원 관리", href: "/management" }],
+    items: [
+      { label: "사원 관리", href: "/management" },
+      { label: "채팅", href: "/chat/chat-create" },
+      { label: "채팅방 관리", href: "/chat/chat-list" },
+    ],
   },
 ];
 
