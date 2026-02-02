@@ -1,10 +1,11 @@
+import { getMyChats } from "@/api/chat-api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge"; // 읽지 않은 개수용
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
-import { useEffect, useState } from "react";
 import { UserCircle } from "lucide-react";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function ChatList() {
   const { account } = useAccount();
@@ -18,12 +19,13 @@ export default function ChatList() {
     if (!token) return;
 
     // 채팅 목록 API 호출 (경로는 프로젝트 설정에 맞춰 수정)
-    fetch("http://192.168.0.20:8080/api/chats", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
+    // fetch("http://192.168.0.20:8080/api/chats", {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // })
+    //   .then((res) => res.json())
+    getMyChats(token)
       .then((data) => {
         // console.log("응답 데이터:", data); // 여기서 구조를 꼭 확인하세요!
         setChatData(data); // { myChatList: [...] } 형태가 들어감
@@ -59,7 +61,9 @@ export default function ChatList() {
                   key={user.userId}
                   className="border-2 border-white size-12 shadow-sm"
                 >
-                  <AvatarImage src={user.profileImageUrl} />
+                  <AvatarImage
+                    src={"http://192.168.0.20:8080" + user.profileImageUrl}
+                  />
                   <AvatarFallback>
                     <UserCircle />
                   </AvatarFallback>
