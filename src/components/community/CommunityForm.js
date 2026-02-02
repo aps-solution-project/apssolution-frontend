@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Editor from "@/components/ui/editor";
+import BoardEditor from "@/components/ui/editor";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
 import { FileInput } from "lucide-react";
@@ -72,7 +72,7 @@ export default function CommunityForm({
         />
 
         {/* 에디터 값이 정확히 setContent로 들어가도록 설정 */}
-        <Editor value={content} onChange={(value) => setContent(value)} />
+        <BoardEditor value={content} onChange={(value) => setContent(value)} />
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>

@@ -97,7 +97,6 @@ export default function MyProfilePage() {
     }
   };
 
-  // Load account details on mount
   useEffect(() => {
     if (!account?.accountId || !token) return;
 
@@ -122,7 +121,6 @@ export default function MyProfilePage() {
   return (
     <div className="min-h-screen bg-slate-50 p-10">
       <div className="max-w-7xl mx-auto grid grid-cols-[280px_1fr] gap-10">
-        {/* LEFT */}
         <div className="bg-white rounded-lg border shadow-sm p-6 text-center">
           <div className="relative mx-auto w-32 h-32 mb-4">
             {preview && (
@@ -164,7 +162,6 @@ export default function MyProfilePage() {
           )}
         </div>
 
-        {/* RIGHT */}
         <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
           <div className="flex border-b">
             <button className="px-8 py-4 font-semibold border-b-2 border-black">

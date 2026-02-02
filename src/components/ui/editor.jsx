@@ -1,144 +1,341 @@
-import { Button } from "@/components/ui/button";
-import Color from "@tiptap/extension-color";
-import Highlight from "@tiptap/extension-highlight";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
+import Highlight from "@tiptap/extension-highlight";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import { Placeholder } from "@tiptap/extensions";
+
 import {
   Bold,
-  Highlighter,
-  ImageIcon,
   Italic,
-  LinkIcon,
-  Paintbrush,
   Underline as UnderlineIcon,
+  Strikethrough,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Undo,
+  Redo,
+  Palette,
+  Highlighter,
+  ChevronDown,
+  List as ListIcon,
 } from "lucide-react";
-import { useEffect } from "react";
 
-const COLORS = [
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+/* ===== 색상 ===== */
+
+const TEXT_COLORS = [
   "#000000",
-  "#ef4444",
-  "#22c55e",
-  "#3b82f6",
-  "#f59e0b",
-  "#8b5cf6",
+  "#333333",
+  "#666666",
+  "#999999",
+  "#FFFFFF",
+  "#FF0000",
+  "#FFA500",
+  "#FFD700",
+  "#008000",
+  "#00CED1",
+  "#0000FF",
+  "#4B0082",
+  "#800080",
+  "#FF1493",
+  "#8B0000",
 ];
 
-export default function Editor({ value, onChange }) {
+const HIGHLIGHT_COLORS = [
+  "#FFFF00",
+  "#FFF3B0",
+  "#FFB3B3",
+  "#FFD59E",
+  "#B6F2C2",
+  "#9EE7F5",
+  "#B5CCFF",
+  "#D6C2FF",
+  "#FFC1E3",
+  "#E0E0E0",
+];
+
+/* ===== Toolbar ===== */
+
+const Toolbar = ({ editor }) => {
+  if (!editor) return null;
+
+  const fileInputRef = useRef(null);
+  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      editor.chain().focus().setImage({ src: event.target.result }).run();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const setLink = useCallback(() => {
+    const prev = editor.getAttributes("link").href;
+    const url = window.prompt("URL 입력", prev || "");
+    if (url === null) return;
+
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+
+    const valid = url.startsWith("http") ? url : `https://${url}`;
+
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: valid })
+      .run();
+  }, [editor]);
+
+  return (
+    <div className="border-b bg-gray-50 sticky top-0 z-10 flex flex-wrap gap-1 p-2">
+      {/* Undo / Redo */}
+      <div className="flex gap-1 border-r pr-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          icon={<Undo size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          icon={<Redo size={16} />}
+        />
+      </div>
+
+      {/* Text style */}
+      <div className="flex gap-1 border-r pr-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={editor.isActive("bold")}
+          icon={<Bold size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={editor.isActive("italic")}
+          icon={<Italic size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          isActive={editor.isActive("underline")}
+          icon={<UnderlineIcon size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          isActive={editor.isActive("strike")}
+          icon={<Strikethrough size={16} />}
+        />
+      </div>
+
+      {/* Color */}
+      <div className="flex gap-1 border-r pr-2">
+        <ColorPicker
+          icon={<Palette size={16} />}
+          colors={TEXT_COLORS}
+          active={editor.getAttributes("textStyle").color}
+          onSelect={(c) => editor.chain().focus().setColor(c).run()}
+          onReset={() => editor.chain().focus().unsetColor().run()}
+          show={showTextColorPicker}
+          setShow={setShowTextColorPicker}
+          closeOther={() => setShowHighlightPicker(false)}
+        />
+
+        <ColorPicker
+          icon={<Highlighter size={16} />}
+          colors={HIGHLIGHT_COLORS}
+          active={editor.getAttributes("highlight").color}
+          onSelect={(c) =>
+            editor.chain().focus().toggleHighlight({ color: c }).run()
+          }
+          onReset={() => editor.chain().focus().unsetHighlight().run()}
+          show={showHighlightPicker}
+          setShow={setShowHighlightPicker}
+          closeOther={() => setShowTextColorPicker(false)}
+        />
+      </div>
+
+      {/* Align */}
+      <div className="flex gap-1 border-r pr-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          isActive={editor.isActive({ textAlign: "left" })}
+          icon={<AlignLeft size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          isActive={editor.isActive({ textAlign: "center" })}
+          icon={<AlignCenter size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          isActive={editor.isActive({ textAlign: "right" })}
+          icon={<AlignRight size={16} />}
+        />
+      </div>
+
+      {/* Link / Image */}
+      <div className="flex gap-1">
+        <ToolbarButton
+          onClick={setLink}
+          isActive={editor.isActive("link")}
+          icon={<LinkIcon size={16} />}
+        />
+        <ToolbarButton
+          onClick={() => fileInputRef.current.click()}
+          icon={<ImageIcon size={16} />}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={handleImageUpload}
+        />
+      </div>
+    </div>
+  );
+};
+
+/* ===== Color Picker ===== */
+
+const ColorPicker = ({
+  icon,
+  colors,
+  active,
+  onSelect,
+  onReset,
+  show,
+  setShow,
+  closeOther,
+}) => (
+  <div className="relative">
+    <button
+      onClick={() => {
+        setShow(!show);
+        closeOther();
+      }}
+      className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+    >
+      {icon}
+      <ChevronDown size={12} />
+    </button>
+
+    {show && (
+      <>
+        <div className="absolute top-full left-0 mt-2 bg-white border shadow-lg rounded p-2 z-50 w-48">
+          <div className="grid grid-cols-5 gap-1 mb-2">
+            {colors.map((c) => (
+              <button
+                key={c}
+                onClick={() => {
+                  onSelect(c);
+                  setShow(false);
+                }}
+                className={cn(
+                  "w-6 h-6 rounded-full border",
+                  active === c && "ring-2 ring-black",
+                )}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={onReset}
+          >
+            색상 제거
+          </Button>
+        </div>
+        <div className="fixed inset-0 z-40" onClick={() => setShow(false)} />
+      </>
+    )}
+  </div>
+);
+
+const ToolbarButton = ({ onClick, isActive, disabled, icon }) => (
+  <Button
+    type="button"
+    size="sm"
+    variant="ghost"
+    onClick={onClick}
+    disabled={disabled}
+    className={cn(
+      "h-8 w-8 p-0",
+      isActive && "bg-gray-200 ring-1 ring-gray-300",
+    )}
+  >
+    {icon}
+  </Button>
+);
+
+/* ===== Main Editor ===== */
+
+export default function BoardEditor({ value, onChange }) {
+  const router = useRouter();
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        blockquote: false,
+        codeBlock: false,
+      }),
+      Placeholder.configure({ placeholder: "내용을 입력하세요..." }),
       Underline,
+      Link.configure({ openOnClick: false }),
+      Image.configure({ inline: true, allowBase64: true }),
+      TextAlign.configure({ types: ["paragraph"] }),
       TextStyle,
       Color,
       Highlight.configure({ multicolor: true }),
-      Link.configure({ openOnClick: false }),
-      Image,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: value || "",
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[400px] px-6 py-4 focus:outline-none max-w-none [&_p]:my-1 [&_br]:block",
+      },
     },
+
     immediatelyRender: false,
   });
 
-  /** ✅ 외부 value 변경 시 에디터 내용 동기화 */
   useEffect(() => {
-    if (!editor) return;
-    const current = editor.getHTML();
-    if (value !== current) {
-      editor.commands.setContent(value || "");
+    if (editor && value && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
     }
   }, [value, editor]);
 
-  if (!editor) return null;
-
-  /** ✅ 이미지 삽입 */
-  const addImage = () => {
-    const url = prompt("이미지 URL 입력");
-    if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
-  };
-
-  /** ✅ 링크 삽입 (프로토콜 자동 보정) */
-  const addLink = () => {
-    let url = prompt("링크 입력");
-    if (!url) return;
-
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      url = "https://" + url;
-    }
-
-    editor.chain().focus().setLink({ href: url }).run();
-  };
-
   return (
-    <div className="border rounded-xl bg-white overflow-hidden shadow-sm">
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted">
-        <Btn onClick={() => editor.chain().focus().toggleBold().run()}>
-          <Bold size={16} />
-        </Btn>
-
-        <Btn onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <Italic size={16} />
-        </Btn>
-
-        <Btn onClick={() => editor.chain().focus().toggleUnderline().run()}>
-          <UnderlineIcon size={16} />
-        </Btn>
-
-        <Btn onClick={addLink}>
-          <LinkIcon size={16} />
-        </Btn>
-
-        <Btn onClick={addImage}>
-          <ImageIcon size={16} />
-        </Btn>
-
-        {/* 글자색 */}
-        {COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className="w-5 h-5 rounded-full border"
-            style={{ background: c }}
-            onClick={() => editor.chain().focus().setColor(c).run()}
-          />
-        ))}
-
-        {/* 하이라이트 */}
-        <Btn
-          onClick={() =>
-            editor.chain().focus().toggleHighlight({ color: "#fde047" }).run()
-          }
-        >
-          <Highlighter size={16} />
-        </Btn>
-
-        {/* 색상 초기화 */}
-        <Btn onClick={() => editor.chain().focus().unsetColor().run()}>
-          <Paintbrush size={16} />
-        </Btn>
+    <div className="w-full flex flex-col gap-3">
+      <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
+        <Toolbar editor={editor} />
+        <EditorContent editor={editor} />
       </div>
-
-      <EditorContent
-        editor={editor}
-        className="min-h-[320px] p-4 prose max-w-none focus:outline-none"
-      />
     </div>
-  );
-}
-
-/** ✅ form 내부에서도 submit 안 되도록 type="button" 필수 */
-function Btn({ children, onClick }) {
-  return (
-    <Button type="button" size="icon" variant="ghost" onClick={onClick}>
-      {children}
-    </Button>
   );
 }
