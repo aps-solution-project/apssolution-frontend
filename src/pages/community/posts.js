@@ -11,8 +11,10 @@ import {
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function PostsPage() {
+  useAuthGuard();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const { token } = useToken();

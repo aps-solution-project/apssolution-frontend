@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function ProfileEditModal({
   open,
@@ -23,6 +24,7 @@ export default function ProfileEditModal({
   account,
   setAccount,
 }) {
+  useAuthGuard();
   const token = useToken((s) => s.token);
   const router = useRouter();
 

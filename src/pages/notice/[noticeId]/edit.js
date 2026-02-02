@@ -3,8 +3,10 @@ import NoticeForm from "@/components/notice/NoticeForm";
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function NoticeEditPage() {
+  useAuthGuard();
   const router = useRouter();
   const { noticeId } = router.query;
   const token = useToken((state) => state.token);

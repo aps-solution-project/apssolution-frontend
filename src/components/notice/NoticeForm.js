@@ -4,6 +4,7 @@ import Editor from "@/components/ui/editor";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
 import { FileInput } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function NoticeForm({
   title,
@@ -16,6 +17,7 @@ export default function NoticeForm({
   setFiles,
   onCancel,
 }) {
+  useAuthGuard();
   const fileInputRef = useRef(null);
 
   const handleFileButtonClick = () => {

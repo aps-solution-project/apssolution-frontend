@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { LogOut, Menu, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import { useRouter } from "next/router";
 import ProfileEditModal from "./modal/profileSetting";
 
 export default function Header() {
+  useAuthGuard();
   const { toggleSidebar } = useSidebar();
   const router = useRouter();
 
@@ -67,6 +69,17 @@ export default function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
 
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/myInformation/myProfile")}
+                  >
+                    마이페이지
+                    <DropdownMenuShortcut>
+                      <UserCog className="h-4 w-4" />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem onClick={handleLogout}>

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 /* =========================
    ⏱ Time System (24h / 5min)
@@ -57,6 +58,7 @@ const products = [
 ========================= */
 
 export default function ProductionGantt() {
+  useAuthGuard();
   return (
     <div className="min-h-screen bg-slate-100 p-8">
       <Card className="rounded-2xl shadow-xl">

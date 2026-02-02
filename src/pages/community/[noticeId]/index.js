@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SquarePen, List, Trash2, Baby } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function CommunityDetailPage() {
+  useAuthGuard();
   const router = useRouter();
   const { noticeId } = router.query;
   const [post, setPost] = useState(null);
