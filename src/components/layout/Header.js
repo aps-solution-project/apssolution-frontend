@@ -17,7 +17,6 @@ import {
 
 import { useAccount, useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
-import ProfileEditModal from "./modal/profileSetting";
 
 export default function Header() {
   useAuthGuard();
@@ -61,8 +60,10 @@ export default function Header() {
 
               <DropdownMenuContent align="end">
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setProfileOpen(true)}>
-                    Settings
+                  <DropdownMenuItem
+                    onClick={() => router.push("/myInformation/myProfile")}
+                  >
+                    마이페이지
                     <DropdownMenuShortcut>
                       <UserCog className="h-4 w-4" />
                     </DropdownMenuShortcut>
@@ -72,9 +73,9 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => router.push("/myInformation/myProfile")}
+                    onClick={() => router.push("/myInformation/myPosts")}
                   >
-                    마이페이지
+                    내가 쓴 글
                     <DropdownMenuShortcut>
                       <UserCog className="h-4 w-4" />
                     </DropdownMenuShortcut>
@@ -93,13 +94,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
-      <ProfileEditModal
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        account={account}
-        setAccount={setAccount}
-      />
     </>
   );
 }

@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 
 export default function AnnouncementsCreatePage() {
   useAuthGuard();
+  const token = useToken((state) => state.token);
+
   const router = useRouter();
   const { account, role } = useAccount();
 
