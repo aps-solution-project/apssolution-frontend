@@ -97,6 +97,7 @@ export default function MyProfilePage() {
     }
   };
 
+  // Load account details on mount
   useEffect(() => {
     if (!account?.accountId || !token) return;
 
