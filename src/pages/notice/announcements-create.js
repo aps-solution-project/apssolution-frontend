@@ -1,77 +1,139 @@
-import { createNotice } from "@/api/notice-api";
-import NoticeForm from "@/components/notice/NoticeForm";
-import { useToken, useAccount } from "@/stores/account-store";
+import BoardEditor from "@/components/ui/editor";
+import { Button } from "@/components/ui/button";
+import { ListIcon, Save, FileInput } from "lucide-react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/router";
+import { createNotice } from "@/api/notice-api"; // ✅ 공지 작성 API
+import { useToken } from "@/stores/account-store";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useState, useEffect } from "react";
 
-export default function AnnouncementsCreatePage() {
+export default function NoticeCreatePage() {
   useAuthGuard();
-  const token = useToken((state) => state.token);
 
   const router = useRouter();
-  const { account, role } = useAccount();
+  const token = useToken((state) => state.token);
+  const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
 
-  useEffect(() => {
-    // 1. 하이드레이션(persist 데이터 로드)이 끝날 때까지 대기하거나
-    // account 정보가 들어올 때까지 기다립니다.
-    if (!account && !role) return;
+  const goToList = () => {
+    router.push("/notice/announcements");
+  };
 
-    // 2. role 값을 직접 확인 (useAccount에서 role을 따로 관리하므로 편리합니다)
-    const canCreate = role === "ADMIN" || role === "PLANNER";
-
-    console.log("현재 접속 역할:", role); // 디버깅용
-
-    if (!canCreate) {
-      alert("공지사항 작성 권한이 없습니다.");
-      router.replace("/notice/announcements");
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      alert("제목을 입력해주세요.");
+      return;
     }
-  }, [account, role, router]);
 
-  // 3. 권한이 없는 사용자는 화면 렌더링 자체를 차단
-  if (role !== "ADMIN" && role !== "PLANNER") {
-    return null;
-  }
-
-  const handleSave = async () => {
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-
-    // 파일 배열 추가
-    files.forEach((file) => {
-      formData.append("attachment", file);
-    });
+    if (!content || content.replace(/<[^>]*>/g, "").trim() === "") {
+      alert("내용을 입력해주세요.");
+      return;
+    }
 
     try {
-      // createNotice가 FormData를 받도록 구성되어야 함
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("content", content);
+
+      if (files.length > 0) {
+        files.forEach((file) => {
+          if (file instanceof File) {
+            formData.append("files", file);
+          }
+        });
+      }
+
       await createNotice(token, formData);
-      alert("공지사항이 생성되었습니다.");
+
+      alert("공지사항이 등록되었습니다.");
       router.push("/notice/announcements");
-    } catch (e) {
-      alert("생성 실패");
+    } catch (err) {
+      console.error("공지 등록 실패:", err);
+      alert("저장 중 오류가 발생했습니다.");
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">공지사항 작성</h1>
+    <div>
+      <p className="text-2xl font-semibold mb-6">공지사항 작성</p>
 
-      <NoticeForm
-        title={title}
-        setTitle={setTitle}
-        content={content}
-        setContent={setContent}
-        files={files}
-        setFiles={setFiles}
-        onSubmit={handleSave}
-        submitText="저장"
-        onCancel={() => router.back()}
-      />
+      <div className="space-y-4 bg-white border rounded-lg p-6 shadow-sm">
+        {/* 상단 영역 */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={goToList}
+            className="flex items-center gap-2"
+          >
+            <ListIcon size={16} />
+            목록으로
+          </Button>
+
+          <input
+            type="file"
+            multiple
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e) => {
+              const selectedFiles = Array.from(e.target.files || []);
+              setFiles(selectedFiles);
+            }}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center py-5 gap-2 bg-indigo-900 hover:bg-indigo-600 text-white"
+          >
+            첨부파일
+            <FileInput size={16} />
+          </Button>
+        </div>
+
+        {/* 제목 */}
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="공지 제목을 입력하세요"
+          className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        {/* 에디터 */}
+        <BoardEditor value={content} onChange={setContent} />
+
+        {/* 파일 목록 */}
+        {files.length > 0 && (
+          <div className="p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <ul className="space-y-1 text-sm">
+              {files.map((file, i) => (
+                <li key={i} className="text-blue-600 italic">
+                  📎 {file.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 하단 버튼 */}
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="button" variant="outline" onClick={goToList}>
+            취소
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            className="flex items-center gap-2"
+          >
+            <Save size={16} />
+            저장
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
