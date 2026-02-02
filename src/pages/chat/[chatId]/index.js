@@ -1,12 +1,11 @@
-import { useRouter } from "next/router";
-import { useEffect, useState, useRef } from "react";
+import { getChatDetail, sendMessage } from "@/api/chat-api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
-import { getChatDetail, sendMessage } from "@/api/chat-api";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Send, Image as ImageIcon, ChevronLeft, User2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChevronLeft, Image as ImageIcon, Send } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
 
 export default function ChatRoom() {
   const router = useRouter();
@@ -32,6 +31,7 @@ export default function ChatRoom() {
         // 백엔드에서 reversed()로 오기 때문에 다시 뒤집어서 시간순 정렬
         const chronologicalMessages = [...(data.messages || [])].reverse();
         setMessages(chronologicalMessages);
+        console.log("채팅방 데이터:", data);
       })
       .catch((err) => {
         console.error("채팅방 로드 실패:", err);
@@ -40,22 +40,38 @@ export default function ChatRoom() {
   }, [chatId, token]);
 
   // 2. STOMP 실시간 구독
-  useEffect(() => {
-    console.log("🔥 STOMP EFFECT CHECK", {
-      stomp,
-      connected: stomp?.connected,
-      chatId,
-    });
+  // useEffect(() => {
+  //   console.log("🔥 STOMP EFFECT CHECK", {
+  //     stomp,
+  //     connected: stomp?.connected,
+  //     chatId,
+  //   });
 
+  //   if (!stomp || !stomp.connected || !chatId) return;
+
+  //   const sub = stomp.subscribe(`/topic/chat/${chatId}`, (frame) => {
+  //     const body = JSON.parse(frame.body);
+  //     setMessages((prev) => [...prev, body]);
+  //   });
+
+  //   return () => sub.unsubscribe();
+  // }, [stomp, chatId]);
+
+  useEffect(() => {
     if (!stomp || !stomp.connected || !chatId) return;
+
+    console.log("📡 채팅 구독 시작:", chatId);
 
     const sub = stomp.subscribe(`/topic/chat/${chatId}`, (frame) => {
       const body = JSON.parse(frame.body);
       setMessages((prev) => [...prev, body]);
     });
 
-    return () => sub.unsubscribe();
-  }, [stomp, chatId]);
+    return () => {
+      console.log("❌ 채팅 구독 해제:", chatId);
+      sub.unsubscribe();
+    };
+  }, [stomp, stomp?.connected, chatId]);
 
   // 하단 스크롤
   useEffect(() => {
@@ -95,6 +111,21 @@ export default function ChatRoom() {
     }
   };
 
+  function downloadFile(file) {
+    const downloadUrl = `http://192.168.0.20:8080/api/chats/files/download?path=${encodeURIComponent(
+      file.fileUrl.replace("/apssolution/chatAttachments/", ""),
+    )}`;
+    window.open(downloadUrl, "_blank");
+  }
+
+  if (!chatInfo) {
+    return (
+      <div className="flex items-center justify-center h-[85vh]">
+        로딩 중...
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-[85vh] max-w-3xl mx-auto bg-white border shadow-2xl rounded-2xl overflow-hidden mt-4">
       {/* 상단 헤더 */}
@@ -110,7 +141,7 @@ export default function ChatRoom() {
           </Button>
           <div className="flex flex-col">
             <h2 className="font-bold text-slate-800">
-              {chatInfo?.chatRoomName || chatInfo?.otherUser?.name || "채팅방"}
+              {chatInfo?.chatRoomName || "로딩 중..."}
             </h2>
             <p className="text-[10px] text-emerald-500 flex items-center gap-1">
               <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -160,6 +191,7 @@ export default function ChatRoom() {
                           >
                             {/* 1. key 추가: 고유 ID가 없으면 index라도 사용하여 경고 해결 */}
                             <img
+                              onClick={() => downloadFile(file)}
                               src={encodeURI(
                                 `http://192.168.0.20:8080${file.fileUrl}`,
                               )}

@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { useAccount, useToken } from "@/stores/account-store";
-import { startDirectChat, createGroupChat } from "@/api/chat-api";
 import { getAllAccounts } from "@/api/auth-api";
-import { Input } from "@/components/ui/input";
+import { createGroupChat, startDirectChat } from "@/api/chat-api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, X, ChevronLeft, User2, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useAccount, useToken } from "@/stores/account-store";
+import { ChevronLeft, Loader2, Search, User2, X } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function CreateChatPage() {
   const router = useRouter();
@@ -64,16 +64,17 @@ export default function CreateChatPage() {
         result = await startDirectChat(token, selectedUsers[0].accountId);
       } else {
         // 그룹 채팅 API 호출 (방 이름이 없으면 참여자 이름들로 자동 생성)
-        const defaultName = `${selectedUsers.map((u) => u.accountName).join(", ")} 정담방`;
+        //const defaultName = `${selectedUsers.map((u) => u.accountName).join(", ")} 정담방`;
         result = await createGroupChat(token, {
-          roomName: roomName || defaultName,
+          //roomName: roomName || defaultName,
+          roomName: roomName,
           members: selectedUsers.map((u) => u.accountId),
         });
       }
 
       // 생성된 채팅방 ID로 이동 (백엔드 DTO 필드명 확인: chatRoomId 또는 id)
       const targetId = result.chatRoomId || result.id;
-      router.push(`/chat/${targetId}/chat-detail`);
+      router.push(`/chat/${targetId}`);
     } catch (e) {
       console.error(e);
       alert("채팅방 생성 중 오류가 발생했습니다.");
@@ -186,7 +187,9 @@ export default function CreateChatPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-bold text-slate-800">{user.accountId} · {user.accountName}</p>
+                  <p className="font-bold text-slate-800">
+                    {user.accountId} · {user.accountName}
+                  </p>
                   <p className="text-xs text-slate-500">
                     {user.role} · {user.accountEmail}
                   </p>
