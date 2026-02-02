@@ -1,4 +1,4 @@
-const URL = "http://192.168.0.10:8080";
+const URL = "http://192.168.0.20:8080";
 
 // 1. 사원 게시판 목록 조회 (백엔드에서 role=worker 필터를 지원한다고 가정)
 export async function getWorkerPosts(token) {
