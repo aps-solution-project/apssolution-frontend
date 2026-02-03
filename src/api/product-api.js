@@ -21,15 +21,10 @@ async function upLoadFiles(file, token) {
 }
 
 //파일 저장 api
-async function bulkUpsertProducts(products, token) {
+async function bulkUpsertProducts(data, token) {
+  // 이미 handleSaveAll에서 productId 등으로 매핑된 배열을 받으므로 그대로 payload에 넣습니다.
   const payload = {
-    products: products.map((p) => ({
-      id: p.id, // 기존이면 수정
-      toolId: p.toolId, // 공정 장비 기준
-      categoryId: p.categoryId,
-      description: p.description,
-      name: p.name,
-    })),
+    products: data,
   };
 
   const resp = await fetch(`${URL}/api/products`, {
@@ -41,7 +36,10 @@ async function bulkUpsertProducts(products, token) {
     body: JSON.stringify(payload),
   });
 
-  if (!resp.ok) throw new Error("제품 저장 실패");
+  if (!resp.ok) {
+    const errorData = await resp.json();
+    throw new Error(errorData.message || "제품 저장 실패");
+  }
 
   return resp.json();
 }

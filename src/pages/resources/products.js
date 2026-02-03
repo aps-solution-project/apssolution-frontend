@@ -26,8 +26,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 10;
-const GRID_COLS_HEADER = "grid-cols-[15%_25%_35%_10%_5%]";
-const GRID_COLS = "grid-cols-[15%_26%_35%_10%_5%]";
+const GRID_COLS_HEADER = "grid-cols-[20%_15%_40%_10%_10%]";
+const GRID_COLS = "grid-cols-[20%_15%_40%_10%_10%]";
 
 export default function ResourcesPage() {
   useAuthGuard(); // <-- 페이지 접근시 토큰 인증
@@ -143,9 +143,7 @@ export default function ResourcesPage() {
 
           <Button
             size="sm"
-            onClick={() =>
-              selectedId && router.push(`/resources/products/${selectedId}`)
-            }
+            onClick={() => router.push(`/products`)}
             className="flex gap-1"
           >
             <Pencil size={14} />
@@ -160,7 +158,7 @@ export default function ResourcesPage() {
         <Header label="ID" onClick={() => toggleSort("id")} />
         <Header label="제품명" onClick={() => toggleSort("name")} />
         <Header label="설명" onClick={() => toggleSort("description")} />
-        <Header label="상태" onClick={() => toggleSort("active")} />
+        <Header label="유통상태" onClick={() => toggleSort("active")} />
         <Header label="등록일" onClick={() => toggleSort("createdAt")} />
       </div>
 

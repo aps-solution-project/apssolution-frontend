@@ -25,7 +25,7 @@ import { Plus, Trash2, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const GRID_COLS = "grid-cols-[25%_50%_15%_10%]";
+const GRID_COLS = "grid-cols-[25%_50%_3%]";
 const PAGE_SIZE = 10;
 
 export default function ToolCategoryPage() {
@@ -216,7 +216,7 @@ export default function ToolCategoryPage() {
 
                 <button
                   onClick={() => handleDelete(realIndex, cat.id)}
-                  className="flex justify-center text-stone-300 hover:text-red-500"
+                  className="flex justify-center text-stone-300 hover:text-red-500 hover:bg-red-50"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

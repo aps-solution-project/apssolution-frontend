@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { getTasks, upsertTasks, parseTaskXls } from "@/api/task-api";
 import { useToken } from "@/stores/account-store";
@@ -27,6 +25,7 @@ export default function TaskManagementPage() {
   useAuthGuard();
   const token = useToken((state) => state.token);
   const [tasks, setTasks] = useState([]);
+  const [isAdding, setIsAdding] = useState(false);
 
   /* =========================
    * 1. 서버 데이터 로드
@@ -47,6 +46,7 @@ export default function TaskManagementPage() {
       console.error("작업 목록 조회 실패", e);
       alert("작업 목록을 불러오지 못했습니다.");
     }
+    setIsAdding(false);
   };
 
   /* =========================
@@ -96,8 +96,8 @@ export default function TaskManagementPage() {
    * 4. 행 추가 / 삭제
    * ========================= */
   const handleAddRow = () => {
+    setIsAdding(true);
     setTasks([
-      ...tasks,
       {
         id: "",
         productId: "",
@@ -108,16 +108,16 @@ export default function TaskManagementPage() {
         duration: 0,
         isSaved: false,
       },
+      ...tasks,
     ]);
   };
 
   const handleDeleteRow = (index) => {
     const target = tasks[index];
-    if (
-      window.confirm(
-        `[${target.id || "신규 작업"}] 을 목록에서 제거할까요?\n(저장 시 실제 삭제됩니다)`,
-      )
-    ) {
+    if (window.confirm("이 항목을 목록에서 제외하시겠습니까?")) {
+      if (!target.isSaved) {
+        setIsAdding(false);
+      }
       setTasks(tasks.filter((_, i) => i !== index));
     }
   };
@@ -247,6 +247,20 @@ export default function TaskManagementPage() {
             </TableHeader>
 
             <TableBody>
+              {!isAdding && (
+                <TableRow
+                  onClick={handleAddRow}
+                  className="cursor-pointer hover:bg-slate-50 border-b-2 border-dashed group transition-colors bg-stone-50/50"
+                >
+                  <TableCell
+                    colSpan={9}
+                    className="text-center py-4 text-stone-400 group-hover:text-indigo-600 font-medium"
+                  >
+                    <Plus className="inline mr-2 size-4" /> 새로운 작업 추가
+                  </TableCell>
+                </TableRow>
+              )}
+
               {tasks.map((t, i) => (
                 <TableRow
                   key={i}
@@ -259,7 +273,7 @@ export default function TaskManagementPage() {
                       </span>
                     ) : (
                       <span className="text-emerald-600 text-xs font-bold">
-                        신규
+                        NEW
                       </span>
                     )}
                   </TableCell>
@@ -269,6 +283,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="ID 입력"
                       value={t.id}
                       onChange={(e) =>
                         handleInputChange(i, "id", e.target.value)
@@ -281,6 +296,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="제품 ID 입력"
                       value={t.productId}
                       onChange={(e) =>
                         handleInputChange(i, "productId", e.target.value)
@@ -293,6 +309,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="카테고리 ID 입력"
                       value={t.toolCategoryId}
                       onChange={(e) =>
                         handleInputChange(i, "toolCategoryId", e.target.value)
@@ -305,6 +322,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="난이도 입력"
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -320,6 +338,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="이름 입력"
                       value={t.name}
                       onChange={(e) =>
                         handleInputChange(i, "name", e.target.value)
@@ -332,6 +351,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="설명 입력"
                       value={t.description}
                       onChange={(e) =>
                         handleInputChange(i, "description", e.target.value)
@@ -344,6 +364,7 @@ export default function TaskManagementPage() {
                       className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
                         !t.isSaved ? "border-emerald-300" : ""
                       }`}
+                      placeholder="소요 시간 입력"
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -366,18 +387,6 @@ export default function TaskManagementPage() {
                   </TableCell>
                 </TableRow>
               ))}
-
-              <TableRow
-                onClick={handleAddRow}
-                className="cursor-pointer hover:bg-stone-50 border-t-2 border-dashed group transition-colors"
-              >
-                <TableCell
-                  colSpan={9}
-                  className="text-center text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
-                >
-                  <Plus className="inline mr-2 h-4 w-4" />새 작업 추가
-                </TableCell>
-              </TableRow>
             </TableBody>
           </Table>
         </div>

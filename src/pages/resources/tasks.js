@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 
 const PAGE_SIZE = 15;
-const GRID_COLS = "grid-cols-[12%_12%_17%_10%_10%_36%]";
+const GRID_COLS = "grid-cols-[15%_17%_13%_7%_15%_36%]";
 
 export default function TaskPage() {
   useAuthGuard(); // <-- 페이지 접근시 토큰 인증
