@@ -1,6 +1,5 @@
 import { getMyChats } from "@/api/chat-api";
 import { useToken } from "@/stores/account-store";
-import { useStomp } from "@/stores/stomp-store";
 import {
   Sidebar,
   SidebarContent,
