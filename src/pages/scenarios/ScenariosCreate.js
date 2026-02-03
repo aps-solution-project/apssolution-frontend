@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Check } from "lucide-react";
+import { Plus, Trash2, Check, Copy } from "lucide-react";
+import ScenariosInformation from "./ScenariosInformation";
 
 const initialScenarios = [
   {
@@ -20,7 +21,7 @@ const initialScenarios = [
   },
 ];
 
-export default function PlaygroundLayout() {
+export default function ScenariosCreate() {
   const [scenarioData, setScenarioData] = useState(initialScenarios);
   const [selectedId, setSelectedId] = useState(1);
   const [showForm, setShowForm] = useState(false); // 폼 보임/숨김 상태
@@ -57,6 +58,12 @@ export default function PlaygroundLayout() {
     setProgress(0);
     setCompleted(false);
     setRunning(true);
+  };
+
+  const handleDelete = (id) => {
+    if (!confirm("삭제할까요?")) return;
+
+    setScenarios((prev) => prev.filter((s) => s.id !== id));
   };
 
   const resetForm = () => {
@@ -317,23 +324,51 @@ export default function PlaygroundLayout() {
           <div className="space-y-3">
             {scenarioData.map((s) => {
               const active = selectedId === s.id;
+
+              const handleCopy = (e) => {
+                e.stopPropagation();
+
+                const copiedScenario = {
+                  ...s,
+                  id: Date.now(),
+                };
+
+                setScenarioData((prev) => [copiedScenario, ...prev]);
+              };
+
               return (
                 <div
                   key={s.id}
                   onClick={() => setSelectedId(active ? null : s.id)}
-                  className={`p-4 border rounded-lg cursor-pointer flex justify-between transition-colors
-                    ${
-                      active
-                        ? "bg-blue-50 border-blue-400"
-                        : "bg-white hover:bg-gray-50"
-                    }`}
+                  className={`p-4 border rounded-lg cursor-pointer flex justify-between items-center transition-colors
+          ${
+            active ? "bg-blue-50 border-blue-400" : "bg-white hover:bg-gray-50"
+          }`}
                 >
                   <div className="text-sm font-medium text-blue-700">
                     {s.title}
                   </div>
-                  <div className="flex gap-2 text-sm text-gray-500">
+
+                  <div className="flex items-center gap-3 text-sm text-gray-500">
                     {s.startAt.slice(11, 16)}
+
+                    <button
+                      onClick={handleCopy}
+                      className="p-1 rounded hover:bg-blue-100 transition"
+                      title="복사"
+                    >
+                      <Copy size={16} className="text-blue-600" />
+                    </button>
+
                     {active && <Check size={16} className="text-blue-600" />}
+
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      className="p-1 rounded hover:bg-red-100 transition"
+                      title="삭제"
+                    >
+                      <Trash2 size={16} className="text-red-500" />
+                    </button>
                   </div>
                 </div>
               );
@@ -342,55 +377,13 @@ export default function PlaygroundLayout() {
         </section>
 
         {/* RIGHT */}
-        <section className="w-1/2 p-6 bg-gray-100">
-          {selectedScenario && (
-            <div className="bg-white border p-6 h-full flex flex-col shadow-sm">
-              <div className="space-y-2">
-                <div className="text-lg font-semibold text-blue-700">
-                  {selectedScenario.title}
-                </div>
-                <div className="text-sm text-gray-600">
-                  {selectedScenario.description}
-                </div>
-                <div className="text-sm">시작: {selectedScenario.startAt}</div>
-                <div className="text-sm">
-                  인원: {selectedScenario.maxWorkerCount}
-                </div>
-
-                {selectedScenario.scenarioProductList.map((p, i) => (
-                  <div key={i} className="text-sm">
-                    {p.productId} - {p.quantity}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-auto flex items-center justify-end gap-3">
-                <div className="w-48 h-2 bg-gray-200 overflow-hidden rounded-full">
-                  <div
-                    className="h-full bg-blue-600 transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-
-                <span className="text-xs w-10 text-right">{progress}%</span>
-
-                <button
-                  onClick={handleStart}
-                  disabled={running}
-                  className={`px-4 py-1.5 rounded text-sm transition-colors ${
-                    running
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : completed
-                        ? "bg-green-600 text-white"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  {completed ? "완료" : running ? "실행중" : "Start"}
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
+        <ScenariosInformation
+          selectedScenario={selectedScenario}
+          progress={progress}
+          running={running}
+          completed={completed}
+          onStart={handleStart}
+        />
       </div>
     </div>
   );

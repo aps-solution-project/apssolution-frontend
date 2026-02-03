@@ -31,7 +31,7 @@ const sections = [
     title: "설계 엔진",
     icon: Columns3Cog,
     items: [
-      { label: "주문 항목 생성", href: "/scenarios" },
+      { label: "주문 항목 생성", href: "/scenarios/ScenariosCreate" },
       { label: "시뮬레이션 결과(gantt임시 페이지)", href: "/simulations" },
     ],
   },
