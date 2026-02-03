@@ -21,7 +21,7 @@ const initialScenarios = [
     scenarioProductList: [{ productId: "제품 B", quantity: 80 }],
   },
 ];
-//test
+
 export default function ScenariosCreate() {
   const [scenarioData, setScenarioData] = useState(initialScenarios);
   const [selectedId, setSelectedId] = useState(1);
