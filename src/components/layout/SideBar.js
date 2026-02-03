@@ -77,7 +77,7 @@ export default function SideBar({ children }) {
 
   useEffect(() => {
     // 💡 토큰이 없거나 'null', 'undefined' 문자열인 경우 아예 실행 안 함
-    if (!token || token.length < 10) {
+    if (!token) {
       setHasUnread(false);
       return;
     }
