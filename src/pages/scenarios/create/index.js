@@ -1,30 +1,22 @@
+import { getProducts } from "@/api/product-api";
+import {
+  copyScenario,
+  deleteScenario,
+  getScenario,
+  getScenarios,
+  postScenario,
+} from "@/api/scenario-api";
 import ScenariosInformation from "@/components/scenario/ScenarioInfomation";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
 import { Check, Copy, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const initialScenarios = [
-  {
-    id: 1,
-    title: "2월 4일자 제품 생산",
-    description: "당일 생산 수량 및 품질 점검 요약",
-    startAt: "2026-02-04T09:00",
-    maxWorkerCount: 5,
-    scenarioProductList: [{ productId: "제품 A", quantity: 100 }],
-  },
-  {
-    id: 2,
-    title: "2월 3일자 제품 생산",
-    description: "전일 생산 결과 및 이슈 정리",
-    startAt: "2026-02-03T10:00",
-    maxWorkerCount: 4,
-    scenarioProductList: [{ productId: "제품 B", quantity: 80 }],
-  },
-];
-//createSceanrio page fix
 export default function ScenariosCreate() {
-  const [scenarioData, setScenarioData] = useState(initialScenarios);
-  const [selectedId, setSelectedId] = useState(1);
+  useAuthGuard(); // 인증 체크
+  const [scenarioData, setScenarioData] = useState([]);
+  const [selectedId, setSelectedId] = useState(0);
   const [showForm, setShowForm] = useState(false); // 폼 보임/숨김 상태
 
   const [errors, setErrors] = useState({});
@@ -32,6 +24,11 @@ export default function ScenariosCreate() {
   const [progress, setProgress] = useState(0);
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
+
+  const { token } = useToken();
+  const [selectedScenario, setSelectedScenario] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [editScenario, setEditScenario] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -42,7 +39,15 @@ export default function ScenariosCreate() {
     scenarioProductList: [{ productId: "", quantity: "" }],
   });
 
-  const selectedScenario = scenarioData.find((s) => s.id === selectedId);
+  useEffect(() => {
+    if (!token) return;
+    getScenarios(token).then((obj) => {
+      setScenarioData(obj.scenarios);
+    });
+    getProducts(token).then((obj) => {
+      setProducts(obj.products || []);
+    });
+  }, [token]);
 
   useEffect(() => {
     if (!running) return;
@@ -55,16 +60,43 @@ export default function ScenariosCreate() {
     return () => clearTimeout(t);
   }, [running, progress]);
 
+  useEffect(() => {
+    if (!selectedId || !token) {
+      // 🔥 token도 같이 체크
+      setSelectedScenario(null);
+      return;
+    }
+
+    getScenario(token, selectedId)
+      .then((obj) => {
+        setSelectedScenario(obj.scenario || null);
+      })
+      .catch(() => {
+        setSelectedScenario(null); // 🔥 삭제 직후 404 방지
+      });
+  }, [selectedId, token]);
+
   const handleStart = () => {
     setProgress(0);
     setCompleted(false);
     setRunning(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!confirm("삭제할까요?")) return;
 
-    setScenarios((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await deleteScenario(token, id); // ✅ 서버 응답 기다림
+
+      setScenarioData((prev) => prev.filter((s) => s.id !== id));
+
+      // ✅ 삭제한 게 현재 선택된 시나리오면 오른쪽 패널도 초기화
+      setSelectedId((prev) => (String(prev) === String(id) ? null : prev));
+      setSelectedScenario(null);
+    } catch (e) {
+      alert("삭제에 실패했습니다.");
+      console.error(e);
+    }
   };
 
   const resetForm = () => {
@@ -128,20 +160,28 @@ export default function ScenariosCreate() {
     if (!validate()) return;
 
     const payload = {
-      id: Date.now(),
       title: form.title,
       description: form.description,
       startAt: `${form.date}T${form.time}`,
       maxWorkerCount: Number(form.maxWorkerCount),
-      scenarioProductList: form.scenarioProductList.map((p) => ({
+      scenarioProduct: form.scenarioProductList.map((p) => ({
         productId: p.productId,
-        quantity: Number(p.quantity),
+        qty: Number(p.quantity),
       })),
     };
-
-    setScenarioData([payload, ...scenarioData]);
+    postScenario(token, payload).then((obj) => {
+      setScenarioData((prev) => [obj.scenario, ...prev]);
+    });
     resetForm();
   };
+
+  function copyScenarioHandle(scenarioId) {
+    copyScenario(token, scenarioId).then((obj) => {
+      setScenarioData((prev) => [obj.cloneScenario, ...prev]);
+    });
+  }
+
+  if (!token) return <div>Loading...</div>;
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-100 overflow-hidden">
@@ -276,9 +316,13 @@ export default function ScenariosCreate() {
                         }
                       >
                         <option value="">품목 선택</option>
-                        <option>제품 A</option>
-                        <option>제품 B</option>
-                        <option>제품 C</option>
+                        {products.map((p) => {
+                          return (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          );
+                        })}
                       </select>
 
                       <input
@@ -332,19 +376,8 @@ export default function ScenariosCreate() {
 
             {/* LIST */}
             <div className="space-y-3">
-              {scenarioData.map((s) => {
-                const active = selectedId === s.id;
-
-                const handleCopy = (e) => {
-                  e.stopPropagation();
-
-                  const copiedScenario = {
-                    ...s,
-                    id: Date.now(),
-                  };
-
-                  setScenarioData((prev) => [copiedScenario, ...prev]);
-                };
+              {scenarioData?.filter(Boolean).map((s) => {
+                const active = String(selectedId) === String(s.id);
 
                 return (
                   <div
@@ -363,7 +396,10 @@ export default function ScenariosCreate() {
                       {s.startAt.slice(11, 16)}
 
                       <button
-                        onClick={handleCopy}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyScenarioHandle(s.id);
+                        }}
                         className="p-1 rounded hover:bg-blue-100 transition"
                         title="복사"
                       >
@@ -394,6 +430,9 @@ export default function ScenariosCreate() {
           running={running}
           completed={completed}
           onStart={handleStart}
+          onEdit={(scenario) => setEditScenario(scenario)}
+          onCancelEdit={() => setEditScenario(null)}
+          editScenario={editScenario}
         />
       </div>
     </div>

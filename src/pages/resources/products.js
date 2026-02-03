@@ -245,10 +245,10 @@ export default function ResourcesPage() {
 
                     <div className="text-xs text-stone-500 text-right space-y-1">
                       <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded">
-                        Tool {task.toolCategoryId}
+                        {task.toolCategoryId}
                       </span>
                       <div className="px-2 py-1 text-stone-700">
-                        {task.duration} 분
+                        {task.duration} 분 / {task.requiredWorkers}명
                       </div>
                     </div>
                   </div>

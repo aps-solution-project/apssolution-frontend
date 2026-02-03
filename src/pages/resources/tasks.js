@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
 import { getTasks } from "@/api/task-api";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useEffect, useMemo, useState } from "react";
 
 import SearchBar from "@/components/layout/SearchBar";
 import TaskColumnFilter from "@/components/layout/TaskColumnFilter";
 
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -16,21 +17,23 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 
 const PAGE_SIZE = 15;
-const GRID_COLS = "grid-cols-[15%_17%_13%_7%_15%_36%]";
+
+/** 👉 컬럼 비율 재설계 (설명 넓힘) */
+const GRID_COLS = "grid-cols-[10%_17%_14%_6%_13%_30%_10%]";
+
+const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0";
 
 export default function TaskPage() {
-  useAuthGuard(); // <-- 페이지 접근시 토큰 인증
+  useAuthGuard();
   const token = useToken((state) => state.token);
   const router = useRouter();
 
   const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-
   const [productFilter, setProductFilter] = useState([]);
   const [toolFilter, setToolFilter] = useState([]);
 
@@ -41,46 +44,39 @@ export default function TaskPage() {
 
   useEffect(() => {
     if (!token) return;
-
-    getTasks(token).then((data) => {
-      setTasks(data.tasks || []);
-    });
+    getTasks(token).then((data) => setTasks(data.tasks || []));
   }, [token]);
 
-  const productOptions = useMemo(() => {
-    return Array.from(new Set(tasks.map((t) => t.productId))).filter(Boolean);
-  }, [tasks]);
+  const productOptions = useMemo(
+    () => Array.from(new Set(tasks.map((t) => t.productId))).filter(Boolean),
+    [tasks],
+  );
 
-  const toolOptions = useMemo(() => {
-    return Array.from(new Set(tasks.map((t) => t.toolCategoryId))).filter(
-      Boolean,
-    );
-  }, [tasks]);
+  const toolOptions = useMemo(
+    () =>
+      Array.from(new Set(tasks.map((t) => t.toolCategoryId))).filter(Boolean),
+    [tasks],
+  );
 
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
-      const keyword =
-        t.id + t.productId + t.toolCategoryId + t.name + (t.description || "");
+      const keyword = (
+        t.id +
+        t.productId +
+        t.toolCategoryId +
+        t.name +
+        (t.description || "")
+      ).toLowerCase();
 
-      const matchSearch = keyword.toLowerCase().includes(search.toLowerCase());
-
-      const matchProduct =
-        productFilter.length === 0 || productFilter.includes(t.productId);
-
-      const matchTool =
-        toolFilter.length === 0 || toolFilter.includes(t.toolCategoryId);
-
-      return matchSearch && matchProduct && matchTool;
+      return (
+        keyword.includes(search.toLowerCase()) &&
+        (productFilter.length === 0 || productFilter.includes(t.productId)) &&
+        (toolFilter.length === 0 || toolFilter.includes(t.toolCategoryId))
+      );
     });
   }, [tasks, search, productFilter, toolFilter]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-
-  useEffect(() => {
-    if (page > totalPages && totalPages > 0) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
 
   const pageData = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
@@ -89,6 +85,7 @@ export default function TaskPage() {
 
   return (
     <div className="space-y-4">
+      {/* 상단 네비 */}
       <div className="flex justify-between items-center">
         <div className="flex gap-8 text-sm font-medium">
           <Link
@@ -126,71 +123,78 @@ export default function TaskPage() {
             }}
             placeholder="검색"
           />
-
           <Button
             size="sm"
             onClick={() => router.push("/tasks")}
             className="flex gap-1"
           >
-            <Pencil size={14} />
-            수정
+            <Pencil size={14} /> 수정
           </Button>
         </div>
       </div>
 
-      <div
-        className={`grid ${GRID_COLS} px-4 py-1.5 bg-slate-200 text-xs font-semibold leading-tight`}
-      >
-        <div className="flex items-center gap-1">ID</div>
+      {/* 표 */}
+      <div className="border rounded-lg overflow-hidden shadow-sm">
+        {/* 헤더 (세로폭 살짝 줄임) */}
+        <div
+          className={`grid ${GRID_COLS} bg-slate-100 text-xs font-semibold border-b`}
+        >
+          <div className={`${cellBase} py-2`}>ID</div>
 
-        <div className="flex items-center gap-1">
-          <TaskColumnFilter
-            label="제품"
-            options={productOptions}
-            selected={productFilter}
-            onChange={(v) => {
-              setProductFilter(v);
-              setPage(1);
-            }}
-          />
+          <div className={`${cellBase} py-2`}>
+            <TaskColumnFilter
+              label="제품"
+              options={productOptions}
+              selected={productFilter}
+              onChange={(v) => {
+                setProductFilter(v);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          <div className={`${cellBase} py-2`}>
+            <TaskColumnFilter
+              label="도구"
+              options={toolOptions}
+              selected={toolFilter}
+              onChange={(v) => {
+                setToolFilter(v);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          <div className={`${cellBase} justify-center py-2`}>순서</div>
+          <div className={`${cellBase} py-2`}>작업명</div>
+          <div className={`${cellBase} py-2`}>설명</div>
+          <div className={`${cellBase} justify-center py-2`}>요구인원</div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <TaskColumnFilter
-            label="도구"
-            options={toolOptions}
-            selected={toolFilter}
-            onChange={(v) => {
-              setToolFilter(v);
-              setPage(1);
-            }}
-          />
-        </div>
-
-        <div className="flex items-center gap-1">순서</div>
-        <div className="flex items-center gap-1">작업명</div>
-        <div className="flex items-center gap-1">설명</div>
-      </div>
-
-      <div className="border border-t-0 rounded-b-lg overflow-hidden">
+        {/* 바디 */}
         {pageData.map((t) => (
           <div
             key={t.id}
-            className={`grid ${GRID_COLS} px-6 py-3 items-center text-sm border-b hover:bg-slate-100`}
+            className={`grid ${GRID_COLS} text-sm border-b last:border-b-0 hover:bg-slate-50`}
           >
-            <div className="font-medium text-stone-600">{t.id}</div>
-            <div className="text-stone-600">{t.productId}</div>
-            <div className="text-stone-600">{t.toolCategoryId}</div>
-            <div>{t.seq}</div>
-            <div className="truncate">{t.name}</div>
-            <div className="text-stone-400 truncate">
+            <div className={cellBase}>{t.id}</div>
+            <div className={`${cellBase} truncate`}>{t.productId}</div>
+            <div className={`${cellBase} truncate`}>
+              {t.toolCategoryId || "-"}
+            </div>
+            <div className={`${cellBase} justify-center`}>{t.seq}</div>
+            <div className={`${cellBase} truncate`}>{t.name}</div>
+            <div className={`${cellBase} truncate text-stone-500`}>
               {t.description || "-"}
+            </div>
+            <div className={`${cellBase} justify-center`}>
+              {t.requiredWorkers ?? 1}
             </div>
           </div>
         ))}
 
         {pageData.length === 0 && (
-          <div className="py-12 text-center text-stone-400">
+          <div className="py-12 text-center text-stone-400 text-sm">
             조건에 맞는 공정이 없습니다.
           </div>
         )}
@@ -204,7 +208,6 @@ export default function TaskPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               />
             </PaginationItem>
-
             {Array.from({ length: totalPages }).map((_, i) => (
               <PaginationItem key={i}>
                 <PaginationLink
@@ -215,7 +218,6 @@ export default function TaskPage() {
                 </PaginationLink>
               </PaginationItem>
             ))}
-
             <PaginationItem>
               <PaginationNext
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
