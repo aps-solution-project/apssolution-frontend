@@ -1,18 +1,16 @@
-// 페이지마다 토큰인증
-
-import { useEffect } from "react";
-import { useRouter } from "next/router";
+// 페이지마다 토큰 인증 (추가 보호 - _app.js에서 이미 체크함)
 import { useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export function useAuthGuard() {
   const token = useToken((s) => s.token);
   const router = useRouter();
 
-  // console.log("AuthGuard token:", token); <-- 토큰 인증하고 있는지 확인용
-
   useEffect(() => {
-    if (!token) {
+    // _app.js에서 이미 체크하므로, 추가 보호용
+    if (!token && router.isReady) {
       router.replace("/login");
     }
-  }, [token]);
+  }, [token, router]);
 }

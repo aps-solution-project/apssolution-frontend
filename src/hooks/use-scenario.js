@@ -1,22 +1,14 @@
 import { fetcher } from "@/api/fetcher.api";
-import { useScenarioStore } from "@/stores/scenario-store";
 
 export function useScenario() {
-  const {
-    setScenarios,
-    setCurrentScenario,
-    startSimulation,
-    setResult,
-    setError,
-  } = useScenarioStore();
-
-  // 시나리오 목록
+  // 시나리오 목록 로드
   const loadScenarios = async () => {
     try {
       const data = await fetcher.getScenarios();
-      setScenarios(data);
+      return data;
     } catch (e) {
       console.error(e);
+      throw e;
     }
   };
 
@@ -24,12 +16,8 @@ export function useScenario() {
   const createScenario = async (payload) => {
     try {
       const res = await fetcher.postScenario(payload);
-
       const scenario = res.data || res.scenario || res;
-
       console.log("created scenario 👉", scenario);
-
-      setCurrentScenario(scenario);
       return scenario;
     } catch (e) {
       console.error(e);
@@ -40,15 +28,12 @@ export function useScenario() {
   // 시뮬레이션 실행
   const runSimulation = async (scenarioId) => {
     try {
-      startSimulation();
-
       await fetcher.simulateScenario(scenarioId);
-
       const result = await fetcher.getScenarioResult(scenarioId);
-      setResult(result);
+      return result;
     } catch (e) {
       console.error(e);
-      setError(e);
+      throw e;
     }
   };
 

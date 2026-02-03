@@ -3,12 +3,13 @@ import {
   getAccountDetail,
   updateMyAccount,
 } from "@/api/auth-api";
-import { useEffect, useMemo, useState } from "react";
-import { useAccount, useToken } from "@/stores/account-store";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, Pencil, Shield, Check, X } from "lucide-react";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useAccount, useToken } from "@/stores/account-store";
+import { Camera, Check, Pencil, Shield, X } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useMemo, useState } from "react";
 
 const API_BASE_URL = "http://192.168.0.20:8080";
 
@@ -16,6 +17,7 @@ export default function MyProfilePage() {
   const account = useAccount((s) => s.account);
   const setAccount = useAccount((s) => s.setAccount);
   const token = useToken((s) => s.token);
+  const router = useRouter();
 
   useAuthGuard();
 
@@ -69,7 +71,6 @@ export default function MyProfilePage() {
       setAccount(updated);
 
       alert("프로필이 수정되었습니다");
-
       window.location.reload();
     } finally {
       setLoading(false);
@@ -168,7 +169,7 @@ export default function MyProfilePage() {
               계정 관리
             </button>
             <button
-              onClick={() => (window.location.href = "/myInformation/myPosts")}
+              onClick={() => router.push("/myInformation/myPosts")}
               className="px-8 py-4 text-slate-400 hover:text-slate-700"
             >
               내가 쓴 글
