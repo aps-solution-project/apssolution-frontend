@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Check, Copy } from "lucide-react";
 import ScenariosInformation from "./ScenariosInformation";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const initialScenarios = [
   {
@@ -143,237 +144,247 @@ export default function ScenariosCreate() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-100 overflow-hidden">
-      <header className="h-14 bg-white border-b px-6 flex items-center">
+    <div className="h-full w-full flex flex-col bg-gray-100 overflow-hidden">
+      <header className="h-14 bg-white border-b px-6 flex items-center shrink-0">
         <span className="font-semibold text-blue-600">Scenario</span>
       </header>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <section className="w-1/2 bg-white border-r px-6 py-4 overflow-y-auto">
-          <div className="flex justify-between mb-4">
-            <h2 className="font-medium">시나리오 생성</h2>
-            <button
-              onClick={() => setShowForm((v) => !v)}
-              className="border px-2 py-1 rounded text-sm flex items-center gap-1 hover:bg-gray-50 transition-colors"
+        <section className="w-1/2 bg-white border-r px-6 py-4 h-full min-h-0">
+          <ScrollArea className="h-full w-full">
+            <div className=" flex justify-between mb-4">
+              <h2 className="font-medium">시나리오 생성</h2>
+              <button
+                onClick={() => setShowForm((v) => !v)}
+                className="border px-2 py-1 rounded text-sm flex items-center gap-1 hover:bg-gray-50 transition-colors"
+              >
+                <Plus size={14} /> 시나리오 추가
+              </button>
+            </div>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showForm
+                  ? "max-h-250 opacity-100 mb-6"
+                  : "max-h-0 opacity-0 mb-0"
+              }`}
             >
-              <Plus size={14} /> 시나리오 추가
-            </button>
-          </div>
-
-          <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              showForm ? "max-h-250 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"
-            }`}
-          >
-            <div className="border rounded-xl p-5 space-y-4 bg-white shadow-sm">
-              {/* 제목 */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  시나리오 제목 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                />
-                {errors.title && (
-                  <p className="text-xs text-red-500">{errors.title}</p>
-                )}
-              </div>
-
-              {/* 설명 */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  설명<span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* 날짜 + 시간 */}
-              <div className="flex gap-4">
-                <div className="flex-1 space-y-1">
+              <div className="border rounded-xl p-5 space-y-4 bg-white shadow-sm">
+                {/* 제목 */}
+                <div className="space-y-1">
                   <label className="text-sm font-medium">
-                    날짜 <span className="text-red-500">*</span>
+                    시나리오 제목 <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
                     className="w-full border rounded px-3 py-2 text-sm"
-                    value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
                   />
-                  {errors.date && (
-                    <p className="text-xs text-red-500">{errors.date}</p>
+                  {errors.title && (
+                    <p className="text-xs text-red-500">{errors.title}</p>
                   )}
                 </div>
 
-                <div className="flex-1 space-y-1">
+                {/* 설명 */}
+                <div className="space-y-1">
                   <label className="text-sm font-medium">
-                    시간 <span className="text-red-500">*</span>
+                    설명<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="time"
+                  <textarea
                     className="w-full border rounded px-3 py-2 text-sm"
-                    value={form.time}
-                    onChange={(e) => setForm({ ...form, time: e.target.value })}
+                    rows={3}
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
                   />
-                  {errors.time && (
-                    <p className="text-xs text-red-500">{errors.time}</p>
-                  )}
                 </div>
-              </div>
 
-              {/* 인원 */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  인원 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                  placeholder="작업에 투입될 인원 수"
-                  value={form.maxWorkerCount}
-                  onChange={(e) =>
-                    setForm({ ...form, maxWorkerCount: e.target.value })
-                  }
-                />
-                {errors.maxWorkerCount && (
-                  <p className="text-xs text-red-500">
-                    {errors.maxWorkerCount}
-                  </p>
-                )}
-              </div>
-
-              {/* 생산 품목 */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  생산 품목 <span className="text-red-500">*</span>
-                </label>
-
-                {form.scenarioProductList.map((item, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <select
-                      className="border rounded px-2 py-2 text-sm w-1/2"
-                      value={item.productId}
-                      onChange={(e) =>
-                        updateItem(i, "productId", e.target.value)
-                      }
-                    >
-                      <option value="">품목 선택</option>
-                      <option>제품 A</option>
-                      <option>제품 B</option>
-                      <option>제품 C</option>
-                    </select>
-
+                {/* 날짜 + 시간 */}
+                <div className="flex gap-4">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-sm font-medium">
+                      날짜 <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="number"
-                      className="border rounded px-2 py-2 text-sm w-1/2"
-                      placeholder="수량"
-                      value={item.quantity}
+                      type="date"
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={form.date}
                       onChange={(e) =>
-                        updateItem(i, "quantity", e.target.value)
+                        setForm({ ...form, date: e.target.value })
                       }
                     />
-
-                    <button
-                      onClick={() => removeItem(i)}
-                      className="text-red-500"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {errors.date && (
+                      <p className="text-xs text-red-500">{errors.date}</p>
+                    )}
                   </div>
-                ))}
 
-                {errors.products && (
-                  <p className="text-xs text-red-500">{errors.products}</p>
-                )}
+                  <div className="flex-1 space-y-1">
+                    <label className="text-sm font-medium">
+                      시간 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={form.time}
+                      onChange={(e) =>
+                        setForm({ ...form, time: e.target.value })
+                      }
+                    />
+                    {errors.time && (
+                      <p className="text-xs text-red-500">{errors.time}</p>
+                    )}
+                  </div>
+                </div>
 
-                <button
-                  onClick={addItem}
-                  className="text-sm text-blue-600 flex items-center gap-1"
-                >
-                  <Plus size={14} /> 품목 추가
-                </button>
-              </div>
+                {/* 인원 */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">
+                    인원 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full border rounded px-3 py-2 text-sm"
+                    placeholder="작업에 투입될 인원 수"
+                    value={form.maxWorkerCount}
+                    onChange={(e) =>
+                      setForm({ ...form, maxWorkerCount: e.target.value })
+                    }
+                  />
+                  {errors.maxWorkerCount && (
+                    <p className="text-xs text-red-500">
+                      {errors.maxWorkerCount}
+                    </p>
+                  )}
+                </div>
 
-              {/* 버튼 */}
-              <div className="flex gap-2 pt-3">
-                <button
-                  onClick={handleAddScenario}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 transition-colors"
-                >
-                  추가하기
-                </button>
-                <button
-                  onClick={resetForm}
-                  className="flex-1 border py-2 rounded text-sm hover:bg-gray-50 transition-colors"
-                >
-                  취소
-                </button>
+                {/* 생산 품목 */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">
+                    생산 품목 <span className="text-red-500">*</span>
+                  </label>
+
+                  {form.scenarioProductList.map((item, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <select
+                        className="border rounded px-2 py-2 text-sm w-1/2"
+                        value={item.productId}
+                        onChange={(e) =>
+                          updateItem(i, "productId", e.target.value)
+                        }
+                      >
+                        <option value="">품목 선택</option>
+                        <option>제품 A</option>
+                        <option>제품 B</option>
+                        <option>제품 C</option>
+                      </select>
+
+                      <input
+                        type="number"
+                        className="border rounded px-2 py-2 text-sm w-1/2"
+                        placeholder="수량"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItem(i, "quantity", e.target.value)
+                        }
+                      />
+
+                      <button
+                        onClick={() => removeItem(i)}
+                        className="text-red-500"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {errors.products && (
+                    <p className="text-xs text-red-500">{errors.products}</p>
+                  )}
+
+                  <button
+                    onClick={addItem}
+                    className="text-sm text-blue-600 flex items-center gap-1"
+                  >
+                    <Plus size={14} /> 품목 추가
+                  </button>
+                </div>
+
+                {/* 버튼 */}
+                <div className="flex gap-2 pt-3">
+                  <button
+                    onClick={handleAddScenario}
+                    className="flex-1 bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    추가하기
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    className="flex-1 border py-2 rounded text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* LIST */}
-          <div className="space-y-3">
-            {scenarioData.map((s) => {
-              const active = selectedId === s.id;
+            {/* LIST */}
+            <div className="space-y-3">
+              {scenarioData.map((s) => {
+                const active = selectedId === s.id;
 
-              const handleCopy = (e) => {
-                e.stopPropagation();
+                const handleCopy = (e) => {
+                  e.stopPropagation();
 
-                const copiedScenario = {
-                  ...s,
-                  id: Date.now(),
+                  const copiedScenario = {
+                    ...s,
+                    id: Date.now(),
+                  };
+
+                  setScenarioData((prev) => [copiedScenario, ...prev]);
                 };
 
-                setScenarioData((prev) => [copiedScenario, ...prev]);
-              };
-
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => setSelectedId(active ? null : s.id)}
-                  className={`p-4 border rounded-lg cursor-pointer flex justify-between items-center transition-colors
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => setSelectedId(active ? null : s.id)}
+                    className={`p-4 border rounded-lg cursor-pointer flex justify-between items-center transition-colors
           ${
             active ? "bg-blue-50 border-blue-400" : "bg-white hover:bg-gray-50"
           }`}
-                >
-                  <div className="text-sm font-medium text-blue-700">
-                    {s.title}
+                  >
+                    <div className="text-sm font-medium text-blue-700">
+                      {s.title}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                      {s.startAt.slice(11, 16)}
+
+                      <button
+                        onClick={handleCopy}
+                        className="p-1 rounded hover:bg-blue-100 transition"
+                        title="복사"
+                      >
+                        <Copy size={16} className="text-blue-600" />
+                      </button>
+
+                      {active && <Check size={16} className="text-blue-600" />}
+
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="p-1 rounded hover:bg-red-100 transition"
+                        title="삭제"
+                      >
+                        <Trash2 size={16} className="text-red-500" />
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    {s.startAt.slice(11, 16)}
-
-                    <button
-                      onClick={handleCopy}
-                      className="p-1 rounded hover:bg-blue-100 transition"
-                      title="복사"
-                    >
-                      <Copy size={16} className="text-blue-600" />
-                    </button>
-
-                    {active && <Check size={16} className="text-blue-600" />}
-
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      className="p-1 rounded hover:bg-red-100 transition"
-                      title="삭제"
-                    >
-                      <Trash2 size={16} className="text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
         </section>
 
         {/* RIGHT */}

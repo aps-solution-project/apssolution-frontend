@@ -70,7 +70,7 @@ export default function SideBar({ children }) {
   useAuthGuard();
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-screen">
+      <div className="flex min-h-screen w-screen overflow-hidden">
         <Sidebar>
           <SidebarContent>
             <SidebarMenu>
@@ -104,9 +104,10 @@ export default function SideBar({ children }) {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0">
           <Header />
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
+
+          <main className="flex-1 overflow-y-auto bg-muted/30 p-6 min-h-0">
             {children}
           </main>
         </div>
