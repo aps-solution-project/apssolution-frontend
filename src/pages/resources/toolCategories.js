@@ -1,16 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
-import { useToken } from "@/stores/account-store";
 import {
-  getToolCategories,
   createToolCategory,
   deleteToolCategory,
+  getToolCategories,
 } from "@/api/tool-api";
-
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
+import { useEffect, useMemo, useState } from "react";
 
 import SearchBar from "@/components/layout/SearchBar";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 import {
   Pagination,
@@ -21,12 +20,15 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import { Plus, Trash2, Save } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Save, Trash2 } from "lucide-react";
 
-const GRID_COLS = "grid-cols-[25%_50%_3%]";
 const PAGE_SIZE = 10;
+
+/** 다른 리소스 페이지들과 동일한 컬럼 결 */
+const GRID_COLS = "grid-cols-[30%_55%_15%]";
+const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0";
 
 export default function ToolCategoryPage() {
   useAuthGuard();
@@ -71,7 +73,6 @@ export default function ToolCategoryPage() {
   const handleSave = async () => {
     const newCat = categories.find((c) => !c.isSaved);
     if (!newCat) return;
-
     if (!newCat.id.trim() || !newCat.name.trim()) return;
 
     await createToolCategory(
@@ -96,7 +97,6 @@ export default function ToolCategoryPage() {
 
   const filtered = useMemo(() => {
     if (!search.trim()) return categories;
-
     return categories.filter((c) =>
       `${c.id} ${c.name}`.toLowerCase().includes(search.toLowerCase()),
     );
@@ -110,7 +110,8 @@ export default function ToolCategoryPage() {
   }, [filtered, page]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* 상단 네비 */}
       <div className="flex justify-between items-center">
         <div className="flex gap-8 text-sm font-medium">
           <Link
@@ -148,7 +149,6 @@ export default function ToolCategoryPage() {
             }}
             placeholder="카테고리 검색"
           />
-
           {categories.some((c) => !c.isSaved) && (
             <Button size="sm" onClick={handleSave}>
               <Save className="mr-1 h-4 w-4" />
@@ -158,87 +158,90 @@ export default function ToolCategoryPage() {
         </div>
       </div>
 
-      <div
-        className={`grid ${GRID_COLS} px-5 py-2.5 bg-slate-200 text-xs font-semibold`}
-      >
-        <div>ID</div>
-        <div>카테고리명</div>
-        <div className="text-center">삭제</div>
-        <div></div>
-      </div>
+      {/* 표 */}
+      <div className="border rounded-lg overflow-hidden shadow-sm">
+        {/* 헤더 */}
+        <div
+          className={`grid ${GRID_COLS} bg-slate-100 text-xs font-semibold border-b`}
+        >
+          <div className={`${cellBase} py-2`}>카테고리 ID</div>
+          <div className={`${cellBase} py-2`}>카테고리명</div>
+          <div className={`${cellBase} py-2 justify-center`}>삭제</div>
+        </div>
 
-      <div className="border border-t-0 rounded-b-lg divide-y">
+        {/* 바디 */}
         {pageData.map((cat, index) => {
           const realIndex = (page - 1) * PAGE_SIZE + index;
 
           return (
             <div
               key={realIndex}
-              className={`px-5 py-2.5 transition ${
+              className={`grid ${GRID_COLS} text-sm border-b last:border-b-0 ${
                 cat.isSaved ? "hover:bg-slate-50" : "bg-emerald-50/40"
               }`}
             >
-              <div className={`grid ${GRID_COLS} w-full items-center`}>
-                {cat.isSaved ? (
-                  <>
-                    <div className="text-sm text-stone-500">{cat.id}</div>
-                    <div className="text-sm font-medium truncate">
-                      {cat.name}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="pr-30">
-                      <Input
-                        value={cat.id}
-                        onChange={(e) =>
-                          handleInputChange(realIndex, "id", e.target.value)
-                        }
-                        placeholder="카테고리 ID"
-                        className="h-8 rounded-lg text-sm border-stone-300
-      focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      />
-                    </div>
+              {cat.isSaved ? (
+                <>
+                  <div className={`${cellBase} text-stone-600`}>{cat.id}</div>
+                  <div
+                    className={`${cellBase} font-medium truncate flex gap-2`}
+                  >
+                    {cat.name}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={cellBase}>
+                    <Input
+                      value={cat.id}
+                      onChange={(e) =>
+                        handleInputChange(realIndex, "id", e.target.value)
+                      }
+                      placeholder="카테고리 ID"
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className={cellBase}>
+                    <Input
+                      value={cat.name}
+                      onChange={(e) =>
+                        handleInputChange(realIndex, "name", e.target.value)
+                      }
+                      placeholder="카테고리 이름"
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </>
+              )}
 
-                    <div className="pr-90">
-                      <Input
-                        value={cat.name}
-                        onChange={(e) =>
-                          handleInputChange(realIndex, "name", e.target.value)
-                        }
-                        placeholder="카테고리 이름"
-                        className="h-8 rounded-lg text-sm border-stone-300
-      focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      />
-                    </div>
-                  </>
-                )}
-
+              <div className={`${cellBase} justify-center`}>
                 <button
                   onClick={() => handleDelete(realIndex, cat.id)}
-                  className="flex justify-center text-stone-300 hover:text-red-500 hover:bg-red-50"
+                  className="text-stone-300 hover:text-red-500 hover:bg-red-50 p-1 rounded"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
-
-                {!cat.isSaved && (
-                  <span className="text-xs text-emerald-600 font-medium">
-                    신규
-                  </span>
-                )}
               </div>
             </div>
           );
         })}
+
+        {pageData.length === 0 && (
+          <div className="py-12 text-center text-stone-400 text-sm">
+            검색 결과가 없습니다.
+          </div>
+        )}
       </div>
 
+      {/* 페이지네이션 */}
       {totalPages > 1 && (
         <Pagination>
           <PaginationContent>
-            <PaginationPrevious
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            />
-
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+            </PaginationItem>
             {Array.from({ length: totalPages }).map((_, i) => (
               <PaginationItem key={i}>
                 <PaginationLink
@@ -249,21 +252,22 @@ export default function ToolCategoryPage() {
                 </PaginationLink>
               </PaginationItem>
             ))}
-
-            <PaginationNext
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            />
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              />
+            </PaginationItem>
           </PaginationContent>
         </Pagination>
       )}
 
+      {/* 추가 버튼 */}
       {!categories.some((c) => !c.isSaved) && (
         <div
           onClick={handleAddRow}
-          className="cursor-pointer py-4 rounded-xl border border-dashed text-sm text-stone-400 text-center
-            hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-400 transition"
+          className="cursor-pointer py-4 rounded-xl border border-dashed text-sm text-stone-400 text-center hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-400 transition"
         >
-          <Plus className="inline-block mr-1 h-5 w-5" />새 카테고리 추가
+          <Plus className="inline-block mr-1 h-5 w-5" /> 새 카테고리 추가
         </div>
       )}
     </div>

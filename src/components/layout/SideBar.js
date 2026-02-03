@@ -9,20 +9,21 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
-import { useAuthGuard } from "@/hooks/use-authGuard";
-import Header from "./Header";
 import Link from "next/link";
+import Header from "./Header";
 
+import { useToken } from "@/stores/account-store";
 import {
-  Inbox,
-  Settings,
   Columns3Cog,
+  Inbox,
   PackageCheck,
+  Settings,
   Wrench,
 } from "lucide-react";
 
@@ -31,7 +32,7 @@ const sections = [
     title: "설계 엔진",
     icon: Columns3Cog,
     items: [
-      { label: "주문 항목 생성", href: "/scenarios/ScenariosCreate" },
+      { label: "주문 항목 생성", href: "/scenarios/create" },
       { label: "시뮬레이션 결과(gantt임시 페이지)", href: "/simulations" },
     ],
   },
@@ -67,6 +68,9 @@ const sections = [
 ];
 
 export default function SideBar({ children }) {
+  const { token } = useToken();
+  if (!token) return;
+
   useAuthGuard();
   return (
     <SidebarProvider>

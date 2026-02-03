@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
 import { getAllTools } from "@/api/tool-api";
+import SearchBar from "@/components/layout/SearchBar";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useAuthGuard } from "@/hooks/use-authGuard";
-import SearchBar from "@/components/layout/SearchBar";
+import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -15,10 +16,12 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 15;
+
+/** Tasks 페이지랑 톤 맞춤 */
 const GRID_COLS = "grid-cols-[20%_30%_50%]";
+const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0";
 
 export default function ToolPage() {
   useAuthGuard();
@@ -36,27 +39,23 @@ export default function ToolPage() {
 
   useEffect(() => {
     if (!token) return;
-
-    getAllTools(token).then((data) => {
-      setTools(data.tools || []);
-    });
+    getAllTools(token).then((data) => setTools(data.tools || []));
   }, [token]);
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return tools.filter(
       (t) =>
-        t.id.toLowerCase().includes(search.toLowerCase()) ||
-        t.category?.id?.toLowerCase().includes(search.toLowerCase()) ||
-        (t.description || "").toLowerCase().includes(search.toLowerCase()),
+        t.id.toLowerCase().includes(q) ||
+        t.category?.id?.toLowerCase().includes(q) ||
+        (t.description || "").toLowerCase().includes(q),
     );
   }, [tools, search]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   useEffect(() => {
-    if (page > totalPages && totalPages > 0) {
-      setPage(totalPages);
-    }
+    if (page > totalPages && totalPages > 0) setPage(totalPages);
   }, [page, totalPages]);
 
   const pageData = useMemo(() => {
@@ -66,6 +65,7 @@ export default function ToolPage() {
 
   return (
     <div className="space-y-4">
+      {/* 상단 네비 */}
       <div className="flex justify-between items-center">
         <div className="flex gap-8 text-sm font-medium">
           <Link
@@ -103,7 +103,6 @@ export default function ToolPage() {
             }}
             placeholder="검색"
           />
-
           <Button
             size="sm"
             onClick={() => router.push("/tools")}
@@ -115,30 +114,37 @@ export default function ToolPage() {
         </div>
       </div>
 
-      <div
-        className={`grid ${GRID_COLS} px-6 py-3 bg-slate-200 text-xs font-semibold`}
-      >
-        <div>도구 ID</div>
-        <div>카테고리 ID</div>
-        <div>설명</div>
-      </div>
+      {/* 표 */}
+      <div className="border rounded-lg overflow-hidden shadow-sm">
+        {/* 헤더 */}
+        <div
+          className={`grid ${GRID_COLS} bg-slate-100 text-xs font-semibold border-b`}
+        >
+          <div className={`${cellBase} py-2`}>도구 ID</div>
+          <div className={`${cellBase} py-2`}>카테고리 ID</div>
+          <div className={`${cellBase} py-2`}>설명</div>
+        </div>
 
-      <div className="border border-t-0 rounded-b-lg overflow-hidden">
+        {/* 바디 */}
         {pageData.map((tool) => (
           <div
             key={tool.id}
-            className={`grid ${GRID_COLS} px-6 py-3 items-center text-sm border-b transition hover:bg-slate-50`}
+            className={`grid ${GRID_COLS} text-sm border-b last:border-b-0 hover:bg-slate-50`}
           >
-            <div className="text-stone-600 font-medium">{tool.id}</div>
-            <div className="text-stone-500">{tool.category?.id || "-"}</div>
-            <div className="text-stone-700 truncate">
+            <div className={`${cellBase} font-medium text-stone-700`}>
+              {tool.id}
+            </div>
+            <div className={`${cellBase} text-stone-500`}>
+              {tool.category?.id || "-"}
+            </div>
+            <div className={`${cellBase} text-stone-600 truncate`}>
               {tool.description || "-"}
             </div>
           </div>
         ))}
 
         {pageData.length === 0 && (
-          <div className="py-12 text-center text-stone-400">
+          <div className="py-12 text-center text-stone-400 text-sm">
             검색 결과가 없습니다.
           </div>
         )}
