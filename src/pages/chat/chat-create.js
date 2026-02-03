@@ -1,4 +1,4 @@
-import { getAllAccounts } from "@/api/auth-api";
+import { getActiveAccounts } from "@/api/auth-api";
 import { createGroupChat, startDirectChat } from "@/api/chat-api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,18 +20,17 @@ export default function CreateChatPage() {
   const [selectedUsers, setSelectedUsers] = useState([]); // 선택된 유저들
   const [roomName, setRoomName] = useState(""); // 그룹 채팅 방 이름
 
-  const API_BASE_URL = "http://192.168.0.20:8080";
+  const SERVER_URL = "http://192.168.0.20:8080"; // 프로필 이미지 경로
+  const DEFAULT_IMAGE = "/images/default-profile.png"; // 디폴트 이미지 경로
 
   // 1. 페이지 로드 시 사원 목록 가져오기
   useEffect(() => {
     if (!token) return;
 
     setLoading(true);
-    getAllAccounts(token)
+    getActiveAccounts(token)
       .then((data) => {
-        const accountList = data.accounts || [];
-        // 본인을 제외한 사원들만 리스트에 담기
-        const otherUsers = accountList.filter(
+        const otherUsers = data.filter(
           (u) => u.accountId !== account?.accountId,
         );
         setUsers(otherUsers);
@@ -82,9 +81,19 @@ export default function CreateChatPage() {
   };
 
   // 검색 필터링
-  const filteredUsers = users.filter((u) =>
-    (u.accountName || "").includes(search),
-  );
+  const filteredUsers = users.filter((u) => {
+    // 1. 검색어를 소문자로 변환 (대소문자 구분 방지)
+    const searchTerm = search.toLowerCase();
+
+    // 2. 이름 검색 (소문자 변환 후 비교)
+    const nameMatch = (u.name || "").toLowerCase().includes(searchTerm);
+
+    // 3. 사원 번호 검색 (소문자 변환 후 비교)
+    const idMatch = (u.accountId || "").toLowerCase().includes(searchTerm);
+
+    // 이름이나 사원 번호 중 하나라도 일치하면 결과에 포함
+    return nameMatch || idMatch;
+  });
 
   return (
     <div className="max-w-2xl mx-auto bg-white min-h-[85vh] shadow-lg border rounded-2xl flex flex-col overflow-hidden my-4">
@@ -110,39 +119,6 @@ export default function CreateChatPage() {
         </Button>
       </div>
 
-      {/* 선택된 인원 요약 */}
-      {selectedUsers.length > 0 && (
-        <div className="px-5 py-3 flex gap-2 overflow-x-auto bg-indigo-50/30 border-b scrollbar-hide">
-          {selectedUsers.map((user) => (
-            <div
-              key={user.accountId}
-              className="flex items-center gap-1.5 bg-white border border-indigo-200 px-3 py-1.5 rounded-full text-sm text-indigo-600 shadow-sm shrink-0 animate-in zoom-in-50"
-            >
-              <span className="font-medium">{user.accountName}</span>
-              <X
-                className="size-3.5 cursor-pointer hover:text-red-500"
-                onClick={() => toggleUser(user)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 그룹 채팅 설정 */}
-      {selectedUsers.length > 1 && (
-        <div className="p-5 border-b bg-white animate-in slide-in-from-top-3">
-          <label className="text-xs font-bold text-slate-400 mb-2 block ml-1">
-            채팅방 이름
-          </label>
-          <Input
-            placeholder="대화방 이름을 정해주세요 (선택)"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            className="bg-slate-50 border-none focus-visible:ring-indigo-500 py-6"
-          />
-        </div>
-      )}
-
       {/* 검색 바 */}
       <div className="p-5 relative">
         <Search className="absolute left-9 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -152,6 +128,57 @@ export default function CreateChatPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+      </div>
+
+      {/* 상단 설정 영역: min-h를 주어 리스트 밀림 현상 방지 */}
+      <div className="border-b bg-slate-50/50 min-h-[145px] flex flex-col justify-center transition-all">
+        {selectedUsers.length > 0 ? (
+          <div className="p-5 space-y-4 animate-in fade-in duration-300">
+            {/* 1. 선택된 인원 요약 */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {selectedUsers.map((user) => (
+                <div
+                  key={user.accountId}
+                  className="flex items-center gap-1.5 bg-white border border-indigo-200 px-3 py-1.5 rounded-full text-sm text-indigo-600 shadow-sm shrink-0 
+               animate-in fade-in zoom-in-90 slide-in-from-left-2 duration-300 ease-out"
+                >
+                  <span className="font-medium">{user.name}</span>
+                  <X
+                    className="size-3.5 cursor-pointer hover:text-red-500"
+                    onClick={() => toggleUser(user)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* 2. 그룹 채팅 설정: 공간을 미리 차지하도록 구성 */}
+            <div className="min-h-[60px]">
+              {selectedUsers.length > 1 ? (
+                <div className="animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">
+                    채팅방 이름 설정
+                  </label>
+                  <Input
+                    placeholder="대화방 이름을 정해주세요 (선택)"
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    className="bg-white border-slate-200 focus-visible:ring-indigo-500 h-10 shadow-sm"
+                  />
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 ml-1 mt-6 italic">
+                  사원을 한 명 더 선택하면 그룹 채팅이 가능합니다.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* 멤버 미선택 시 가이드: 이 영역 덕분에 리스트가 위로 붙지 않음 */
+          <div className="flex flex-col items-center justify-center py-10 text-slate-400 opacity-60 animate-in fade-in">
+            <User2 className="size-8 mb-1.5 stroke-[1.5px]" />
+            <p className="text-sm">대화할 상대를 목록에서 선택하세요.</p>
+          </div>
+        )}
       </div>
 
       {/* 사원 리스트 영역 */}
@@ -177,10 +204,10 @@ export default function CreateChatPage() {
                   <AvatarImage
                     src={
                       user.profileImageUrl
-                        ? `${API_BASE_URL}${user.profileImageUrl}`
-                        : ""
+                        ? `${SERVER_URL}${user.profileImageUrl}`
+                        : DEFAULT_IMAGE
                     }
-                    alt={user.accountName}
+                    alt={user.name}
                   />
                   <AvatarFallback className="bg-slate-100 text-slate-400">
                     <User2 className="size-6" />
@@ -188,10 +215,10 @@ export default function CreateChatPage() {
                 </Avatar>
                 <div>
                   <p className="font-bold text-slate-800">
-                    {user.accountId} · {user.accountName}
+                    {user.accountId} · {user.name}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {user.role} · {user.accountEmail}
+                    {user.role} · {user.email}
                   </p>
                 </div>
               </div>

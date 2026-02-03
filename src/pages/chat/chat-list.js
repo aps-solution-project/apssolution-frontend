@@ -11,6 +11,7 @@ export default function ChatList() {
   const { account } = useAccount();
   const { token } = useToken();
   const { stomp } = useStomp();
+  const { setTotalUnreadCount } = useStomp();
   const router = useRouter();
 
   const [chatData, setChatData] = useState({ myChatList: [] });
@@ -26,6 +27,11 @@ export default function ChatList() {
     getMyChats(token)
       .then((data) => {
         setChatData(data);
+        const initialTotal = data.myChatList.reduce(
+          (acc, cur) => acc + (cur.unreadCount || 0),
+          0,
+        );
+        setTotalUnreadCount(initialTotal);
       })
       .catch((err) => console.error("목록 로드 실패:", err));
   }, [token]);
@@ -67,6 +73,11 @@ export default function ChatList() {
                 unreadCount: (r.unreadCount || 0) + 1,
               };
             });
+            const total = updated.reduce(
+              (acc, cur) => acc + (cur.unreadCount || 0),
+              0,
+            );
+            setTotalUnreadCount(total);
 
             updated.sort(
               (a, b) =>

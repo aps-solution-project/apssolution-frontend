@@ -1,20 +1,12 @@
 import { create } from "zustand";
 
-export const useStomp = create(
-  function (set) {
-    return {
-      stomp: null,
+export const useStomp = create((set) => ({
+  stomp: null,
+  totalUnreadCount: 0,
 
-      clearStomp: function () {
-        set({ stomp: null });
-      },
+  clearStomp: () => set({ stomp: null }),
 
-      setStomp: function (newStomp) {
-        set({ stomp: newStomp });
-      },
-    };
-  },
-  {
-    name: "stomp",
-  },
-);
+  setStomp: (newStomp) => set({ stomp: newStomp }),
+
+  setTotalUnreadCount: (count) => set({ totalUnreadCount: count }),
+}));

@@ -117,6 +117,17 @@ export const getAllAccounts = async (token) => {
   });
 };
 
+// 재직중인 사원 조회
+export async function getActiveAccounts(token) {
+  const resp = await fetch(`${URL}/api/accounts/active`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok) throw new Error("사원 목록을 불러오지 못했습니다.");
+  return resp.json();
+}
+
+// 사원 상세 조회
 export function getAccountDetail(token, accountId) {
   return fetch(`${URL}/api/accounts/${accountId}`, {
     method: "GET",
