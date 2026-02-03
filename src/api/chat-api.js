@@ -79,3 +79,16 @@ export async function createGroupChat(token, data) {
   if (!resp.ok) throw new Error("그룹 채팅방 생성 실패");
   return resp.json();
 }
+
+
+export async function leaveChat(token, chatId) {
+  const resp = await fetch(`${URL}/api/chats/${chatId}/leave`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!resp.ok) throw new Error("채팅방 나가기 실패");
+  return resp;
+}

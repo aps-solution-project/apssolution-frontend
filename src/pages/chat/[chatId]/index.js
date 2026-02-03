@@ -1,9 +1,17 @@
-import { getChatDetail, sendMessage } from "@/api/chat-api";
+import { getChatDetail, leaveChat, sendMessage } from "@/api/chat-api";
+import { AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
-import { ChevronLeft, Image as ImageIcon, Send } from "lucide-react";
+import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import {
+  ChevronLeft,
+  FilePlus,
+  Image as ImageIcon,
+  LogOut,
+  Send,
+} from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
@@ -118,6 +126,16 @@ export default function ChatRoom() {
     window.open(downloadUrl, "_blank");
   }
 
+  function leaveChatRoom() {
+    leaveChat(token, chatId)
+      .then(() => {
+        router.replace("/chat/chat-list");
+      })
+      .catch((err) => {
+        console.error("채팅방 나가기 실패:", err);
+      });
+  }
+
   if (!chatInfo) {
     return (
       <div className="flex items-center justify-center h-[85vh]">
@@ -148,95 +166,113 @@ export default function ChatRoom() {
               실시간 연결됨
             </p>
           </div>
+          <div>
+            <Button
+              onClick={leaveChatRoom}
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              채팅방 나가기
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* 채팅 메시지 영역 */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f8f9fc]">
         {messages.map((msg) => {
+          if (msg.type === "LEAVE") {
+            return (
+              <div key={msg.id} className="flex justify-center my-4">
+                <div className="px-4 py-2 text-xs text-slate-500 bg-slate-200 rounded-full shadow-sm">
+                  {msg.talker && msg.talker.name}님이 나갔습니다
+                </div>
+              </div>
+            );
+          }
           const isMe =
             String(account?.accountId) === String(msg.talker?.userId);
+
+          const timeText =
+            msg.talkedAt &&
+            new Date(msg.talkedAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
 
           return (
             <div
               key={msg.id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 mb-4`}
+              className={`flex ${isMe ? "justify-end" : "justify-start"} gap-3 mb-6`}
             >
+              {/* 상대방 아바타 */}
+              {!isMe && (
+                <Avatar className="size-10 shrink-0 rounded-full shadow-sm border">
+                  <AvatarImage
+                    src={
+                      "http://192.168.0.20:8080" + msg.talker?.profileImageUrl
+                    }
+                  />
+                  <AvatarFallback>
+                    {msg.talker?.name?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+
+              {/* 메시지 영역 */}
               <div
-                className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[75%]`}
+                className={`flex flex-col max-w-[70%] ${
+                  isMe ? "items-end" : "items-start"
+                }`}
               >
-                {/* 말풍선 컨테이너 */}
+                {/* 이름 */}
+                <span className="text-[11px] text-slate-500 mb-1 px-1">
+                  {msg.talker?.name || "알 수 없음"}
+                </span>
+
+                {/* 💬 말풍선 + 시간 (한 줄) */}
                 <div
-                  className={`p-3 rounded-2xl shadow-sm ${
-                    isMe
-                      ? "bg-indigo-600 text-white rounded-br-none"
-                      : "bg-white text-slate-800 border rounded-bl-none"
+                  className={`flex items-end gap-2 ${
+                    isMe ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* 텍스트 메시지 */}
-                  {msg.type === "TEXT" && (
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  )}
+                  {/* 말풍선 */}
+                  <div
+                    className={`px-4 py-2 rounded-2xl shadow-sm text-sm whitespace-pre-wrap ${
+                      isMe
+                        ? "bg-indigo-600 text-white rounded-tr-none"
+                        : "bg-white border text-slate-800 rounded-tl-none"
+                    }`}
+                  >
+                    {msg.type === "TEXT" && msg.content}
 
-                  {/* 파일/이미지 메시지 */}
-                  {msg.type === "FILE" && (
-                    <div className="flex flex-col gap-2 p-1">
-                      {" "}
-                      {/* 패딩을 살짝 주어 테두리 안 겹치게 수정 */}
-                      {msg.attachments && msg.attachments.length > 0 ? (
-                        msg.attachments.map((file, index) => (
-                          <div
-                            key={file.id || `file-${index}`}
-                            className="relative group"
-                          >
-                            {/* 1. key 추가: 고유 ID가 없으면 index라도 사용하여 경고 해결 */}
-                            <img
-                              onClick={() => downloadFile(file)}
-                              src={encodeURI(
-                                `http://192.168.0.20:8080${file.fileUrl}`,
-                              )}
-                              className="rounded-lg w-full min-w-[150px] max-w-[250px] h-auto object-contain border border-white/20 shadow-sm transition-transform group-hover:scale-[1.02]"
-                              alt={file.fileName}
-                              onLoad={() =>
-                                console.log("이미지 로드 성공:", file.fileUrl)
-                              }
-                              onError={(e) => {
-                                console.error(
-                                  "파일 경로 확인용:",
-                                  e.target.src,
-                                );
-                                // 2. 무한 루프 방지: onError 내에서 src 교체 시 실패하면 계속 실행될 수 있음
-                                if (!e.target.src.includes("placehold.co")) {
-                                  e.target.src =
-                                    "https://placehold.co/250x200?text=Image+Not+Found";
-                                }
-                              }}
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-white/70 italic p-2">
-                          첨부된 파일이 없습니다.
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    {msg.type === "FILE" && (
+                      <div className="flex flex-col gap-2">
+                        {msg.attachments?.map((file, index) => (
+                          <img
+                            key={file.id || index}
+                            onClick={() => downloadFile(file)}
+                            src={`http://192.168.0.20:8080${file.fileUrl}`}
+                            className="rounded-lg w-full max-w-[220px] object-contain cursor-pointer hover:scale-[1.02] transition"
+                            alt={file.fileName}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 시간 */}
+                  <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                    {timeText}
+                  </span>
                 </div>
-                {/* ... 시간 표시 ... */}
-                <span className="text-[9px] text-slate-400 mt-1 px-1">
-                  {msg.talkedAt && (
-                    <span className="text-[9px] text-slate-400 mt-1 px-1">
-                      {new Date(msg.talkedAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  )}
-                </span>
               </div>
             </div>
           );
         })}
+
         <div ref={scrollRef} />
       </div>
 
@@ -259,6 +295,8 @@ export default function ChatRoom() {
           >
             <ImageIcon className="size-5" />
           </Button>
+
+          <FilePlus className="size-5" />
           <div className="flex-1 relative">
             <Input
               value={inputText}
