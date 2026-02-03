@@ -41,7 +41,7 @@ export default function LoginPage() {
       setToken(result.token);
       setAccount(result.account);
 
-      const redirect = router.query.redirect || "/scenarios";
+      const redirect = router.query.redirect || "/scenarios/create";
       router.replace(redirect);
     } catch (error) {
       setError(error.message);

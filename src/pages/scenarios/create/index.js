@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Check, Copy } from "lucide-react";
-import ScenariosInformation from "./ScenariosInformation";
+import ScenariosInformation from "@/components/scenario/ScenarioInfomation";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Check, Copy, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const initialScenarios = [
   {

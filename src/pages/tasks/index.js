@@ -1,8 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { getTasks, upsertTasks, parseTaskXls } from "@/api/task-api";
+import { getTasks, parseTaskXls, upsertTasks } from "@/api/task-api";
 import { useToken } from "@/stores/account-store";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
+import { FileInput, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 
 /**
  * Task Management Page
