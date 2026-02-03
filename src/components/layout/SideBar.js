@@ -98,8 +98,6 @@ export default function SideBar({ children }) {
         }
         setHasUnread(exists);
       } catch (err) {
-        // 401 에러가 나면 인터벌을 멈추거나 로그를 찍어 확인
-        console.error("SideBar Auth Error:", err.message);
         if (err.message.includes("401")) {
           setHasUnread(false);
         }
