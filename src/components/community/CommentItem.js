@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import BoardEditor from "../ui/editor";
 
 export default function CommentItem({
   comment,
@@ -117,7 +118,7 @@ export default function CommentItem({
 
             {/* 댓글 본문 */}
             <p className="text-sm text-slate-700 whitespace-pre-wrap break-words leading-relaxed">
-              {comment.content}
+              <EditorBlank html={comment.content} />
             </p>
           </div>
 
