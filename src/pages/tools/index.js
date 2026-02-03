@@ -17,6 +17,7 @@ import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
 export default function ToolManagementPage() {
   useAuthGuard();
   const [tools, setTools] = useState([]);
+  const [isAdding, setIsAdding] = useState(false);
   const token = useToken((state) => state.token);
 
   // 1. 데이터 로드
@@ -32,6 +33,7 @@ export default function ToolManagementPage() {
           isSaved: true,
         }));
         setTools(savedList);
+        setIsAdding(false);
       })
       .catch((err) => console.error("데이터 로드 실패:", err));
   };
@@ -84,14 +86,15 @@ export default function ToolManagementPage() {
   };
 
   const handleAddRow = () => {
+    setIsAdding(true);
     setTools([
-      ...tools,
       {
         id: "",
         category: { id: "", name: "" },
         description: "",
         isSaved: false,
       },
+      ...tools,
     ]);
   };
 
@@ -132,11 +135,10 @@ export default function ToolManagementPage() {
 
     // 3. 브라우저 기본 confirm 창을 띄웁니다.
     // 이 창은 '확인'을 누르면 true, '취소'를 누르면 false를 반환합니다.
-    if (
-      window.confirm(
-        `[${displayName}] 도구를 목록에서 제외하시겠습니까?\n실제 삭제는 상단의 '저장' 버튼을 눌러야 반영됩니다.`,
-      )
-    ) {
+    if (window.confirm("이 항목을 목록에서 제외하시겠습니까?")) {
+      if (!targetTool.isSaved) {
+        setIsAdding(false);
+      }
       // 확인을 눌렀을 때만 리스트에서 필터링하여 제거
       setTools(tools.filter((_, i) => i !== index));
     }
@@ -211,6 +213,21 @@ export default function ToolManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {!isAdding && (
+                <TableRow
+                  className="cursor-pointer hover:bg-stone-50 border-b-2 border-dashed group transition-colors bg-stone-50/50"
+                  onClick={handleAddRow}
+                >
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-4 text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
+                  >
+                    <Plus className="inline-block mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    새 도구 추가
+                  </TableCell>
+                </TableRow>
+              )}
+
               {tools.map((tool, index) => (
                 <TableRow
                   key={index}
@@ -224,7 +241,7 @@ export default function ToolManagementPage() {
                       </span>
                     ) : (
                       <span className="text-emerald-600 text-xs font-bold">
-                        신규
+                        NEW
                       </span>
                     )}
                   </TableCell>
@@ -241,6 +258,7 @@ export default function ToolManagementPage() {
                           ? "border-emerald-300 ring-1 ring-emerald-100"
                           : ""
                       }`}
+                      placeholder="ID 입력"
                     />
                   </TableCell>
 
@@ -256,6 +274,7 @@ export default function ToolManagementPage() {
                           ? "border-emerald-300 ring-1 ring-emerald-100"
                           : ""
                       }`}
+                      placeholder="카테고리 ID 입력"
                     />
                   </TableCell>
 
@@ -271,6 +290,7 @@ export default function ToolManagementPage() {
                           ? "border-emerald-300 ring-1 ring-emerald-100"
                           : ""
                       }`}
+                      placeholder="설명 입력"
                     />
                   </TableCell>
 
@@ -287,18 +307,6 @@ export default function ToolManagementPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow
-                className="cursor-pointer hover:bg-stone-50 border-t-2 border-dashed group transition-colors"
-                onClick={handleAddRow}
-              >
-                <TableCell
-                  colSpan={5}
-                  className="text-center text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
-                >
-                  <Plus className="inline-block mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                  새 도구 추가
-                </TableCell>
-              </TableRow>
             </TableBody>
           </Table>
         </div>
