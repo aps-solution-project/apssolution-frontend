@@ -69,7 +69,7 @@ export default function PlaygroundLayout() {
       scenarioProductList: [{ productId: "", quantity: "" }],
     });
     setErrors({});
-    setShowForm(false); // 취소 시 폼 닫기
+    setShowForm(false);
   };
 
   const addItem = () => {
@@ -142,7 +142,6 @@ export default function PlaygroundLayout() {
       </header>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* LEFT */}
         <section className="w-1/2 bg-white border-r px-6 py-4 overflow-y-auto">
           <div className="flex justify-between mb-4">
             <h2 className="font-medium">시나리오 생성</h2>
@@ -154,12 +153,9 @@ export default function PlaygroundLayout() {
             </button>
           </div>
 
-          {/* FORM AREA WITH ANIMATION */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              showForm
-                ? "max-h-[1000px] opacity-100 mb-6"
-                : "max-h-0 opacity-0 mb-0"
+              showForm ? "max-h-250 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"
             }`}
           >
             <div className="border rounded-xl p-5 space-y-4 bg-white shadow-sm">

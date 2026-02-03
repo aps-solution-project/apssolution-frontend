@@ -58,7 +58,7 @@ export default function CommunityEditPage() {
         });
       }
 
-      // ✅ 사원 전용 수정 API 호출
+      //  사원 전용 수정 API 호출
       const res = await editWorkerPost(token, noticeId, formData);
 
       if (res) {

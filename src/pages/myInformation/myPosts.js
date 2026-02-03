@@ -159,7 +159,7 @@ export default function MyProfilePage() {
                 <div key={post.noticeId} className="space-y-3">
                   <div
                     onClick={() =>
-                      (window.location.href = `/community/${post.noticeId}`)
+                      (window.location.href = `/notice/${post.noticeId}`)
                     }
                     className="border rounded-2xl bg-white p-5 cursor-pointer hover:bg-slate-50 transition"
                   >
@@ -180,7 +180,7 @@ export default function MyProfilePage() {
                       key={c.commentId}
                       className="border rounded-xl bg-white p-4 flex gap-3 cursor-pointer hover:bg-slate-50 transition"
                       onClick={() =>
-                        (window.location.href = `/community/${post.noticeId}`)
+                        (window.location.href = `/notice/${post.noticeId}`)
                       }
                     >
                       <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
