@@ -24,9 +24,9 @@ export default function Header() {
   const router = useRouter();
 
   const { clearToken } = useToken();
-  const { account, setAccount, clearAccount } = useAccount();
+  const { account, clearAccount } = useAccount();
 
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileOpen] = useState(false);
 
   const handleLogout = () => {
     clearToken();
