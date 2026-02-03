@@ -11,6 +11,7 @@ export default function ChatList() {
   const { account } = useAccount();
   const { token } = useToken();
   const { stomp } = useStomp();
+  const { setTotalUnreadCount } = useStomp();
   const router = useRouter();
 
   const [chatData, setChatData] = useState({ myChatList: [] });
@@ -26,6 +27,11 @@ export default function ChatList() {
     getMyChats(token)
       .then((data) => {
         setChatData(data);
+        const initialTotal = data.myChatList.reduce(
+          (acc, cur) => acc + (cur.unreadCount || 0),
+          0,
+        );
+        setTotalUnreadCount(initialTotal);
       })
       .catch((err) => console.error("목록 로드 실패:", err));
   }, [token]);
@@ -49,33 +55,32 @@ export default function ChatList() {
       const sub = stomp.subscribe(`/topic/chat/${roomId}`, (frame) => {
         try {
           const msg = JSON.parse(frame.body);
-          console.log("📩 목록에서 메시지 수신:", msg);
-
           const messageChatId = String(msg.chatId);
+          setTimeout(() => {
+            setChatData((prev) => {
+              const updated = prev.myChatList.map((r) => {
+                if (String(r.id) !== messageChatId) return r;
 
-          setChatData((prev) => {
-            const updated = prev.myChatList.map((r) => {
-              if (String(r.id) !== messageChatId) return r;
+                const lastMessage =
+                  msg.type === "FILE" ? "파일" : (msg.content ?? "메시지");
 
-              const lastMessage =
-                msg.type === "FILE" ? "파일" : (msg.content ?? "메시지");
+                return {
+                  ...r,
+                  lastMessage,
+                  lastMessageTime: parseDateSafe(msg.talkedAt),
+                  unreadCount: (r.unreadCount || 0) + 1,
+                };
+              });
 
-              return {
-                ...r,
-                lastMessage,
-                lastMessageTime: parseDateSafe(msg.talkedAt),
-                unreadCount: (r.unreadCount || 0) + 1,
-              };
+              updated.sort(
+                (a, b) =>
+                  new Date(b.lastMessageTime || 0).getTime() -
+                  new Date(a.lastMessageTime || 0).getTime(),
+              );
+
+              return { ...prev, myChatList: updated };
             });
-
-            updated.sort(
-              (a, b) =>
-                new Date(b.lastMessageTime || 0).getTime() -
-                new Date(a.lastMessageTime || 0).getTime(),
-            );
-
-            return { ...prev, myChatList: updated };
-          });
+          }, 0);
         } catch (e) {
           console.error("메시지 파싱 실패:", e);
         }
