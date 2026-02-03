@@ -1,4 +1,4 @@
-import { getProductTasks } from "@/api/product-api";
+import { getProducts, getProductTasks } from "@/api/product-api";
 import {
   Accordion,
   AccordionContent,
@@ -6,15 +6,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useResourcesStore } from "@/stores/resources-store";
 import { useToken } from "@/stores/account-store";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
 
 import SearchBar from "@/components/layout/SearchBar";
 
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -23,7 +23,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
 
 const PAGE_SIZE = 10;
 const GRID_COLS_HEADER = "grid-cols-[15%_25%_35%_10%_5%]";
@@ -38,10 +37,29 @@ export default function ResourcesPage() {
   const [sortDir, setSortDir] = useState("asc");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const token = useToken((state) => state.token);
-  const { products, loading, fetchProducts } = useResourcesStore();
   const router = useRouter();
+
+  const fetchProducts = async () => {
+    if (!token) {
+      console.warn("fetchProducts blocked: no token");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const data = await getProducts(token);
+      setProducts(data.products || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isProducts = router.pathname === "/resources/products";
   const isCategories = router.pathname === "/resources/toolCategories";
@@ -50,7 +68,7 @@ export default function ResourcesPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, [token]);
 
   const loadTasks = async (productId) => {
     if (tasksMap[productId]) return;

@@ -1,11 +1,9 @@
-import { useScenarioStore } from "@/stores/scenario-store";
-import { useMasterStore } from "@/stores/master-store";
-import { fetcher } from "@/api/fetcher.api";
-
-export default function ScenarioResult() {
-  const { result, status } = useScenarioStore();
-  const { tools = [], accounts = [] } = useMasterStore();
-
+export default function ScenarioResult({
+  result,
+  status,
+  tools = [],
+  accounts = [],
+}) {
   if (status !== "OPTIMAL") return null;
   if (!result?.scenarioSchedules) return null;
 
