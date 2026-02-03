@@ -18,7 +18,7 @@ export default function LoginPage() {
   // 토큰이 있으면 이미 로그인된 상태 → 리다이렉트
   useEffect(() => {
     if (token && router.isReady) {
-      router.replace("/scenarios");
+      router.replace("/scenarios/create");
     }
   }, [token, router]);
 

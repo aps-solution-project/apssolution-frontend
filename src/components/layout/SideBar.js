@@ -31,7 +31,7 @@ const sections = [
     title: "설계 엔진",
     icon: Columns3Cog,
     items: [
-      { label: "주문 항목 생성", href: "/scenarios/ScenariosCreate" },
+      { label: "주문 항목 생성", href: "/scenarios/create" },
       { label: "시뮬레이션 결과(gantt임시 페이지)", href: "/simulations" },
     ],
   },
@@ -70,7 +70,7 @@ export default function SideBar({ children }) {
   useAuthGuard();
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-screen overflow-hidden">
+      <div className="flex min-h-screen w-screen overflow-x-hidden">
         <Sidebar>
           <SidebarContent>
             <SidebarMenu>
@@ -104,12 +104,9 @@ export default function SideBar({ children }) {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
           <Header />
-
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6 min-h-0">
-            {children}
-          </main>
+          <main className="  bg-muted/30 p-6 min-h-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>
