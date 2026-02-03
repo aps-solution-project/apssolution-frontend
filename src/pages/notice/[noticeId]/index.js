@@ -7,6 +7,7 @@ import { List, SquarePen } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import EditorBlank from "@/components/ui/editorBlank";
 
 export default function AnnouncementDetailPage() {
   useAuthGuard();
@@ -96,10 +97,7 @@ export default function AnnouncementDetailPage() {
         </CardHeader>
 
         <CardContent>
-          <div
-            className="prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: notice.content }}
-          />
+          <EditorBlank html={notice.content} />
         </CardContent>
       </Card>
       {/* 첨부 파일 섹션 */}

@@ -15,6 +15,19 @@ export default function LoginPage() {
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
 
+  // 토큰이 있으면 이미 로그인된 상태 → 리다이렉트
+  useEffect(() => {
+    if (token && router.isReady) {
+      router.replace("/scenarios");
+    }
+  }, [token, router]);
+
+  // 페이지 진입시 상태 초기화
+  useEffect(() => {
+    clearToken();
+    clearAccount();
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -28,7 +41,7 @@ export default function LoginPage() {
       setToken(result.token);
       setAccount(result.account);
 
-      const redirect = router.query.redirect || "/scenarios";
+      const redirect = router.query.redirect || "/scenarios/create";
       router.replace(redirect);
     } catch (error) {
       setError(error.message);
@@ -36,11 +49,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    clearToken();
-    clearAccount();
-  }, []);
 
   return (
     <div className="min-h-screen bg-[url('/images/login-bp-01-01.jpg')] bg-cover bg-center">

@@ -1,15 +1,17 @@
 import { getAccountDetail, updateMyAccount } from "@/api/auth-api";
 import { getComments } from "@/api/community-api";
-import { useEffect, useState } from "react";
-import { useAccount, useToken } from "@/stores/account-store";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { Camera, Shield, FileText, MessageCircle } from "lucide-react";
+import { useAccount, useToken } from "@/stores/account-store";
+import { Camera, FileText, MessageCircle, Shield } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 const API_BASE_URL = "http://192.168.0.20:8080";
 
 export default function MyProfilePage() {
   const account = useAccount((s) => s.account);
   const token = useToken((s) => s.token);
+  const router = useRouter();
 
   useAuthGuard();
 
@@ -84,7 +86,6 @@ export default function MyProfilePage() {
 
     await updateMyAccount(account.accountId, formData, token);
     alert("프로필 사진이 변경되었습니다");
-    window.location.reload();
   };
 
   return (
@@ -131,9 +132,7 @@ export default function MyProfilePage() {
         <div className="bg-white rounded-xl border overflow-hidden flex flex-col">
           <div className="flex border-b">
             <button
-              onClick={() =>
-                (window.location.href = "/myInformation/myProfile")
-              }
+              onClick={() => router.push("/myInformation/myProfile")}
               className="px-8 py-4 text-slate-400 hover:text-slate-700"
             >
               계정 관리
@@ -158,9 +157,7 @@ export default function MyProfilePage() {
               {myPosts.map((post) => (
                 <div key={post.noticeId} className="space-y-3">
                   <div
-                    onClick={() =>
-                      (window.location.href = `/notice/${post.noticeId}`)
-                    }
+                    onClick={() => router.push(`/notice/${post.noticeId}`)}
                     className="border rounded-2xl bg-white p-5 cursor-pointer hover:bg-slate-50 transition"
                   >
                     <div className="flex gap-3">
@@ -179,9 +176,7 @@ export default function MyProfilePage() {
                     <div
                       key={c.commentId}
                       className="border rounded-xl bg-white p-4 flex gap-3 cursor-pointer hover:bg-slate-50 transition"
-                      onClick={() =>
-                        (window.location.href = `/notice/${post.noticeId}`)
-                      }
+                      onClick={() => router.push(`/notice/${post.noticeId}`)}
                     >
                       <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
                         <MessageCircle size={16} />

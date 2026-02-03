@@ -8,6 +8,7 @@ import { SquarePen, List, Trash2, Baby } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import EditorBlank from "@/components/ui/editorBlank";
 
 export default function CommunityDetailPage() {
   useAuthGuard();
@@ -121,10 +122,7 @@ export default function CommunityDetailPage() {
         </CardHeader>
 
         <CardContent className="pt-8">
-          <div
-            className="prose prose-slate max-w-none min-h-[200px]"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          <EditorBlank html={post.content} />
         </CardContent>
       </Card>
 

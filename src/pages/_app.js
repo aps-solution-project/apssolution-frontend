@@ -1,26 +1,42 @@
 import "@/styles/globals.css";
 
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import SideBar from "@/components/layout/SideBar";
+import { Spinner } from "@/components/ui/spinner";
 import { useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
 import { Client } from "@stomp/stompjs";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
-import SideBar from "@/components/layout/SideBar";
-import { Spinner } from "@/components/ui/spinner";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const token = useToken((s) => s.token);
-  const flag = useToken((s) => s.flag);
+  const [isReady, setIsReady] = useState(false);
   const stompRef = useRef(null);
 
   const isLoginPage = router.pathname === "/login";
+  const isRedirecting = !token && !isLoginPage && isReady;
 
+  // Persist 복구 + 라우터 준비 확인
   useEffect(() => {
     useToken.persist.rehydrate();
-  }, []);
 
+    // 라우터 준비 대기
+    if (!router.isReady) return;
+    setIsReady(true);
+  }, [router.isReady]);
+
+  // 토큰 없으면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!isReady) return;
+
+    if (!token && !isLoginPage) {
+      router.replace("/login");
+    }
+  }, [token, isReady, isLoginPage, router]);
+
+  // STOMP 초기화 (토큰이 있을 때만)
   useEffect(() => {
     if (!token) return;
     if (stompRef.current) return;
@@ -40,16 +56,18 @@ export default function App({ Component, pageProps }) {
     });
 
     client.activate();
+    stompRef.current = client;
 
     return () => {
       console.log("🧹 STOMP deactivate");
       client.deactivate();
       useStomp.getState().clearStomp();
+      stompRef.current = null;
     };
   }, [token]);
 
-  // ⛔ 아직 persist 복구 안 됨
-  if (!flag) {
+  // 라우터 준비 전 로딩 화면
+  if (!isReady) {
     return (
       <div className="flex justify-center items-center gap-6 h-screen w-screen">
         <Spinner className="size-20" />
@@ -57,18 +75,17 @@ export default function App({ Component, pageProps }) {
     );
   }
 
-  // ⛔ 인증 안 됐는데 로그인 페이지 아님
+  // 토큰 없고 로그인 페이지 아님 = 리다이렉트 중
   if (!token && !isLoginPage) {
-    router.replace("/login");
     return null;
   }
 
-  // ✅ 로그인 페이지는 사이드바 없음
-  if (isLoginPage) {
+  // 로그인 페이지는 사이드바 없음
+  if (isLoginPage || isRedirecting) {
     return <Component {...pageProps} />;
   }
 
-  // ✅ 나머지는 사이드바 포함
+  // 나머지는 사이드바 포함
   return (
     <SideBar>
       <Component {...pageProps} />
