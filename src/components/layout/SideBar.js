@@ -70,8 +70,6 @@ const sections = [
 ];
 
 export default function SideBar({ children }) {
-  if (!token) return;
-
   useAuthGuard();
   const { token } = useToken();
   // const hasUnread = useStomp((state) => state.hasUnread);
