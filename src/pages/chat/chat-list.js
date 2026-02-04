@@ -56,36 +56,46 @@ export default function ChatList() {
         try {
           const msg = JSON.parse(frame.body);
           const messageChatId = String(msg.chatId);
-          setTimeout(() => {
-            setChatData((prev) => {
-              const updated = prev.myChatList.map((r) => {
-                if (String(r.id) !== messageChatId) return r;
 
-                const lastMessage =
-                  msg.type === "FILE" ? "파일" : (msg.content ?? "메시지");
+          // 1. 목록 데이터 업데이트
+          setChatData((prev) => {
+            const updated = prev.myChatList.map((r) => {
+              if (String(r.id) !== messageChatId) return r;
+              let lastMsgText = "메시지";
 
-                return {
-                  ...r,
-                  lastMessage,
-                  lastMessageTime: parseDateSafe(msg.talkedAt),
-                  unreadCount: (r.unreadCount || 0) + 1,
-                };
-              });
+              if (msg.type === "LEAVE") {
+                lastMsgText = `${msg.talker?.name || "알 수 없는 사용자"}님이 나갔습니다.`;
+              } else if (msg.type === "FILE") {
+                lastMsgText = "파일을 보냈습니다.";
+              } else if (msg.type === "IMAGE") {
+                lastMsgText = "사진을 보냈습니다.";
+              } else {
+                lastMsgText = msg.content || "메시지";
+              }
 
-              updated.sort(
-                (a, b) =>
-                  new Date(b.lastMessageTime || 0).getTime() -
-                  new Date(a.lastMessageTime || 0).getTime(),
-              );
-
-              return { ...prev, myChatList: updated };
+              return {
+                ...r,
+                unreadCount: (r.unreadCount || 0) + 1,
+                lastMessage: lastMsgText,
+                lastMessageTime: parseDateSafe(msg.talkedAt),
+              };
             });
-          }, 0);
+            // 2. 전체 카운트 업데이트 (setTimeout으로 렌더링 루프 분리)
+            // 사파리 에러를 피하기 위해 데이터 가공 후에 별도로 실행합니다.
+            const total = updated.reduce(
+              (acc, cur) => acc + (cur.unreadCount || 0),
+              0,
+            );
+            setTimeout(() => {
+              setTotalUnreadCount(total);
+            }, 0);
+
+            return { ...prev, myChatList: updated };
+          });
         } catch (e) {
-          console.error("메시지 파싱 실패:", e);
+          console.error("메시지 처리 실패:", e);
         }
       });
-
       subscriptionsRef.current[roomId] = sub;
     });
 

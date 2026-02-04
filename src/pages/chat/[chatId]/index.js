@@ -1,4 +1,9 @@
-import { getChatDetail, leaveChat, sendMessage } from "@/api/chat-api";
+import {
+  getChatDetail,
+  leaveChat,
+  sendMessage,
+  getUnreadCount,
+} from "@/api/chat-api";
 import ChatGalleryModal from "@/components/chat/chat-gallery-modal";
 import ChatFileModal from "@/components/chat/chat-file-modal";
 import { AvatarFallback } from "@/components/ui/avatar";
@@ -32,6 +37,7 @@ export default function ChatRoom() {
   const { account } = useAccount();
   const { token } = useToken();
   const { stomp } = useStomp();
+  const { totalUnreadCount, setTotalUnreadCount } = useStomp();
 
   const [chatInfo, setChatInfo] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -85,6 +91,33 @@ export default function ChatRoom() {
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // 채팅방 진입 시 안읽은 메세지 카운트 초기화
+  useEffect(() => {
+    if (!chatId || !token) return;
+
+    const updateGlobalCount = async () => {
+      try {
+        // 서버에서 최신 안 읽은 개수 가져오기
+        const data = await getUnreadCount(token);
+
+        // 사파리 등 브라우저 렌더링 에러 방지를 위해 setTimeout 사용
+        setTimeout(() => {
+          setTotalUnreadCount(data.unreadCount || 0);
+        }, 0);
+      } catch (err) {
+        console.error("전역 카운트 업데이트 실패:", err);
+      }
+    };
+
+    updateGlobalCount();
+
+    // (선택 사항) 채팅방을 나갈 때도 한 번 더 갱신하여
+    // 목록으로 돌아갔을 때 사이드바가 최신 상태를 유지하게 함
+    return () => {
+      updateGlobalCount();
+    };
+  }, [chatId, token, setTotalUnreadCount]);
 
   // 텍스트 전송
   const handleSend = async () => {
@@ -155,7 +188,7 @@ export default function ChatRoom() {
             onClick={() => router.back()}
             className="rounded-full"
           >
-            <ChevronLeft className="size-5" />
+            <ChevronLeft className="size-5 text-slate-900" />
           </Button>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -271,13 +304,14 @@ export default function ChatRoom() {
             >
               {/* 상대방 아바타 */}
               {!isMe && (
-                <Avatar className="size-10 shrink-0 rounded-full shadow-sm border">
+                <Avatar className="size-10 shrink-0 rounded-full overflow-hidden shadow-sm border border-slate-200">
                   <AvatarImage
                     src={
                       "http://192.168.0.20:8080" + msg.talker?.profileImageUrl
                     }
+                    className="h-full w-full object-cover"
                   />
-                  <AvatarFallback>
+                  <AvatarFallback className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-500 font-medium">
                     {msg.talker?.name?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>

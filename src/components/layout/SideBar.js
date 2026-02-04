@@ -1,4 +1,3 @@
-import { getMyChats } from "@/api/chat-api";
 import {
   Sidebar,
   SidebarContent,
@@ -9,7 +8,6 @@ import {
   SidebarMenuSubItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { useToken } from "@/stores/account-store";
 
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import {
@@ -27,7 +25,7 @@ import {
   Settings,
   Wrench,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useStomp } from "@/stores/stomp-store";
 
 const sections = [
   {
@@ -71,43 +69,7 @@ const sections = [
 
 export default function SideBar({ children }) {
   useAuthGuard();
-  const { token } = useToken();
-  // const hasUnread = useStomp((state) => state.hasUnread);
-  const [hasUnread, setHasUnread] = useState(false);
-
-  useEffect(() => {
-    // 💡 토큰이 없거나 'null', 'undefined' 문자열인 경우 아예 실행 안 함
-    if (!token) {
-      setHasUnread(false);
-      return;
-    }
-
-    const checkUnread = async () => {
-      try {
-        if (!token) return;
-        // API 호출 직전 토큰 재확인
-        const response = await getMyChats(token);
-        const rooms = response?.myChatList || [];
-
-        let exists = false;
-        for (const room of rooms) {
-          if (Number(room.unreadCount) > 0) {
-            exists = true;
-            break;
-          }
-        }
-        setHasUnread(exists);
-      } catch (err) {
-        if (err.message.includes("401")) {
-          setHasUnread(false);
-        }
-      }
-    };
-
-    checkUnread();
-    const interval = setInterval(checkUnread, 5000);
-    return () => clearInterval(interval);
-  }, [token]);
+  const hasUnread = useStomp((state) => state.hasUnread);
 
   return (
     <SidebarProvider>
@@ -138,8 +100,8 @@ export default function SideBar({ children }) {
                               >
                                 <span>{item.label}</span>
 
-                                {/* 🔴 '채팅방 관리' 메뉴이고 안 읽은 메시지가 있다면 레드닷 표시 */}
-                                {item.label === "채팅방 관리" && hasUnread && (
+                                {/* 안 읽은 메시지가 있다면 레드닷 표시 */}
+                                {item.label === "채팅방 목록" && hasUnread && (
                                   <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
