@@ -7,7 +7,7 @@ export default function ScenariosInformation({
   editScenario,
   progress,
   running,
-  completed,
+  pending,
   onStart,
   onEdit,
   onCancelEdit,
@@ -23,7 +23,7 @@ export default function ScenariosInformation({
   const isOptimal = selectedScenario.status === "OPTIMAL";
 
   const displayProgress = isReady ? progress : 100;
-  const isCompleted = isReady ? completed : true;
+  const ispending = isReady ? pending : true;
 
   function onTogglePublish() {
     if (selectedScenario.published) {
@@ -151,17 +151,17 @@ export default function ScenariosInformation({
                   ? "bg-purple-600 text-white hover:bg-purple-700"
                   : running
                     ? "bg-gray-400 text-white cursor-not-allowed"
-                    : isCompleted
+                    : ispending
                       ? "bg-green-600 text-white"
                       : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
           >
             {isOptimal
               ? "시뮬레이션 결과 보러가기"
-              : isCompleted
-                ? "완료"
+              : ispending
+                ? "시뮬레이팅 중.."
                 : running
-                  ? "실행중..."
+                  ? "시나리오 데이터 전송 중..."
                   : "Start"}
           </button>
         </div>
