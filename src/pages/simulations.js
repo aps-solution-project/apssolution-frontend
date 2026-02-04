@@ -7,6 +7,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 const MINUTE_STEP = 5;
 const CELL = 12;
@@ -21,7 +23,7 @@ const TOOL_COLORS = {
   "TABLE-01": "bg-yellow-400",
 };
 
-// 더미데이터(나중에 삭제)--------------------------
+// 더미데이터(나중에 삭제)---------------
 const backendData = {
   scenario: {
     id: "SCN-BAKERY-001",
@@ -203,14 +205,39 @@ const products = backendData.scenarioProductList.map((product) => ({
 const TOTAL_MINUTES = backendData.scenario.makespan;
 const SLOTS = TOTAL_MINUTES / MINUTE_STEP;
 
-export default function ProductionGantt() {
+export default function productionGantt() {
   useAuthGuard();
+
+  const router = useRouter();
+  const isSimulations = router.pathname === "/simulations";
+  const isWorkload = router.pathname === "/workerSchedule";
 
   return (
     <div className="h-full w-full overflow-x-auto bg-slate-100 p-5">
       <Card className="rounded-sm w-full">
         <div className="flex items-center justify-between px-7 py-2 border-b">
-          <p className="text-lg font-semibold">시뮬레이션 결과</p>
+          <div className="flex gap-8 text-sm font-medium">
+            <Link
+              href="/simulations"
+              className={
+                isSimulations
+                  ? "text-lg text-indigo-600"
+                  : "text-lg text-stone-300 "
+              }
+            >
+              시뮬레이션 결과
+            </Link>
+            <Link
+              href="/workerSchedule"
+              className={
+                isWorkload
+                  ? "text-lg text-indigo-600"
+                  : "text-lg text-stone-300 "
+              }
+            >
+              인원별 작업량
+            </Link>
+          </div>
 
           <p className="font-medium text-slate-500">2026년 2월 3일</p>
         </div>
