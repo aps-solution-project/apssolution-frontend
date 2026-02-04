@@ -1,11 +1,10 @@
 import "@/styles/globals.css";
 
-import SideBar from "@/components/layout/SideBar";
 import { getMyChats } from "@/api/chat-api";
+import SideBar from "@/components/layout/SideBar";
 import { Spinner } from "@/components/ui/spinner";
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
-import { useAccount } from "@/stores/account-store";
 import { Client } from "@stomp/stompjs";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -14,41 +13,42 @@ import SockJS from "sockjs-client";
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const token = useToken((s) => s.token);
+  const account = useAccount((s) => s.account);
+  const stomp = useStomp((s) => s.stomp);
+
   const [isHydrated, setIsHydrated] = useState(false);
   const stompRef = useRef(null);
 
   const isLoginPage = router.pathname === "/login";
-  const isRedirecting = !token && !isLoginPage && isReady;
-  const stomp = useStomp.getState().stomp;
-  const account = useAccount.getState().account;
 
-  // ✅ 1. persist 복구 완료 신호
+  /* ===================== 1️⃣ Zustand persist 복구 ===================== */
   useEffect(() => {
-    useToken.persist.rehydrate().then(() => {
-      setIsHydrated(true);
-    });
+    useToken.persist.rehydrate().then(() => setIsHydrated(true));
   }, []);
 
-  // ✅ 2. 로그인 리다이렉트
+  /* ===================== 2️⃣ 로그인 리다이렉트 ===================== */
   useEffect(() => {
     if (!router.isReady || !isHydrated) return;
-
     if (!token && router.pathname !== "/login") {
       router.replace("/login");
     }
-  }, [token, router.isReady, isHydrated]);
+  }, [token, router.isReady, router.pathname, isHydrated]);
 
-  // ✅ 3. STOMP 연결
+  /* ===================== 3️⃣ STOMP 연결 ===================== */
   useEffect(() => {
     if (!token) return;
-    if (stompRef.current) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS("http://192.168.0.20:8080/ws"),
-      // reconnectDelay: 5000,
+      reconnectDelay: 5000,
 
       onConnect: () => {
+        console.log("✅ STOMP connected");
         useStomp.getState().setStomp(client);
+      },
+
+      onDisconnect: () => {
+        console.log("❌ STOMP disconnected");
       },
 
       debug: (str) => console.log("[STOMP]", str),
@@ -58,55 +58,53 @@ export default function App({ Component, pageProps }) {
     stompRef.current = client;
 
     return () => {
+      console.log("🧹 STOMP cleanup");
       client.deactivate();
       useStomp.getState().clearStomp();
       stompRef.current = null;
     };
   }, [token]);
 
-  // 전체 영역 구독용 stomp
+  /* ===================== 4️⃣ 전체 채팅방 구독 ===================== */
   useEffect(() => {
     if (!stomp || !stomp.connected || !token || !account) return;
 
     console.log("🌍 GLOBAL CHAT SUBSCRIBE");
 
-    let isIgnore = false;
-    let subs = [];
+    let isCancelled = false;
+    const subscriptions = [];
 
-    const subscribeAllChats = async () => {
+    const loadAndSubscribe = async () => {
       try {
         const data = await getMyChats(token);
-        if (isIgnore || !stomp.connected) return;
+        if (isCancelled) return;
 
         data.myChatList.forEach((room) => {
-          if (subs.find((s) => s.roomId === room.id)) return;
-
           const sub = stomp.subscribe(`/topic/chat/${room.id}`, (frame) => {
             const msg = JSON.parse(frame.body);
-            const { currentChatId, increaseUnreadIfNeeded } =
-              useStomp.getState();
+            const { increaseUnreadIfNeeded } = useStomp.getState();
             const currentAccount = useAccount.getState().account;
             if (!currentAccount) return;
 
             increaseUnreadIfNeeded(msg, currentAccount.accountId);
           });
 
-          subs.push({ roomId: room.id, sub });
+          subscriptions.push(sub);
         });
       } catch (err) {
-        console.error("구독할 채팅 목록 로드 실패", err);
+        console.error("채팅 목록 구독 실패", err);
       }
     };
 
-    subscribeAllChats();
+    loadAndSubscribe();
 
     return () => {
-      isIgnore = true;
-      subs.forEach(({ sub }) => sub.unsubscribe());
+      isCancelled = true;
+      subscriptions.forEach((sub) => sub.unsubscribe());
     };
-  }, [stomp?.connected, token, account?.accountId]);
+  }, [stomp, token, account]);
 
-  // ✅ 🚨 가장 중요: 준비 안됐으면 아무것도 그리지 않음
+  /* ===================== 5️⃣ 렌더 가드 (깜빡임 방지 핵심) ===================== */
   if (!router.isReady || !isHydrated) {
     return (
       <div className="flex justify-center items-center h-screen w-screen">
@@ -115,17 +113,14 @@ export default function App({ Component, pageProps }) {
     );
   }
 
-  // ✅ 로그인 안 된 상태 → 리다이렉트 중에는 빈 화면
   if (!token && router.pathname !== "/login") {
     return null;
   }
 
-  // ✅ 로그인 페이지는 Sidebar 없음
   if (isLoginPage) {
     return <Component {...pageProps} />;
   }
 
-  // ✅ 로그인 된 일반 페이지
   return (
     <SideBar>
       <Component {...pageProps} />

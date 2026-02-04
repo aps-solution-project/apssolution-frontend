@@ -20,13 +20,7 @@ export default function LoginPage() {
     if (token && router.isReady) {
       router.replace("/scenarios/create");
     }
-  }, [token, router]);
-
-  // 페이지 진입시 상태 초기화
-  useEffect(() => {
-    clearToken();
-    clearAccount();
-  }, []);
+  }, [token, router.isReady]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
