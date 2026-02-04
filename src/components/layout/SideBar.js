@@ -92,24 +92,29 @@ export default function SideBar({ children }) {
 
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {section.items.map((item) => (
-                            <SidebarMenuSubItem key={item.href}>
-                              <Link
-                                href={item.href}
-                                className="flex items-center justify-between w-full pr-2"
-                              >
-                                <span>{item.label}</span>
+                          {section.items.map((item) => {
+                            const showUnreadDot =
+                              hasUnread && item.href === "/chat/chat-list";
 
-                                {/* 안 읽은 메시지가 있다면 레드닷 표시 */}
-                                {item.label === "채팅방 목록" && hasUnread && (
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                  </span>
-                                )}
-                              </Link>
-                            </SidebarMenuSubItem>
-                          ))}
+                            return (
+                              <SidebarMenuSubItem key={item.href}>
+                                <Link
+                                  href={item.href}
+                                  className="flex items-center justify-between w-full pr-2"
+                                >
+                                  <span>{item.label}</span>
+
+                                  {/* 안 읽은 메시지가 있다면 레드닷 표시 */}
+                                  {showUnreadDot && (
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    </span>
+                                  )}
+                                </Link>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>

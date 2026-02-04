@@ -20,7 +20,11 @@ export async function getChatDetail(token, chatId) {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!resp.ok) throw new Error("채팅방 정보를 가져올 수 없습니다.");
+  if (!resp.ok) {
+    const error = new Error("채팅방 정보를 가져올 수 없습니다.");
+    error.status = resp.status;
+    throw error;
+  }
   return resp.json();
 }
 
@@ -79,7 +83,6 @@ export async function createGroupChat(token, data) {
   if (!resp.ok) throw new Error("그룹 채팅방 생성 실패");
   return resp.json();
 }
-
 
 export async function leaveChat(token, chatId) {
   const resp = await fetch(`${URL}/api/chats/${chatId}/leave`, {
