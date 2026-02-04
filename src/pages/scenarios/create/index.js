@@ -184,7 +184,7 @@ export default function ScenariosCreate() {
   if (!token) return <div>Loading...</div>;
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-100 overflow-hidden">
+    <div className="h-200 w-full flex flex-col bg-gray-100 overflow-hidden">
       <header className="h-14 bg-white border-b px-6 flex items-center shrink-0">
         <span className="font-semibold text-blue-600">Scenario</span>
       </header>
