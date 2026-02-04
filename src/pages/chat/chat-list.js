@@ -42,48 +42,76 @@ export default function ChatList() {
   }, [token, setTotalUnreadCount]);
 
   /** ================= STOMP 구독 처리 ================= */
-  useEffect(() => {
-    if (!stomp?.connected) return;
-    if (!rooms.length) return;
+  // useEffect(() => {
+  //   if (!stomp?.connected) return;
+  //   if (!rooms.length) return;
 
-    console.log(
-      "📡 채팅방 구독 시작",
-      rooms.map((r) => r.id),
+  //   console.log(
+  //     "📡 채팅방 구독 시작",
+  //     rooms.map((r) => r.id),
+  //   );
+
+  //   rooms.forEach((room) => {
+  //     const roomId = String(room.id);
+
+  //     // 이미 구독 중이면 스킵
+  //     if (subscriptionsRef.current[roomId]) return;
+
+  //     const sub = stomp.subscribe(`/topic/chat/${roomId}`, async () => {
+  //       try {
+  //         // STOMP 메시지가 오면 항상 서버에서 최신 목록 가져오기
+  //         const data = await getMyChats(token);
+  //         setChatData(data);
+
+  //         const total = data.myChatList.reduce(
+  //           (acc, cur) => acc + (cur.unreadCount || 0),
+  //           0,
+  //         );
+  //         setTotalUnreadCount(total);
+  //       } catch (err) {
+  //         console.error("STOMP 메시지 처리 중 목록 갱신 실패:", err);
+  //       }
+  //     });
+
+  //     subscriptionsRef.current[roomId] = sub;
+  //   });
+
+  //   return () => {
+  //     console.log("❌ 채팅방 구독 해제");
+  //     Object.values(subscriptionsRef.current).forEach((sub) =>
+  //       sub.unsubscribe(),
+  //     );
+  //     subscriptionsRef.current = {};
+  //   };
+  // }, [stomp?.connected, rooms, token, setTotalUnreadCount]);
+
+  useEffect(() => {
+    if (!stomp || !stomp.connected) return;
+
+    console.log("📡 채팅 구독 시작:!!!!!!", account);
+
+    const sub = stomp.subscribe(
+      `/topic/user/${account?.accountId}`,
+      (frame) => {
+        const body = JSON.parse(frame.body);
+        if (body.msg === "refresh") {
+          getMyChats(token).then((data) => {
+            setChatData(data);
+            const total = data.myChatList.reduce(
+              (acc, cur) => acc + (cur.unreadCount || 0),
+              0,
+            );
+            setTotalUnreadCount(total);
+          });
+        }
+      },
     );
 
-    rooms.forEach((room) => {
-      const roomId = String(room.id);
-
-      // 이미 구독 중이면 스킵
-      if (subscriptionsRef.current[roomId]) return;
-
-      const sub = stomp.subscribe(`/topic/chat/${roomId}`, async () => {
-        try {
-          // STOMP 메시지가 오면 항상 서버에서 최신 목록 가져오기
-          const data = await getMyChats(token);
-          setChatData(data);
-
-          const total = data.myChatList.reduce(
-            (acc, cur) => acc + (cur.unreadCount || 0),
-            0,
-          );
-          setTotalUnreadCount(total);
-        } catch (err) {
-          console.error("STOMP 메시지 처리 중 목록 갱신 실패:", err);
-        }
-      });
-
-      subscriptionsRef.current[roomId] = sub;
-    });
-
     return () => {
-      console.log("❌ 채팅방 구독 해제");
-      Object.values(subscriptionsRef.current).forEach((sub) =>
-        sub.unsubscribe(),
-      );
-      subscriptionsRef.current = {};
+      console.log("❌ 채팅 구독 해제:", account?.accountId);
+      sub.unsubscribe();
     };
-  }, [stomp?.connected, rooms, token, setTotalUnreadCount]);
+  }, [stomp, account?.accountId]);
 
   /** ================= 날짜 안전 파싱 ================= */
   function parseDateSafe(value) {

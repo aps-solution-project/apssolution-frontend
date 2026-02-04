@@ -1,6 +1,5 @@
 import "@/styles/globals.css";
 
-import { getMyChats } from "@/api/chat-api";
 import SideBar from "@/components/layout/SideBar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount, useToken } from "@/stores/account-store";
@@ -32,7 +31,7 @@ export default function App({ Component, pageProps }) {
     if (!token && router.pathname !== "/login") {
       router.replace("/login");
     }
-  }, [token, router.isReady, router.pathname, isHydrated]);
+  }, [token, router.isReady, isHydrated]);
 
   /* ===================== 3️⃣ STOMP 연결 ===================== */
   useEffect(() => {
@@ -71,32 +70,20 @@ export default function App({ Component, pageProps }) {
 
     console.log("🌍 GLOBAL CHAT SUBSCRIBE");
 
-    let isCancelled = false;
-    const subscriptions = [];
+    const sub = stomp.subscribe(
+      `/topic/user/${account?.accountId}`,
+      (frame) => {
+        const body = JSON.parse(frame.body);
+        if (body.msg === "refresh") {
+          stomp.hasUnread = true;
+          const { increaseUnreadIfNeeded } = useStomp.getState();
+          const currentAccount = useAccount.getState().account;
+          if (!currentAccount) return;
 
-    const loadAndSubscribe = async () => {
-      try {
-        const data = await getMyChats(token);
-        if (isCancelled) return;
-
-        data.myChatList.forEach((room) => {
-          const sub = stomp.subscribe(`/topic/chat/${room.id}`, (frame) => {
-            const msg = JSON.parse(frame.body);
-            const { increaseUnreadIfNeeded } = useStomp.getState();
-            const currentAccount = useAccount.getState().account;
-            if (!currentAccount) return;
-
-            increaseUnreadIfNeeded(msg, currentAccount.accountId);
-          });
-
-          subscriptions.push(sub);
-        });
-      } catch (err) {
-        console.error("채팅 목록 구독 실패", err);
-      }
-    };
-
-    loadAndSubscribe();
+          increaseUnreadIfNeeded(body, currentAccount.accountId);
+        }
+      },
+    );
 
     return () => {
       isCancelled = true;

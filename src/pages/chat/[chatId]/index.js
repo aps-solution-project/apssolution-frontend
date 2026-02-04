@@ -1,13 +1,19 @@
 import {
   getChatDetail,
+  getUnreadCount,
   leaveChat,
   sendMessage,
-  getUnreadCount,
 } from "@/api/chat-api";
-import ChatGalleryModal from "@/components/chat/chat-gallery-modal";
 import ChatFileModal from "@/components/chat/chat-file-modal";
+import ChatGalleryModal from "@/components/chat/chat-gallery-modal";
 import { AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
@@ -15,19 +21,13 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import {
   ChevronLeft,
   FilePlus,
-  Image as ImageIcon,
-  LogOut,
-  Send,
-  Menu,
-  Images,
   FileText,
+  Image as ImageIcon,
+  Images,
+  LogOut,
+  Menu,
+  Send,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
@@ -83,33 +83,18 @@ export default function ChatRoom() {
 
     const sub = stomp.subscribe(`/topic/chat/${chatId}`, (frame) => {
       const body = JSON.parse(frame.body);
-      setMessages((prev) => {
-        // 중복 수신 방지 (선택 사항)
-        if (prev.some((m) => m.id === body.id)) return prev;
-        return [...prev, body];
-      });
-
-      if (body.type === "LEAVE") {
-        console.log("나간 사람 정보:", body.talker);
-        const leaverId = String(body.talker?.userId);
-        setChatInfo((prev) => {
-          if (!prev) return prev;
-          // 기존 명단에서 나간 사람 제외
-          const filteredUsers = prev.otherUsers.filter(
-            (user) => String(user.userId) !== leaverId,
-          );
-          return {
-            ...prev,
-            otherUsers: filteredUsers,
-          };
+      if (body.type !== "LEAVE") {
+        getChatDetail(token, chatId).then((data) => {
+          setMessages([...(data.messages || [])].reverse());
         });
       }
     });
+
     return () => {
       console.log("❌ 채팅 구독 해제:", chatId);
       sub.unsubscribe();
     };
-  }, [stomp?.connected, chatId]);
+  }, [stomp, chatId, token]);
 
   // 채팅 상세 페이지에서 현재 채팅방 등록
   useEffect(() => {
@@ -195,7 +180,7 @@ export default function ChatRoom() {
   function leaveChatRoom() {
     leaveChat(token, chatId)
       .then(() => {
-        router.replace("/chat/chat-list");
+        router.push("/chat/chat-list");
       })
       .catch((err) => {
         console.error("채팅방 나가기 실패:", err);
