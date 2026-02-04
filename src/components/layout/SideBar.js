@@ -1,5 +1,4 @@
 import { getMyChats } from "@/api/chat-api";
-import { useToken } from "@/stores/account-store";
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +9,7 @@ import {
   SidebarMenuSubItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { useToken } from "@/stores/account-store";
 
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import {
@@ -20,7 +20,6 @@ import {
 import Link from "next/link";
 import Header from "./Header";
 
-import { useToken } from "@/stores/account-store";
 import {
   Columns3Cog,
   Inbox,
@@ -71,7 +70,6 @@ const sections = [
 ];
 
 export default function SideBar({ children }) {
-  const { token } = useToken();
   if (!token) return;
 
   useAuthGuard();
