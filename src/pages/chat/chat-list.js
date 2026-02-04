@@ -24,17 +24,22 @@ export default function ChatList() {
   useEffect(() => {
     if (!token) return;
 
-    getMyChats(token)
-      .then((data) => {
+    const fetchChats = async () => {
+      try {
+        const data = await getMyChats(token);
         setChatData(data);
-        const initialTotal = data.myChatList.reduce(
+        const total = data.myChatList.reduce(
           (acc, cur) => acc + (cur.unreadCount || 0),
           0,
         );
-        setTotalUnreadCount(initialTotal);
-      })
-      .catch((err) => console.error("목록 로드 실패:", err));
-  }, [token]);
+        setTotalUnreadCount(total);
+      } catch (err) {
+        console.error("목록 로드 실패:", err);
+      }
+    };
+
+    fetchChats();
+  }, [token, setTotalUnreadCount]);
 
   /** ================= STOMP 구독 처리 ================= */
   useEffect(() => {
@@ -52,50 +57,22 @@ export default function ChatList() {
       // 이미 구독 중이면 스킵
       if (subscriptionsRef.current[roomId]) return;
 
-      const sub = stomp.subscribe(`/topic/chat/${roomId}`, (frame) => {
+      const sub = stomp.subscribe(`/topic/chat/${roomId}`, async () => {
         try {
-          const msg = JSON.parse(frame.body);
-          const messageChatId = String(msg.chatId);
+          // STOMP 메시지가 오면 항상 서버에서 최신 목록 가져오기
+          const data = await getMyChats(token);
+          setChatData(data);
 
-          // 1. 목록 데이터 업데이트
-          setChatData((prev) => {
-            const updated = prev.myChatList.map((r) => {
-              if (String(r.id) !== messageChatId) return r;
-              let lastMsgText = "메시지";
-
-              if (msg.type === "LEAVE") {
-                lastMsgText = `${msg.talker?.name || "알 수 없는 사용자"}님이 나갔습니다.`;
-              } else if (msg.type === "FILE") {
-                lastMsgText = "파일을 보냈습니다.";
-              } else if (msg.type === "IMAGE") {
-                lastMsgText = "사진을 보냈습니다.";
-              } else {
-                lastMsgText = msg.content || "메시지";
-              }
-
-              return {
-                ...r,
-                unreadCount: (r.unreadCount || 0) + 1,
-                lastMessage: lastMsgText,
-                lastMessageTime: parseDateSafe(msg.talkedAt),
-              };
-            });
-            // 2. 전체 카운트 업데이트 (setTimeout으로 렌더링 루프 분리)
-            // 사파리 에러를 피하기 위해 데이터 가공 후에 별도로 실행합니다.
-            const total = updated.reduce(
-              (acc, cur) => acc + (cur.unreadCount || 0),
-              0,
-            );
-            setTimeout(() => {
-              setTotalUnreadCount(total);
-            }, 0);
-
-            return { ...prev, myChatList: updated };
-          });
-        } catch (e) {
-          console.error("메시지 처리 실패:", e);
+          const total = data.myChatList.reduce(
+            (acc, cur) => acc + (cur.unreadCount || 0),
+            0,
+          );
+          setTotalUnreadCount(total);
+        } catch (err) {
+          console.error("STOMP 메시지 처리 중 목록 갱신 실패:", err);
         }
       });
+
       subscriptionsRef.current[roomId] = sub;
     });
 
@@ -106,19 +83,17 @@ export default function ChatList() {
       );
       subscriptionsRef.current = {};
     };
-  }, [stomp?.connected, rooms.length]);
+  }, [stomp?.connected, rooms, token, setTotalUnreadCount]);
 
   /** ================= 날짜 안전 파싱 ================= */
   function parseDateSafe(value) {
     if (!value) return null;
 
-    // 문자열이면 그대로 Date 변환
     if (typeof value === "string") {
       const d = new Date(value);
       return isNaN(d.getTime()) ? null : d;
     }
 
-    // 혹시 배열(LocalDateTime 기본 직렬화)일 경우
     if (Array.isArray(value)) {
       const [y, m, d, h, min, s] = value;
       return new Date(y, m - 1, d, h, min, s);

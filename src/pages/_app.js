@@ -1,9 +1,11 @@
 import "@/styles/globals.css";
 
 import SideBar from "@/components/layout/SideBar";
+import { getMyChats } from "@/api/chat-api";
 import { Spinner } from "@/components/ui/spinner";
 import { useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
+import { useAccount } from "@/stores/account-store";
 import { Client } from "@stomp/stompjs";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +19,8 @@ export default function App({ Component, pageProps }) {
 
   const isLoginPage = router.pathname === "/login";
   const isRedirecting = !token && !isLoginPage && isReady;
+  const stomp = useStomp.getState().stomp;
+  const account = useAccount.getState().account;
 
   // Persist 복구 + 라우터 준비 확인
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function App({ Component, pageProps }) {
 
     const client = new Client({
       webSocketFactory: () => new SockJS("http://192.168.0.20:8080/ws"),
-      reconnectDelay: 5000,
+      // reconnectDelay: 5000,
 
       onConnect: () => {
         console.log("✅ STOMP connected");
@@ -65,6 +69,48 @@ export default function App({ Component, pageProps }) {
       stompRef.current = null;
     };
   }, [token]);
+
+  // 전체 영역 구독용 stomp
+  useEffect(() => {
+    if (!stomp || !stomp.connected || !token || !account) return;
+
+    console.log("🌍 GLOBAL CHAT SUBSCRIBE");
+
+    let isIgnore = false;
+    let subs = [];
+
+    const subscribeAllChats = async () => {
+      try {
+        const data = await getMyChats(token);
+        if (isIgnore || !stomp.connected) return;
+
+        data.myChatList.forEach((room) => {
+          if (subs.find((s) => s.roomId === room.id)) return;
+
+          const sub = stomp.subscribe(`/topic/chat/${room.id}`, (frame) => {
+            const msg = JSON.parse(frame.body);
+            const { currentChatId, increaseUnreadIfNeeded } =
+              useStomp.getState();
+            const currentAccount = useAccount.getState().account;
+            if (!currentAccount) return;
+
+            increaseUnreadIfNeeded(msg, currentAccount.accountId);
+          });
+
+          subs.push({ roomId: room.id, sub });
+        });
+      } catch (err) {
+        console.error("구독할 채팅 목록 로드 실패", err);
+      }
+    };
+
+    subscribeAllChats();
+
+    return () => {
+      isIgnore = true;
+      subs.forEach(({ sub }) => sub.unsubscribe());
+    };
+  }, [stomp?.connected, token, account?.accountId]);
 
   // 라우터 준비 전 로딩 화면
   if (!isReady) {

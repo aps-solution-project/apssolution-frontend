@@ -38,6 +38,7 @@ export default function ChatRoom() {
   const { token } = useToken();
   const { stomp } = useStomp();
   const { totalUnreadCount, setTotalUnreadCount } = useStomp();
+  const { setCurrentChatId } = useStomp();
 
   const [chatInfo, setChatInfo] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -62,6 +63,10 @@ export default function ChatRoom() {
       })
       .catch((err) => {
         console.error("채팅방 로드 실패:", err);
+        if (err.status === 403 || err.status === 404) {
+          router.replace("/chat/chat-list");
+          return;
+        }
         setChatInfo({
           id: chatId,
           chatRoomName: "새로운 대화", // 혹은 상대방 이름 로직 추가
@@ -78,14 +83,42 @@ export default function ChatRoom() {
 
     const sub = stomp.subscribe(`/topic/chat/${chatId}`, (frame) => {
       const body = JSON.parse(frame.body);
-      setMessages((prev) => [...prev, body]);
-    });
+      setMessages((prev) => {
+        // 중복 수신 방지 (선택 사항)
+        if (prev.some((m) => m.id === body.id)) return prev;
+        return [...prev, body];
+      });
 
+      if (body.type === "LEAVE") {
+        console.log("나간 사람 정보:", body.talker);
+        const leaverId = String(body.talker?.userId);
+        setChatInfo((prev) => {
+          if (!prev) return prev;
+          // 기존 명단에서 나간 사람 제외
+          const filteredUsers = prev.otherUsers.filter(
+            (user) => String(user.userId) !== leaverId,
+          );
+          return {
+            ...prev,
+            otherUsers: filteredUsers,
+          };
+        });
+      }
+    });
     return () => {
       console.log("❌ 채팅 구독 해제:", chatId);
       sub.unsubscribe();
     };
-  }, [stomp, stomp?.connected, chatId]);
+  }, [stomp?.connected, chatId]);
+
+  // 채팅 상세 페이지에서 현재 채팅방 등록
+  useEffect(() => {
+    setCurrentChatId(chatId);
+
+    return () => {
+      setCurrentChatId(null);
+    };
+  }, [chatId]);
 
   // 하단 스크롤
   useEffect(() => {
@@ -123,12 +156,12 @@ export default function ChatRoom() {
   const handleSend = async () => {
     if (!inputText.trim()) return;
     try {
-      // API 함수가 원하는 구조로 전달
       await sendMessage(token, chatId, {
         type: "TEXT",
         content: inputText,
       });
-      setInputText("");
+      setInputText(""); // 입력창만 초기화
+      // 메시지는 STOMP 이벤트에서 처리
     } catch (e) {
       console.error(e);
     }
