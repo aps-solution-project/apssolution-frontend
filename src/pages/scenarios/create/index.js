@@ -5,6 +5,7 @@ import {
   getScenario,
   getScenarios,
   postScenario,
+  simulateScenario,
 } from "@/api/scenario-api";
 import ScenariosInformation from "@/components/scenario/ScenarioInfomation";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +24,7 @@ export default function ScenariosCreate() {
 
   const [progress, setProgress] = useState(0);
   const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [pending, setPending] = useState(false);
 
   const { token } = useToken();
   const [selectedScenario, setSelectedScenario] = useState(null);
@@ -40,6 +41,18 @@ export default function ScenariosCreate() {
   });
 
   useEffect(() => {
+    if (progress === 100 && selectedScenario?.status === "READY") {
+      selectedScenario.status = "PENDING";
+      simulateScenario(token, selectedScenario.id).then(() => {
+        {
+          setRunning(false);
+          setPending(true);
+        }
+      });
+    }
+  }, [progress]);
+
+  useEffect(() => {
     if (!token) return;
     getScenarios(token).then((obj) => {
       setScenarioData(obj.scenarios);
@@ -53,10 +66,10 @@ export default function ScenariosCreate() {
     if (!running) return;
     if (progress >= 100) {
       setRunning(false);
-      setCompleted(true);
+      setPending(true);
       return;
     }
-    const t = setTimeout(() => setProgress((p) => p + 10), 350);
+    const t = setTimeout(() => setProgress((p) => p + 1), 10);
     return () => clearTimeout(t);
   }, [running, progress]);
 
@@ -78,7 +91,7 @@ export default function ScenariosCreate() {
 
   const handleStart = () => {
     setProgress(0);
-    setCompleted(false);
+    setPending(false);
     setRunning(true);
   };
 
@@ -428,7 +441,7 @@ export default function ScenariosCreate() {
           selectedScenario={selectedScenario}
           progress={progress}
           running={running}
-          completed={completed}
+          pending={pending}
           onStart={handleStart}
           onEdit={(scenario) => setEditScenario(scenario)}
           onCancelEdit={() => setEditScenario(null)}

@@ -14,7 +14,7 @@ import SockJS from "sockjs-client";
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const token = useToken((s) => s.token);
-  const [isReady, setIsReady] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const stompRef = useRef(null);
 
   const isLoginPage = router.pathname === "/login";
@@ -22,37 +22,32 @@ export default function App({ Component, pageProps }) {
   const stomp = useStomp.getState().stomp;
   const account = useAccount.getState().account;
 
-  // Persist 복구 + 라우터 준비 확인
+  // ✅ 1. persist 복구 완료 신호
   useEffect(() => {
-    useToken.persist.rehydrate();
+    useToken.persist.rehydrate().then(() => {
+      setIsHydrated(true);
+    });
+  }, []);
 
-    // 라우터 준비 대기
-    if (!router.isReady) return;
-    setIsReady(true);
-  }, [router.isReady]);
-
-  // 토큰 없으면 로그인 페이지로 리다이렉트
+  // ✅ 2. 로그인 리다이렉트
   useEffect(() => {
-    if (!isReady) return;
+    if (!router.isReady || !isHydrated) return;
 
-    if (!token && !isLoginPage) {
+    if (!token && router.pathname !== "/login") {
       router.replace("/login");
     }
-  }, [token, isReady, isLoginPage, router]);
+  }, [token, router.isReady, isHydrated]);
 
-  // STOMP 초기화 (토큰이 있을 때만)
+  // ✅ 3. STOMP 연결
   useEffect(() => {
     if (!token) return;
     if (stompRef.current) return;
-
-    console.log("🔥 STOMP INIT EFFECT RUN");
 
     const client = new Client({
       webSocketFactory: () => new SockJS("http://192.168.0.20:8080/ws"),
       // reconnectDelay: 5000,
 
       onConnect: () => {
-        console.log("✅ STOMP connected");
         useStomp.getState().setStomp(client);
       },
 
@@ -63,7 +58,6 @@ export default function App({ Component, pageProps }) {
     stompRef.current = client;
 
     return () => {
-      console.log("🧹 STOMP deactivate");
       client.deactivate();
       useStomp.getState().clearStomp();
       stompRef.current = null;
@@ -112,26 +106,26 @@ export default function App({ Component, pageProps }) {
     };
   }, [stomp?.connected, token, account?.accountId]);
 
-  // 라우터 준비 전 로딩 화면
-  if (!isReady) {
+  // ✅ 🚨 가장 중요: 준비 안됐으면 아무것도 그리지 않음
+  if (!router.isReady || !isHydrated) {
     return (
-      <div className="flex justify-center items-center gap-6 h-screen w-screen">
+      <div className="flex justify-center items-center h-screen w-screen">
         <Spinner className="size-20" />
       </div>
     );
   }
 
-  // 토큰 없고 로그인 페이지 아님 = 리다이렉트 중
-  if (!token && !isLoginPage) {
+  // ✅ 로그인 안 된 상태 → 리다이렉트 중에는 빈 화면
+  if (!token && router.pathname !== "/login") {
     return null;
   }
 
-  // 로그인 페이지는 사이드바 없음
-  if (isLoginPage || isRedirecting) {
+  // ✅ 로그인 페이지는 Sidebar 없음
+  if (isLoginPage) {
     return <Component {...pageProps} />;
   }
 
-  // 나머지는 사이드바 포함
+  // ✅ 로그인 된 일반 페이지
   return (
     <SideBar>
       <Component {...pageProps} />
