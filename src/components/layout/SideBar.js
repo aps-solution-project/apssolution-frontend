@@ -115,7 +115,7 @@ export default function SideBar({ children }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-screen overflow-hidden">
+      <div className="flex min-h-screen w-screen overflow-x-hidden">
         <Sidebar>
           <SidebarContent>
             <SidebarMenu>
@@ -162,12 +162,9 @@ export default function SideBar({ children }) {
           </SidebarContent>
         </Sidebar>
 
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
           <Header />
-
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6 min-h-0">
-            {children}
-          </main>
+          <main className="  bg-muted/30 p-6 min-h-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>
