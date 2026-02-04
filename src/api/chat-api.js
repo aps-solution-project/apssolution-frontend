@@ -92,3 +92,15 @@ export async function leaveChat(token, chatId) {
   if (!resp.ok) throw new Error("채팅방 나가기 실패");
   return resp;
 }
+
+export async function getUnreadCount(token) {
+  const resp = await fetch(`${URL}/api/chats/unread-count`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!resp.ok) throw new Error("안 읽은 메시지 개수 조회 실패");
+  return resp.json();
+}
