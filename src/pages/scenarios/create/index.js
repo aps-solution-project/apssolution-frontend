@@ -273,6 +273,7 @@ export default function ScenariosCreate() {
                         setForm({ ...form, time: e.target.value })
                       }
                     />
+
                     {errors.time && (
                       <p className="text-xs text-red-500">{errors.time}</p>
                     )}

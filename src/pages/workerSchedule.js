@@ -301,22 +301,6 @@ function TimelineHeader() {
 function WorkerGroup({ worker }) {
   const [open, setOpen] = useState(true);
 
-  // 시간순 정렬
-  const tasks = [...worker.tasks].sort((a, b) => a.start - b.start);
-
-  // 겹치지 않게 누적 배치용 커서
-  let cursor = 0;
-
-  const layouted = tasks.map((t) => {
-    const start = Math.max(cursor, t.start);
-    const left = (start / MINUTE_STEP) * CELL;
-    const width = (t.duration / MINUTE_STEP) * CELL;
-
-    cursor = start + t.duration;
-
-    return { ...t, left, width, visualStart: start };
-  });
-
   return (
     <div className="space-y-2">
       <button
@@ -327,47 +311,50 @@ function WorkerGroup({ worker }) {
         {worker.name}
       </button>
 
-      {open && (
-        <div className="flex">
-          {/* 👈 왼쪽 이름만 유지 */}
-          <div className="w-65 shrink-0 pr-3 text-sm text-slate-600 flex items-center">
-            {worker.name}
-          </div>
+      {open &&
+        worker.tasks
+          .sort((a, b) => a.start - b.start)
+          .map((task) => <TaskRow key={task.id} task={task} />)}
+    </div>
+  );
+}
 
-          {/* 👉 gantt 라인 하나 */}
-          <div className="relative h-12" style={{ width: SLOTS * CELL }}>
-            {layouted.map((task) => (
-              <HoverCard key={task.id} openDelay={10} closeDelay={100}>
-                <HoverCardTrigger asChild>
-                  <div
-                    className={`${TOOL_COLORS[task.toolId]} h-8 rounded-lg text-white text-xs px-2 shadow absolute top-2 cursor-pointer flex items-center gap-2`}
-                    style={{
-                      left: task.left,
-                      width: task.width,
-                    }}
-                  >
-                    <span className="font-medium">{task.label}</span>
-                    <span className="opacity-80">
-                      {formatTime(task.visualStart)}–
-                      {formatTime(task.visualStart + task.duration)}
-                    </span>
-                  </div>
-                </HoverCardTrigger>
+function TaskRow({ task }) {
+  const left = (task.start / MINUTE_STEP) * CELL;
+  const width = (task.duration / MINUTE_STEP) * CELL;
 
-                <HoverCardContent className="w-60">
-                  <div className="font-semibold">{task.label}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatTime(task.visualStart)} ~{" "}
-                    {formatTime(task.visualStart + task.duration)}
-                  </div>
-                  <div className="mt-1 text-xs">{task.product}</div>
-                  <div className="text-xs">{task.toolId}</div>
-                </HoverCardContent>
-              </HoverCard>
-            ))}
-          </div>
+  return (
+    <div className="flex min-w-0 overflow-x-auto overflow-y-hidden">
+      <div className="w-65 shrink-0 pr-3 text-sm text-slate-600 space-y-1">
+        <div className="font-medium">{task.label}</div>
+        <div className="text-xs text-slate-400">
+          {task.product} · {task.toolId}
         </div>
-      )}
+      </div>
+
+      <div className="relative h-10" style={{ width: SLOTS * CELL }}>
+        <HoverCard openDelay={10} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <div
+              className={`${TOOL_COLORS[task.toolId]} h-8 rounded-lg text-white text-xs px-2 shadow absolute top-1 cursor-pointer`}
+              style={{ left, width }}
+            >
+              {formatTime(task.start)} –{" "}
+              {formatTime(task.start + task.duration)}
+            </div>
+          </HoverCardTrigger>
+
+          <HoverCardContent className="w-60">
+            <div className="font-semibold">{task.label}</div>
+            <div className="text-xs text-muted-foreground">
+              {formatTime(task.start)} ~{" "}
+              {formatTime(task.start + task.duration)}
+            </div>
+            <div className="mt-1 text-xs">{task.product}</div>
+            <div className="text-xs">{task.toolId}</div>
+          </HoverCardContent>
+        </HoverCard>
+      </div>
     </div>
   );
 }
