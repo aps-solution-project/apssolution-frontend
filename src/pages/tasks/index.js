@@ -67,6 +67,7 @@ export default function TaskManagementPage() {
         name: item.name,
         description: item.description,
         duration: item.duration,
+        requiredWorkers: item.requiredWorkers,
         isSaved: false,
       }));
 
@@ -107,6 +108,7 @@ export default function TaskManagementPage() {
         description: "",
         duration: 0,
         isSaved: false,
+        requiredWorkers: 1,
       },
       ...tasks,
     ]);
@@ -144,6 +146,7 @@ export default function TaskManagementPage() {
           name: t.name,
           description: t.description,
           duration: Number(t.duration),
+          requiredWorkers: Number(t.requiredWorkers),
         })),
       };
 
@@ -157,6 +160,7 @@ export default function TaskManagementPage() {
           name: t.name,
           description: t.description,
           duration: Number(t.duration),
+          requiredWorkers: Number(t.requiredWorkers),
         })),
       );
 
@@ -220,27 +224,30 @@ export default function TaskManagementPage() {
           <Table className="table-fixed w-full">
             <TableHeader className="bg-stone-50">
               <TableRow>
-                <TableHead className="w-[35px] text-center text-stone-600">
+                <TableHead className="w-[1.5%] text-center text-stone-600">
                   상태
                 </TableHead>
-                <TableHead className="w-[17%] text-center text-stone-600">
+                <TableHead className="w-[13%] text-center text-stone-600">
                   ID
                 </TableHead>
                 <TableHead className="w-[15%] text-center text-stone-600">
                   제품
                 </TableHead>
-                <TableHead className="w-[20%] text-center text-stone-600">
+                <TableHead className="w-[13%] text-center text-stone-600">
                   도구
                 </TableHead>
-                <TableHead className="w-[55px] text-center text-stone-600">
+                <TableHead className="w-[4%] text-center text-stone-600">
                   작업레벨
                 </TableHead>
                 <TableHead className="w-[11%] text-center text-stone-600">
                   작업명
                 </TableHead>
                 <TableHead className="text-center">설명</TableHead>
-                <TableHead className="w-[60px] text-center text-stone-600">
+                <TableHead className="w-[4%] text-center text-stone-600">
                   시간(분)
+                </TableHead>
+                <TableHead className="w-[4%] text-center text-stone-600">
+                  요구인원
                 </TableHead>
                 <TableHead className="w-[45px]" />
               </TableRow>
@@ -371,6 +378,24 @@ export default function TaskManagementPage() {
                       value={t.duration}
                       onChange={(e) =>
                         handleInputChange(i, "duration", e.target.value)
+                      }
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <Input
+                      className={`h-9 text-center text-sm rounded-md border-stone-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all ${
+                        !t.isSaved ? "border-emerald-300" : ""
+                      }`}
+                      placeholder="1"
+                      type="text"
+                      inputMode="numeric"
+                      min={0}
+                      step={1}
+                      pattern="[0-9]*"
+                      value={t.requiredWorkers}
+                      onChange={(e) =>
+                        handleInputChange(i, "requiredWorkers", e.target.value)
                       }
                     />
                   </TableCell>
