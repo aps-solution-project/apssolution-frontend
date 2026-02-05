@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 
+import Header from "@/components/layout/Header";
 import SideBar from "@/components/layout/SideBar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount, useToken } from "@/stores/account-store";
@@ -108,8 +109,10 @@ export default function App({ Component, pageProps }) {
   }
 
   return (
-    <SideBar>
-      <Component {...pageProps} />
-    </SideBar>
+    <>
+      <SideBar>
+        <Component {...pageProps} />
+      </SideBar>
+    </>
   );
 }

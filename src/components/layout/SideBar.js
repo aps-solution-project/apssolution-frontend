@@ -16,8 +16,8 @@ import {
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
 import Link from "next/link";
-import Header from "./Header";
 
+import { useStomp } from "@/stores/stomp-store";
 import {
   Columns3Cog,
   Inbox,
@@ -25,7 +25,6 @@ import {
   Settings,
   Wrench,
 } from "lucide-react";
-import { useStomp } from "@/stores/stomp-store";
 
 const sections = [
   {
@@ -130,8 +129,7 @@ export default function SideBar({ children }) {
         </Sidebar>
 
         <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-          <Header />
-          <main className="  bg-muted/30 p-6 min-h-0">{children}</main>
+          <main className="  bg-muted/30 min-h-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>

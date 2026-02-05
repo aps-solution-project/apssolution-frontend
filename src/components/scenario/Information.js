@@ -1,21 +1,20 @@
 import { publishScenario, unpublishScenario } from "@/api/scenario-api";
-import { useToken } from "@/stores/account-store";
-import { useEffect, useState } from "react";
 import Edit from "@/components/scenario/Edit";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToken } from "@/stores/account-store";
 import {
   Activity,
   Calendar,
-  Users,
-  Package,
   CheckCircle2,
-  Clock,
-  Loader2,
-  Play,
   FileText,
-  Send,
   Globe,
+  Loader2,
+  Package,
+  Play,
+  Send,
+  Users,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useState } from "react";
 
 export default function Information({
   selectedScenario,

@@ -11,8 +11,8 @@ import Information from "@/components/scenario/Information";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
-import { Plus, Trash2, Calendar, Users, Clock, X, Copy } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { Calendar, Copy, Plus, Trash2, Users, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
@@ -226,7 +226,7 @@ export default function ScenariosCreateForm() {
   if (!token) return <div>Loading...</div>;
 
   return (
-    <div className="h-200 w-full flex flex-col bg-slate-50 overflow-hidden">
+    <div className="h-screen w-full flex flex-col bg-slate-50 overflow-hidden">
       <header className="h-16 bg-white border-b px-8 flex items-center justify-between shrink-0 z-20 shadow-sm">
         <span className="font-bold text-xl tracking-tight text-slate-800">
           Scenario Engine
@@ -483,7 +483,7 @@ export default function ScenariosCreateForm() {
 
         {/* 오른쪽 상세 섹션 */}
         <section className="flex-[0.5] bg-slate-50 flex flex-col h-full overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-8">
+          <div className="flex-1 overflow-y-auto p-8">
             <Information
               selectedScenario={selectedScenario}
               progress={progress}
