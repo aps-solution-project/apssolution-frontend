@@ -86,7 +86,7 @@ export default function App({ Component, pageProps }) {
     );
 
     return () => {
-      isCancelled = true;
+      // isCancelled = true;
       subscriptions.forEach((sub) => sub.unsubscribe());
     };
   }, [stomp, token, account]);
