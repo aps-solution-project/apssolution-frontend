@@ -26,20 +26,69 @@ const MINUTE_STEP = 5;
 const CELL = 15;
 
 const TOOL_COLORS = {
+  // 1. 혼합 및 저장 (Pink / Sky)
   "T-MIX-SPR-001": "bg-pink-400",
   "T-MIX-SPR-002": "bg-pink-400",
   "T-MIX-SPR-003": "bg-pink-400",
+  "T-MIX-SPR-004": "bg-pink-400",
+  "T-TNK-BAT-001": "bg-sky-400",
+
+  // 2. 가열 및 조리 (Purple / Orange)
   "T-OVN-COV-001": "bg-purple-500",
+  "T-OVN-COV-002": "bg-purple-500",
+  "T-OVN-COV-003": "bg-purple-500",
+  "T-OVN-COV-004": "bg-purple-500",
   "T-FRY-OIL-001": "bg-orange-500",
+  "T-BOI-STM-001": "bg-cyan-500",
+  "T-BOI-STM-002": "bg-cyan-500",
+  "T-BOI-STM-003": "bg-cyan-500",
+  "T-BOI-STM-004": "bg-cyan-500",
+
+  // 3. 발효 및 증식 (Lime / Amber)
   "T-FER-BUL-001": "bg-lime-500",
+  "T-FER-BUL-002": "bg-lime-500",
   "T-PRO-BOX-001": "bg-amber-400",
+  "T-PRO-BOX-002": "bg-amber-400",
+  "T-PRO-BOX-003": "bg-amber-400",
+  "T-PRO-BOX-004": "bg-amber-400",
+
+  // 4. 성형 및 분할 (Rose / Red)
+  "T-DIV-DOU-001": "bg-rose-400",
+  "T-RND-DOU-001": "bg-rose-400",
+  "T-MOL-BRD-001": "bg-rose-400",
+  "T-CUT-BWL-001": "bg-violet-400",
+  "T-CUT-BWL-002": "bg-violet-400",
+  "T-CUT-BWL-003": "bg-violet-400",
+  "T-CUT-BWL-004": "bg-violet-400",
+  "T-SHT-ROL-001": "bg-fuchsia-400",
+
+  // 5. 작업대 및 부대시설 (Yellow / Emerald)
   "T-TBL-STS-001": "bg-yellow-400",
   "T-TBL-STS-002": "bg-yellow-400",
   "T-TBL-STS-003": "bg-yellow-400",
-  "T-RCK-MOV-001": "bg-indigo-400",
+  "T-TBL-STS-004": "bg-yellow-400",
+  "T-TBL-STS-005": "bg-yellow-400",
   "T-DEP-BAT-001": "bg-emerald-500",
-  "T-TNK-BAT-001": "bg-sky-400",
+
+  // 6. 물류 및 냉각 (Indigo / Blue)
+  "T-RCK-MOV-001": "bg-indigo-400",
+  "T-CHI-AIR-001": "bg-blue-500",
+  "T-CHI-AIR-002": "bg-blue-500",
+  "T-CHI-AIR-003": "bg-blue-500",
+  "T-CHI-AIR-004": "bg-blue-500",
+
+  // 7. 포장 및 기타 (Teal / Slate)
+  "T-PAC-AUT-001": "bg-teal-500",
+  "T-PAN-TRAY-001": "bg-slate-500",
+  "T-MAN-QC-001": "bg-slate-400",
 };
+
+//시간 줌
+const ZOOM_LEVELS = [
+  { step: 5, cell: 70 },
+  { step: 15, cell: 90 },
+  { step: 30, cell: 105 },
+];
 
 /* ================= 시간 계산 ================= */
 
