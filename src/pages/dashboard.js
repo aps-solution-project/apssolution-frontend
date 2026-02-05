@@ -11,6 +11,7 @@ import {
   FileText,
   Calendar as CalendarIcon,
   ArrowRight,
+  Calendar,
 } from "lucide-react";
 
 export default function DashboardPage() {
