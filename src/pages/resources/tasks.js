@@ -21,8 +21,8 @@ import { Pencil } from "lucide-react";
 
 const PAGE_SIZE = 15;
 
-/** 👉 컬럼 비율 재설계 (설명 넓힘) */
-const GRID_COLS = "grid-cols-[10%_17%_14%_6%_13%_30%_10%]";
+/**  컬럼 비율 재설계 (설명 넓힘) */
+const GRID_COLS = "grid-cols-[15%_15%_14%_5%_11%_30%_5%_5%]";
 
 const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0";
 
@@ -168,6 +168,7 @@ export default function TaskPage() {
           <div className={`${cellBase} justify-center py-2`}>순서</div>
           <div className={`${cellBase} py-2`}>작업명</div>
           <div className={`${cellBase} py-2`}>설명</div>
+          <div className={`${cellBase} py-2`}>시간(분)</div>
           <div className={`${cellBase} justify-center py-2`}>요구인원</div>
         </div>
 
@@ -187,6 +188,7 @@ export default function TaskPage() {
             <div className={`${cellBase} truncate text-stone-500`}>
               {t.description || "-"}
             </div>
+            <div className={`${cellBase} justify-center`}>{t.duration}</div>
             <div className={`${cellBase} justify-center`}>
               {t.requiredWorkers ?? 1}
             </div>

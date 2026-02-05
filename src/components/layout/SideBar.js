@@ -33,7 +33,10 @@ const sections = [
     icon: Columns3Cog,
     items: [
       { label: "주문 항목 생성", href: "/scenarios/create" },
-      { label: "시뮬레이션 결과(gantt임시 페이지)", href: "/simulations" },
+      {
+        label: "시뮬레이션 결과(gantt임시 페이지)",
+        href: "/simulations",
+      },
     ],
   },
 
