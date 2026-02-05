@@ -2,213 +2,66 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
+
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+import backendData from "@/data/scenarioMock.json";
+
 import { useRouter } from "next/router";
 import Link from "next/link";
 
 const MINUTE_STEP = 5;
-const CELL = 12;
+const CELL = 15;
 
 const TOOL_COLORS = {
-  "MIXER-01": "bg-pink-400",
-  "PROOFER-01": "bg-blue-400",
-  "OVEN-01": "bg-purple-400",
-  "COOLER-01": "bg-indigo-400",
-  "PACKER-01": "bg-emerald-400",
-  "TABLE-01": "bg-yellow-400",
-  "FERMENT-01": "bg-green-400",
-  "FERMENT-02": "bg-green-600",
-  "CUTTER-01": "bg-red-400",
-  "MIXER-02": "bg-pink-600",
-  "TABLE-02": "bg-yellow-600",
-  "TABLE-03": "bg-yellow-800",
-  "TABLE-04": "bg-yellow-300",
-  "TABLE-05": "bg-yellow-400",
-  "OVEN-02": "bg-purple-600",
-  "OVEN-03": "bg-purple-800",
+  "T-MIX-SPR-001": "bg-pink-400",
+  "T-MIX-SPR-002": "bg-pink-400",
+  "T-MIX-SPR-003": "bg-pink-400",
+  "T-OVN-COV-001": "bg-purple-500",
+  "T-FRY-OIL-001": "bg-orange-500",
+  "T-FER-BUL-001": "bg-lime-500",
+  "T-PRO-BOX-001": "bg-amber-400",
+  "T-TBL-STS-001": "bg-yellow-400",
+  "T-TBL-STS-002": "bg-yellow-400",
+  "T-TBL-STS-003": "bg-yellow-400",
+  "T-RCK-MOV-001": "bg-indigo-400",
+  "T-DEP-BAT-001": "bg-emerald-500",
+  "T-TNK-BAT-001": "bg-sky-400",
 };
 
-// ---------------- 더미 데이터 ----------------
-
-const backendData = {
-  scenario: {
-    startAt: "2026-01-26T05:00:00",
-    makespan: 480, // 8시간
-  },
-
-  scenarioProductList: [
-    {
-      name: "생크림 케이크",
-      scenarioSchedules: [
-        {
-          scheduleTask: { name: "반죽 혼합", duration: 20 },
-          worker: { name: "김제빵" },
-          toolId: "MIXER-01",
-          startAt: "2026-01-26T05:40:00",
-        },
-        {
-          scheduleTask: { name: "1차 발효", duration: 30 },
-          worker: { name: "김제빵" },
-          toolId: "FERMENT-01",
-          startAt: "2026-01-26T06:00:00",
-        },
-        {
-          scheduleTask: { name: "오븐 굽기", duration: 40 },
-          worker: { name: "최제빵" },
-          toolId: "OVEN-01",
-          startAt: "2026-01-26T06:40:00",
-        },
-        {
-          scheduleTask: { name: "데코레이션", duration: 35 },
-          worker: { name: "이제빵" },
-          toolId: "TABLE-02",
-          startAt: "2026-01-26T07:30:00",
-        },
-      ],
-    },
-
-    {
-      name: "바게트",
-      scenarioSchedules: [
-        {
-          scheduleTask: { name: "반죽 혼합", duration: 15 },
-          worker: { name: "박제빵" },
-          toolId: "MIXER-01",
-          startAt: "2026-01-26T05:10:00",
-        },
-        {
-          scheduleTask: { name: "성형", duration: 25 },
-          worker: { name: "박제빵" },
-          toolId: "TABLE-01",
-          startAt: "2026-01-26T06:20:00",
-        },
-        {
-          scheduleTask: { name: "굽기", duration: 35 },
-          worker: { name: "최제빵" },
-          toolId: "OVEN-02",
-          startAt: "2026-01-26T07:00:00",
-        },
-        {
-          scheduleTask: { name: "포장", duration: 20 },
-          worker: { name: "김제빵" },
-          toolId: "PACKER-01",
-          startAt: "2026-01-26T08:35:00",
-        },
-      ],
-    },
-
-    {
-      name: "크루아상",
-      scenarioSchedules: [
-        {
-          scheduleTask: { name: "반죽 혼합", duration: 20 },
-          worker: { name: "이제빵" },
-          toolId: "MIXER-02",
-          startAt: "2026-01-26T05:30:00",
-        },
-        {
-          scheduleTask: { name: "접기 & 휴지", duration: 45 },
-          worker: { name: "이제빵" },
-          toolId: "TABLE-03",
-          startAt: "2026-01-26T06:00:00",
-        },
-        {
-          scheduleTask: { name: "굽기", duration: 30 },
-          worker: { name: "최제빵" },
-          toolId: "OVEN-01",
-          startAt: "2026-01-26T07:00:00",
-        },
-      ],
-    },
-
-    {
-      name: "식빵",
-      scenarioSchedules: [
-        {
-          scheduleTask: { name: "반죽 혼합", duration: 25 },
-          worker: { name: "김제빵" },
-          toolId: "MIXER-01",
-          startAt: "2026-01-26T06:10:00",
-        },
-        {
-          scheduleTask: { name: "발효", duration: 40 },
-          worker: { name: "김제빵" },
-          toolId: "FERMENT-02",
-          startAt: "2026-01-26T06:40:00",
-        },
-        {
-          scheduleTask: { name: "굽기", duration: 45 },
-          worker: { name: "최제빵" },
-          toolId: "OVEN-02",
-          startAt: "2026-01-26T07:40:00",
-        },
-        {
-          scheduleTask: { name: "슬라이스", duration: 15 },
-          worker: { name: "박제빵" },
-          toolId: "CUTTER-01",
-          startAt: "2026-01-26T08:40:00",
-        },
-      ],
-    },
-
-    {
-      name: "마카롱",
-      scenarioSchedules: [
-        {
-          scheduleTask: { name: "머랭 제조", duration: 20 },
-          worker: { name: "이제빵" },
-          toolId: "MIXER-02",
-          startAt: "2026-01-26T05:50:00",
-        },
-        {
-          scheduleTask: { name: "짜기", duration: 20 },
-          worker: { name: "이제빵" },
-          toolId: "TABLE-04",
-          startAt: "2026-01-26T06:20:00",
-        },
-        {
-          scheduleTask: { name: "굽기", duration: 25 },
-          worker: { name: "최제빵" },
-          toolId: "OVEN-03",
-          startAt: "2026-01-26T06:50:00",
-        },
-        {
-          scheduleTask: { name: "필링 샌딩", duration: 20 },
-          worker: { name: "김제빵" },
-          toolId: "TABLE-05",
-          startAt: "2026-01-26T07:30:00",
-        },
-      ],
-    },
-  ],
-};
-
-// ---------------- 시간 계산 ----------------
+/* ================= 시간 계산 ================= */
 
 const baseTime = new Date(backendData.scenario.startAt).getTime();
 
-function minutesFromBase(iso) {
-  return Math.round((new Date(iso).getTime() - baseTime) / 60000);
-}
+const minutesFromBase = (iso) =>
+  Math.round((new Date(iso).getTime() - baseTime) / 60000);
 
-// ---------------- 작업자 기준 재구성 ----------------
+/* ================= 작업자 그룹 ================= */
 
 const workerMap = {};
 
-backendData.scenarioProductList.forEach((product) => {
+backendData.scenarioProductList.forEach((product, pIndex) => {
   product.scenarioSchedules.forEach((s) => {
-    const name = s.worker.name;
+    const workerName = s.worker?.name || `작업자-${(pIndex % 3) + 1}`;
 
-    if (!workerMap[name]) {
-      workerMap[name] = { name, tasks: [] };
+    if (!workerMap[workerName]) {
+      workerMap[workerName] = { name: workerName, tasks: [] };
     }
 
-    workerMap[name].tasks.push({
-      id: Math.random().toString(36).slice(2),
+    workerMap[workerName].tasks.push({
+      id: s.id,
       label: s.scheduleTask.name,
       product: product.name,
       start: minutesFromBase(s.startAt),
@@ -223,80 +76,127 @@ const workers = Object.values(workerMap);
 const TOTAL_MINUTES = backendData.scenario.makespan;
 const SLOTS = TOTAL_MINUTES / MINUTE_STEP;
 
-// =================================================
+/* ================================================= */
 
 export default function WorkersGantt() {
   useAuthGuard();
-
   const router = useRouter();
+
   const isSimulations = router.pathname === "/simulations";
   const isWorkload = router.pathname === "/workerSchedule";
 
   return (
     <div className="h-full w-full overflow-x-auto bg-slate-100 p-5">
-      <Card className="rounded-sm w-full">
-        <div className="flex items-center justify-between px-7 py-2 border-b">
-          <div className="flex gap-8 text-sm font-medium">
-            <Link
-              href="/simulations"
-              className={
-                isSimulations
-                  ? "text-lg text-indigo-600"
-                  : "text-lg text-stone-300"
-              }
-            >
-              시뮬레이션 결과
-            </Link>
-            <Link
-              href="/workerSchedule"
-              className={
-                isWorkload
-                  ? "text-lg text-indigo-600"
-                  : "text-lg text-stone-300"
-              }
-            >
-              인원별 작업량
-            </Link>
-          </div>
-
-          <p className="font-medium text-slate-500">2026년 2월 3일</p>
-        </div>
-
-        <CardContent className="p-6 space-y-4">
-          <div className="w-full overflow-auto">
-            <div className="min-w-max">
-              <TimelineHeader />
-
-              <div className="space-y-4">
-                {workers.map((w) => (
-                  <WorkerGroup key={w.name} worker={w} />
-                ))}
+      <Carousel
+        opts={{ align: "start", loop: false }}
+        className="w-full relative"
+      >
+        <Card className="rounded-sm w-full">
+          <div className="relative">
+            {/* ===== 상단 헤더 ===== */}
+            <div className="flex items-center justify-between px-7 py-2 border-b">
+              <div className="flex gap-8 text-sm font-medium">
+                <Link
+                  href="/simulations"
+                  className={
+                    isSimulations
+                      ? "text-lg text-sky-600"
+                      : "text-lg text-stone-300"
+                  }
+                >
+                  시뮬레이션 결과
+                </Link>
+                <Link
+                  href="/workerSchedule"
+                  className={
+                    isWorkload
+                      ? "text-lg text-sky-600"
+                      : "text-lg text-stone-300"
+                  }
+                >
+                  인원별 작업량
+                </Link>
               </div>
+
+              <p className="font-medium text-slate-500">
+                {new Date(backendData.scenario.startAt).toLocaleDateString()}
+              </p>
             </div>
+
+            {/* ===== 중앙 Carousel 버튼 ===== */}
+            <div className="absolute left-1/2 top-2 -translate-x-1/2 z-10 flex gap-6">
+              <CarouselPrevious className="static translate-y-0" />
+              <CarouselNext className="static translate-y-0" />
+            </div>
+
+            <CardContent className="p-6 space-y-4">
+              <div className="w-full overflow-auto">
+                <div className="min-w-max">
+                  {/* 타임라인 */}
+                  <TimelineHeader />
+
+                  {/* 본문 */}
+                  <CarouselContent>
+                    <CarouselItem className="basis-full pr-6">
+                      <div className="space-y-4">
+                        {workers.map((w) => (
+                          <WorkerGroup key={w.name} worker={w} />
+                        ))}
+                      </div>
+                    </CarouselItem>
+                  </CarouselContent>
+                </div>
+              </div>
+            </CardContent>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </Carousel>
     </div>
   );
 }
 
-// =================================================
+/* ================= 타임라인 ================= */
 
 function TimelineHeader() {
+  const steps = TOTAL_MINUTES / MINUTE_STEP;
+
   return (
-    <div className="flex ml-65 text-xs text-slate-500 overflow-auto">
-      {Array.from({ length: 24 }).map((_, h) => (
-        <div
-          key={h}
-          className="border-r text-center shrink-0"
-          style={{ width: (60 / MINUTE_STEP) * CELL }}
-        >
-          {String(h).padStart(2, "0")}:00
-        </div>
-      ))}
+    <div className="flex ml-65 items-end h-12 text-xs text-slate-600 overflow-auto border-b">
+      {Array.from({ length: steps }).map((_, i) => {
+        const minutes = i * MINUTE_STEP;
+        const hour = Math.floor(minutes / 60);
+
+        const isHour = minutes % 60 === 0;
+        const isHalf = minutes % 30 === 0;
+
+        let height = 6;
+        if (isHalf) height = 10;
+        if (isHour) height = 16;
+
+        return (
+          <div
+            key={i}
+            className="relative shrink-0 flex justify-center"
+            style={{ width: CELL }}
+          >
+            <div
+              className="bg-slate-400 rounded"
+              style={{ width: 1, height }}
+            />
+
+            {isHour && (
+              <div className="absolute -top-4 font-medium text-slate-700">
+                {String(hour).padStart(2, "0")}:00
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
+
+/* ================= 작업자 ================= */
 
 function WorkerGroup({ worker }) {
   const [open, setOpen] = useState(true);
@@ -305,7 +205,7 @@ function WorkerGroup({ worker }) {
     <div className="space-y-2">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 font-semibold text-slate-700"
+        className="flex items-center gap-3 px-6 py-2 rounded-4xl bg-sky-500 text-white font-semibold text-base hover:bg-sky-600 transition"
       >
         {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         {worker.name}
@@ -319,24 +219,28 @@ function WorkerGroup({ worker }) {
   );
 }
 
+/* ================= 작업 ================= */
+
 function TaskRow({ task }) {
   const left = (task.start / MINUTE_STEP) * CELL;
   const width = (task.duration / MINUTE_STEP) * CELL;
 
   return (
     <div className="flex min-w-0 overflow-x-auto overflow-y-hidden">
-      <div className="w-65 shrink-0 pr-3 text-sm text-slate-600 space-y-1">
-        <div className="font-medium">{task.label}</div>
+      <div className="w-65 shrink-0 pr-3 text-sm space-y-1">
+        <div className="font-medium text-stone-600">{task.label}</div>
         <div className="text-xs text-slate-400">
           {task.product} · {task.toolId}
         </div>
       </div>
 
       <div className="relative h-10" style={{ width: SLOTS * CELL }}>
-        <HoverCard openDelay={10} closeDelay={100}>
+        <HoverCard>
           <HoverCardTrigger asChild>
             <div
-              className={`${TOOL_COLORS[task.toolId]} h-8 rounded-lg text-white text-xs px-2 shadow absolute top-1 cursor-pointer`}
+              className={`${
+                TOOL_COLORS[task.toolId] || "bg-slate-400"
+              } h-8 rounded-lg text-white text-xs px-2 shadow absolute top-1`}
               style={{ left, width }}
             >
               {formatTime(task.start)} –{" "}
@@ -360,7 +264,8 @@ function TaskRow({ task }) {
 }
 
 function formatTime(min) {
-  const h = Math.floor(min / 60) + 5;
+  const baseHour = new Date(backendData.scenario.startAt).getHours();
+  const h = Math.floor(min / 60) + baseHour;
   const m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
