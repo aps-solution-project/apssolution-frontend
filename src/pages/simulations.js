@@ -95,9 +95,9 @@ const TOOL_COLORS = {
 
 //시간 줌
 const ZOOM_LEVELS = [
-  { step: 5, cell: 40 },
-  { step: 15, cell: 55 },
-  { step: 30, cell: 65 },
+  { step: 5, cell: 70 },
+  { step: 15, cell: 90 },
+  { step: 30, cell: 105 },
 ];
 
 export default function ProductionGantt() {
@@ -105,7 +105,6 @@ export default function ProductionGantt() {
   const router = useRouter();
 
   const [zoom, setZoom] = useState(0);
-  const [cursorX, setCursorX] = useState(null);
   const [scenarioData, setScenarioData] = useState(null);
   const [loading, setLoading] = useState(true);
   const MINUTE_STEP = ZOOM_LEVELS[zoom].step;
@@ -214,34 +213,12 @@ export default function ProductionGantt() {
 
             <CardContent className="p-6 space-y-4">
               <div className="w-full overflow-auto">
-                <div
-                  className="min-w-max relative"
-                  onMouseMove={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setCursorX(e.clientX - rect.left);
-                  }}
-                  onMouseLeave={() => setCursorX(null)}
-                >
+                <div className="min-w-max relative">
                   <TimelineHeader
                     totalMinutes={scenarioData.scenario.makespan}
                     minuteStep={MINUTE_STEP}
                     cell={CELL}
                   />
-
-                  {cursorX !== null && (
-                    <>
-                      <div
-                        className="absolute top-0 bottom-0 w-px bg-red-500 z-40 pointer-events-none"
-                        style={{ left: cursorX }}
-                      />
-                      <div
-                        className="absolute -top-7 px-2 py-0.5 text-xs bg-black text-white rounded z-40"
-                        style={{ left: cursorX + 6 }}
-                      >
-                        {formatTime(Math.round(cursorX / CELL) * MINUTE_STEP)}
-                      </div>
-                    </>
-                  )}
 
                   <CarouselContent>
                     <CarouselItem className="basis-full pr-6">
