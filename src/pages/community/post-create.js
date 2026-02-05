@@ -1,5 +1,5 @@
 import { createWorkerPost } from "@/api/community-api";
-import CommunityForm from "@/components/community/CommunityForm"; // 새 컴포넌트 임포트
+import CommunityForm from "@/components/community/community-form"; // 새 컴포넌트 임포트
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -26,7 +26,7 @@ export default function PostsCreatePage() {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    files.forEach((file) => formData.append("files", file));
+    files.forEach((file) => formData.append("attachments", file));
 
     try {
       await createWorkerPost(token, formData);

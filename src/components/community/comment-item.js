@@ -11,6 +11,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import BoardEditor from "../ui/editor";
+import EditorBlank from "../ui/editorBlank";
 
 export default function CommentItem({
   comment,
