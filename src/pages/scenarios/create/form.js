@@ -272,7 +272,7 @@ export default function ScenariosCreateForm() {
         <div className="h-full min-h-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
           <div className="h-full min-h-0 flex overflow-hidden">
             {/* ===================== 왼쪽 ===================== */}
-            <section className="w-[45%] min-h-0 border-r border-slate-100 bg-slate-200 flex flex-col overflow-hidden">
+            <section className="w-[45%] min-h-0 border-r border-slate-100 bg-slate-100 flex flex-col overflow-hidden">
               {/* left header */}
               <div className="shrink-0 px-6 py-5  backdrop-blur">
                 <div className="flex items-start justify-between gap-3">
@@ -481,101 +481,77 @@ export default function ScenariosCreateForm() {
 
                     {/* LIST */}
                     <div className="grid grid-cols-1 gap-3">
-                      {(scenarioData || []).map((s) => {
+                      {scenarioData.map((s) => {
                         const active = String(selectedId) === String(s.id);
-
                         return (
                           <div
                             key={s.id}
                             onClick={() => handleSelectScenario(s.id)}
-                            className={[
-                              "group relative cursor-pointer rounded-[26px] border p-5 transition-all",
+                            className={`group relative p-6 border-2 rounded-[28px] cursor-pointer transition-all duration-300 ${
                               active
-                                ? "bg-white border-blue-300 shadow-lg shadow-blue-100"
-                                : "bg-white/70 border-slate-200 hover:bg-white hover:shadow-sm",
-                            ].join(" ")}
+                                ? "bg-white border-blue-500 shadow-2xl translate-x-2"
+                                : "bg-white border-transparent hover:border-slate-200 shadow-sm"
+                            }`}
                           >
-                            {/* 선택 인디케이터 */}
-                            <div
-                              className={[
-                                "absolute left-0 top-5 bottom-5 w-1.5 rounded-full transition",
-                                active ? "bg-blue-600" : "bg-transparent",
-                              ].join(" ")}
-                            />
-
                             {s.isNew && (
-                              <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] px-2.5 py-1 rounded-full font-black animate-pulse">
-                                NEW
+                              <span className="absolute -top-2 -right-1 bg-yellow-500 text-white text-[10px] px-2.5 py-1 rounded-full font-black animate-pulse z-30">
+                                NEW COPY
                               </span>
                             )}
-
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-3">
                                 <h3
-                                  className={[
-                                    "truncate text-sm font-semibold",
-                                    active ? "text-blue-700" : "text-slate-800",
-                                  ].join(" ")}
+                                  className={`font-bold text-base transition-colors ${active ? "text-blue-600" : "text-slate-700"}`}
                                 >
                                   {s.title}
                                 </h3>
-
-                                <div className="flex flex-wrap gap-2">
-                                  <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg">
                                     <Calendar
                                       size={12}
                                       className="text-slate-500"
                                     />
-                                    <span className="text-[11px] font-bold text-slate-600">
-                                      {s.startAt?.slice(0, 10) || "-"}
+                                    <span className="text-[11px] font-bold text-slate-500">
+                                      {s.startAt?.slice(0, 10)}
                                     </span>
                                   </div>
-
-                                  <div className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1">
+                                  <div className="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-lg">
                                     <Users
                                       size={12}
-                                      className="text-blue-600"
+                                      className="text-blue-500"
                                     />
-                                    <span className="text-[11px] font-black text-blue-700">
-                                      {s.maxWorkerCount ?? "-"}명
+                                    <span className="text-[11px] font-bold text-blue-500">
+                                      {s.maxWorkerCount}명
                                     </span>
                                   </div>
                                 </div>
                               </div>
-
                               <div
-                                className={[
-                                  "flex flex-col gap-1 transition-all",
-                                  active
-                                    ? "opacity-100"
-                                    : "opacity-0 group-hover:opacity-100",
-                                ].join(" ")}
+                                className={`flex flex-col gap-1 transition-all ${active ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                               >
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     copyScenarioHandle(s.id);
                                   }}
-                                  type="button"
-                                  className="p-2 rounded-xl text-slate-400 hover:text-blue-700 hover:bg-blue-50"
-                                  title="복사"
+                                  className="p-2 hover:bg-blue-50 rounded-xl text-slate-400 hover:text-blue-600"
                                 >
                                   <Copy size={18} />
                                 </button>
-
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDelete(s.id);
                                   }}
-                                  type="button"
-                                  className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                  title="삭제"
+                                  className="p-2 hover:bg-red-50 rounded-xl text-slate-400 hover:text-red-500"
                                 >
                                   <Trash2 size={18} />
                                 </button>
                               </div>
                             </div>
+                            {active && (
+                              <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-10 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+                            )}
                           </div>
                         );
                       })}
@@ -586,23 +562,21 @@ export default function ScenariosCreateForm() {
             </section>
 
             {/* ===================== 오른쪽 ===================== */}
-            <section className="w-[55%] min-h-0 bg-white flex flex-col overflow-hidden">
+            <section className="w-[55%] min-h-0 bg-white flex flex-col">
               {/* ✅ 오른쪽도 ScrollArea로 통일 */}
-              <div className="flex-1 min-h-0 overflow-hidden bg-slate-50/40">
-                <ScrollArea className="h-full w-full">
-                  <div className="p-3">
-                    <Information
-                      selectedScenario={selectedScenario}
-                      progress={progress}
-                      running={running}
-                      pending={pending}
-                      onStart={handleStart}
-                      onEdit={(scenario) => setEditScenario(scenario)}
-                      onCancelEdit={() => setEditScenario(null)}
-                      editScenario={editScenario}
-                    />
-                  </div>
-                </ScrollArea>
+              <div className="flex-1 h-full bg-slate-50/40">
+                <div className="p-3 h-full">
+                  <Information
+                    selectedScenario={selectedScenario}
+                    progress={progress}
+                    running={running}
+                    pending={pending}
+                    onStart={handleStart}
+                    onEdit={(scenario) => setEditScenario(scenario)}
+                    onCancelEdit={() => setEditScenario(null)}
+                    editScenario={editScenario}
+                  />
+                </div>
               </div>
             </section>
           </div>
