@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { useRouter } from "next/router";
@@ -94,15 +93,23 @@ const TOOL_COLORS = {
   "T-MAN-QC-001": "bg-slate-400",
 };
 
-const MINUTE_STEP = 5;
-const CELL = 15;
+//시간 줌
+const ZOOM_LEVELS = [
+  { step: 5, cell: 40 },
+  { step: 15, cell: 55 },
+  { step: 30, cell: 65 },
+];
 
-export default function productionGantt() {
+export default function ProductionGantt() {
   useAuthGuard();
   const router = useRouter();
 
+  const [zoom, setZoom] = useState(0);
+  const [cursorX, setCursorX] = useState(null);
   const [scenarioData, setScenarioData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const MINUTE_STEP = ZOOM_LEVELS[zoom].step;
+  const CELL = ZOOM_LEVELS[zoom].cell;
 
   useEffect(() => {
     setScenarioData(scenarioMock);
@@ -172,6 +179,29 @@ export default function productionGantt() {
                   인원별 작업량
                 </Link>
               </div>
+              <div className="flex gap-2 ml-[60%]">
+                <Button
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-700"
+                  onClick={() => setZoom(0)}
+                >
+                  5분
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-700"
+                  onClick={() => setZoom(1)}
+                >
+                  15분
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-700"
+                  onClick={() => setZoom(2)}
+                >
+                  30분
+                </Button>
+              </div>
 
               <p className="font-medium text-slate-500">2026년 2월 3일</p>
             </div>
@@ -184,16 +214,46 @@ export default function productionGantt() {
 
             <CardContent className="p-6 space-y-4">
               <div className="w-full overflow-auto">
-                <div className="min-w-max">
+                <div
+                  className="min-w-max relative"
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setCursorX(e.clientX - rect.left);
+                  }}
+                  onMouseLeave={() => setCursorX(null)}
+                >
                   <TimelineHeader
                     totalMinutes={scenarioData.scenario.makespan}
+                    minuteStep={MINUTE_STEP}
+                    cell={CELL}
                   />
+
+                  {cursorX !== null && (
+                    <>
+                      <div
+                        className="absolute top-0 bottom-0 w-px bg-red-500 z-40 pointer-events-none"
+                        style={{ left: cursorX }}
+                      />
+                      <div
+                        className="absolute -top-7 px-2 py-0.5 text-xs bg-black text-white rounded z-40"
+                        style={{ left: cursorX + 6 }}
+                      >
+                        {formatTime(Math.round(cursorX / CELL) * MINUTE_STEP)}
+                      </div>
+                    </>
+                  )}
 
                   <CarouselContent>
                     <CarouselItem className="basis-full pr-6">
                       <div className="space-y-6">
                         {products.map((p) => (
-                          <ProductGroup key={p.id} product={p} slots={SLOTS} />
+                          <ProductGroup
+                            key={p.id}
+                            product={p}
+                            slots={SLOTS}
+                            minuteStep={MINUTE_STEP}
+                            cell={CELL}
+                          />
                         ))}
                       </div>
                     </CarouselItem>
@@ -209,19 +269,19 @@ export default function productionGantt() {
 }
 
 //타임라인(시간눈금)
-function TimelineHeader({ totalMinutes }) {
-  const steps = totalMinutes / MINUTE_STEP;
+function TimelineHeader({ totalMinutes, minuteStep, cell }) {
+  const steps = totalMinutes / minuteStep;
 
   return (
     <div className="flex ml-65 items-end h-12 text-xs text-slate-600 overflow-auto border-b">
       {Array.from({ length: steps }).map((_, i) => {
-        const minutes = i * MINUTE_STEP;
+        const minutes = i * minuteStep;
         const hour = Math.floor(minutes / 60);
 
         const isHour = minutes % 60 === 0;
         const isHalf = minutes % 30 === 0;
 
-        let tickHeight = 6; // 기본 5분
+        let tickHeight = 6;
         if (isHalf) tickHeight = 10;
         if (isHour) tickHeight = 16;
 
@@ -229,15 +289,13 @@ function TimelineHeader({ totalMinutes }) {
           <div
             key={i}
             className="relative shrink-0 flex justify-center"
-            style={{ width: CELL }}
+            style={{ width: cell }}
           >
-            {/* 눈금 */}
             <div
               className="bg-slate-400 rounded"
               style={{ width: 1, height: tickHeight }}
             />
 
-            {/* 시간 라벨 */}
             {isHour && (
               <div className="absolute -top-4 font-medium text-slate-700">
                 {String(hour).padStart(2, "0")}:00
@@ -250,7 +308,7 @@ function TimelineHeader({ totalMinutes }) {
   );
 }
 
-function ProductGroup({ product, slots }) {
+function ProductGroup({ product, slots, minuteStep, cell }) {
   const [open, setOpen] = useState(true);
 
   return (
@@ -273,15 +331,20 @@ function ProductGroup({ product, slots }) {
 
       {open &&
         product.tasks.map((task) => (
-          <TaskRow key={task.id} task={task} slots={slots} />
+          <TaskRow
+            task={task}
+            slots={slots}
+            minuteStep={minuteStep}
+            cell={cell}
+          />
         ))}
     </div>
   );
 }
 
-function TaskRow({ task, slots }) {
-  const left = (task.start / MINUTE_STEP) * CELL;
-  const width = (task.duration / MINUTE_STEP) * CELL;
+function TaskRow({ task, slots, minuteStep, cell }) {
+  const left = (task.start / minuteStep) * cell;
+  const width = (task.duration / minuteStep) * cell;
 
   const [workerId, setWorkerId] = useState(task.workerId);
   const [toolId, setToolId] = useState(task.toolId);
@@ -360,7 +423,7 @@ function TaskRow({ task, slots }) {
         </Popover>
       </div>
 
-      <div className="relative h-10" style={{ width: slots * CELL }}>
+      <div className="relative h-10" style={{ width: slots * cell }}>
         <HoverCard openDelay={10} closeDelay={100}>
           <HoverCardTrigger asChild>
             <div
