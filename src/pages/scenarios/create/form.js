@@ -7,6 +7,7 @@ import {
   postScenario,
   simulateScenario,
 } from "@/api/scenario-api";
+import Header from "@/components/layout/Header";
 import Information from "@/components/scenario/Information";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthGuard } from "@/hooks/use-authGuard";
@@ -227,6 +228,7 @@ export default function ScenariosCreateForm() {
 
   return (
     <div className="h-screen w-full flex flex-col bg-slate-50 overflow-hidden">
+      <Header />
       <header className="h-16 bg-white border-b px-8 flex items-center justify-between shrink-0 z-20 shadow-sm">
         <span className="font-bold text-xl tracking-tight text-slate-800">
           Scenario Engine

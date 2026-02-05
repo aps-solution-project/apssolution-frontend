@@ -19,7 +19,6 @@ import { useAccount, useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 
 export default function Header() {
-  useAuthGuard();
   const { toggleSidebar } = useSidebar();
   const router = useRouter();
 
