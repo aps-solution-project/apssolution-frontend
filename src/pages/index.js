@@ -1,12 +1,16 @@
-import { useEffect } from "react";
+import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const { token } = useToken();
 
   useEffect(() => {
-    router.replace("/login");
-  }, []);
-
-  return null;
+    if (token) {
+      router.replace("/scenarios/create/form");
+    } else {
+      router.replace("/login");
+    }
+  }, [token]);
 }
