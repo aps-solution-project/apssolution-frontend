@@ -71,7 +71,6 @@ const sections = [
 ];
 
 export default function SideBar({ children }) {
-  useAuthGuard();
   const hasUnread = useStomp((state) => state.hasUnread);
 
   return (
