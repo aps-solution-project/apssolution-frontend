@@ -18,7 +18,7 @@ export default function LoginPage() {
   // 토큰이 있으면 이미 로그인된 상태 → 리다이렉트
   useEffect(() => {
     if (token && router.isReady) {
-      router.replace("/scenarios/create/form");
+      router.replace("/dashboard");
     }
   }, [token, router.isReady]);
 
@@ -35,7 +35,7 @@ export default function LoginPage() {
       setToken(result.token);
       setAccount(result.account);
 
-      const redirect = router.query.redirect || "/scenarios/create/form";
+      const redirect = router.query.redirect || "/dashboard";
       router.replace(redirect);
     } catch (error) {
       setError(error.message);
