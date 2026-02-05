@@ -8,6 +8,10 @@ import {
   Package,
   CheckCircle2,
   Clock,
+  Loader2,
+  Play,
+  FileText,
+  Send,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -37,6 +41,8 @@ export default function Information({
 
   const isReady = selectedScenario.status === "READY";
   const isOptimal = selectedScenario.status === "OPTIMAL";
+  const canSimulate =
+    selectedScenario.status === "READY" || selectedScenario.status === "FAIL";
   const displayProgress = isReady ? progress : 100;
   const ispending = isReady ? pending : true;
 
@@ -58,11 +64,11 @@ export default function Information({
     <section className="w-full h-full flex flex-col overflow-hidden">
       <div className="bg-white border-none rounded-[32px] h-full flex flex-col shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100 overflow-hidden">
         {/* 1. 고정 헤더 영역 (shrink-0) */}
-        <div className="p-5 pb-2 shrink-0 bg-white">
+        <div className="p-6 pb-4 shrink-0 bg-white">
           <div className="flex justify-between items-start">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-3 py-0.5 rounded-[32px] bg-slate-100 text-[10px] font-bold text-slate-500 rounded uppercase tracking-wider">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="px-3 py-1 rounded-[32px] bg-slate-100 text-[10px] font-bold text-slate-500 rounded uppercase tracking-wider">
                   Scenario ID
                 </span>
                 <span className="text-xs font-mono text-slate-400">
@@ -94,7 +100,7 @@ export default function Information({
         {/* 2. 스크롤 가능한 본문 영역 (flex-1 + ScrollArea) */}
         <div className="flex-1 min-h-0 relative">
           <ScrollArea className="h-full w-full">
-            <div className="px-4 pb-4 space-y-2">
+            <div className="px-4 pb-5 space-y-2">
               {/* 정보 카드 그리드 */}
               <div className="grid grid-cols-2 gap-1">
                 <InfoCard
@@ -192,24 +198,44 @@ export default function Information({
 
           <button
             onClick={onStart}
-            disabled={running && isReady}
-            className={`w-full py-3 rounded-2xl text-sm font-black transition-all shadow-lg active:scale-[0.98] ${
-              isOptimal
-                ? "bg-indigo-600 text-white"
-                : running
-                  ? "bg-slate-100 text-slate-400"
-                  : ispending
-                    ? "bg-emerald-500 text-white"
-                    : "bg-blue-600 text-white"
-            }`}
+            disabled={running && ispending}
+            className={`w-full py-3 rounded-2xl text-sm font-black transition-all shadow-lg active:scale-[0.98] 
+    flex items-center justify-center gap-2
+    ${
+      isOptimal
+        ? "bg-indigo-600 text-white hover:bg-indigo-700"
+        : ispending
+          ? "bg-emerald-500 text-white cursor-wait"
+          : running
+            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+            : "bg-blue-600 text-white hover:bg-blue-700"
+    }`}
           >
-            {isOptimal
-              ? "결과 레포트 보기"
-              : ispending
-                ? "분석 진행 중..."
-                : running
-                  ? "전송 중..."
+            {isOptimal ? (
+              <>
+                <FileText size={18} />
+                결과 레포트 보기
+              </>
+            ) : ispending ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />{" "}
+                {/* 스피너 애니메이션 */}
+                분석 진행 중...
+              </>
+            ) : running ? (
+              <>
+                <Send size={18} className="animate-pulse" />{" "}
+                {/* 전송 중일 때 깜빡임 효과 */}
+                전송 중...
+              </>
+            ) : (
+              <>
+                <Play size={18} fill="currentColor" />
+                {selectedScenario.status === "FAIL"
+                  ? "재시뮬레이션 시작"
                   : "시뮬레이션 시작"}
+              </>
+            )}
           </button>
         </div>
       </div>
