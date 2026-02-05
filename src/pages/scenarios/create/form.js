@@ -207,7 +207,6 @@ export default function ScenariosCreateForm() {
         isNew: true,
       };
       setScenarioData((prev) => [newScenario, ...prev]);
-      handleSelectScenario(newScenario.id);
       scrollToTop();
     });
   };
@@ -227,16 +226,17 @@ export default function ScenariosCreateForm() {
   if (!token) return <div>Loading...</div>;
 
   return (
-    <div className="h-screen w-full flex flex-col bg-slate-50 overflow-hidden text-slate-900">
-      <header className="h-16 bg-white border-b px-8 flex items-center justify-between shrink-0 shadow-sm z-10">
+    <div className="h-200 w-full flex flex-col bg-slate-50 overflow-hidden">
+      <header className="h-16 bg-white border-b px-8 flex items-center justify-between shrink-0 z-20 shadow-sm">
         <span className="font-bold text-xl tracking-tight text-slate-800">
           Scenario Engine
         </span>
       </header>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* 왼쪽 리스트 섹션 */}
         <section className="flex-[0.5] bg-white border-r flex flex-col h-full shadow-xl shrink-0 overflow-hidden">
-          <div className="p-3 shrink-0 border-b bg-white z-20 flex justify-between items-center">
+          <div className="p-6 h-24 shrink-0 border-b bg-white z-20 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800">시나리오 목록</h2>
             <button
               onClick={handleToggleForm}
@@ -256,12 +256,12 @@ export default function ScenariosCreateForm() {
               ref={scrollAreaRef}
               className="h-full w-full bg-slate-50/30"
             >
-              <div className="p-5 space-y-2">
-                <div id="scroll-top-anchor" className="h-0 w-0" />
+              <div className="p-10">
+                <div id="scroll-top-anchor" className="h-10 w-0" />
 
                 {/* FORM AREA */}
                 <div
-                  className={`overflow-hidden transition-all duration-500 ease-in-out ${showForm ? "max-h-[1200px] opacity-100 mb-8" : "max-h-0 opacity-0 mb-0"}`}
+                  className={`overflow-visible transition-all duration-500 ease-in-out ${showForm ? "max-h-[1200px] opacity-100 mb-8" : "max-h-0 opacity-0 mb-0"}`}
                 >
                   <div className="bg-white border border-blue-100 rounded-[32px] p-8 shadow-xl ring-4 ring-blue-50/50 space-y-6">
                     <div className="space-y-4">
@@ -417,7 +417,7 @@ export default function ScenariosCreateForm() {
                         }`}
                       >
                         {s.isNew && (
-                          <span className="absolute -top-2 -right-1 bg-indigo-600 text-white text-[10px] px-2.5 py-1 rounded-full font-black animate-pulse z-30">
+                          <span className="absolute -top-2 -right-1 bg-yellow-500 text-white text-[10px] px-2.5 py-1 rounded-full font-black animate-pulse z-30">
                             NEW COPY
                           </span>
                         )}
@@ -481,8 +481,9 @@ export default function ScenariosCreateForm() {
           </div>
         </section>
 
-        <section className="flex-[0.6] bg-slate-50 flex flex-col h-full overflow-hidden">
-          <div className="flex-1 flex flex-col p-6 min-h-0">
+        {/* 오른쪽 상세 섹션 */}
+        <section className="flex-[0.5] bg-slate-50 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-8">
             <Information
               selectedScenario={selectedScenario}
               progress={progress}
@@ -499,4 +500,3 @@ export default function ScenariosCreateForm() {
     </div>
   );
 }
-

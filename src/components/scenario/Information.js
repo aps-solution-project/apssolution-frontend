@@ -1,5 +1,6 @@
 import { publishScenario, unpublishScenario } from "@/api/scenario-api";
 import { useToken } from "@/stores/account-store";
+import { useEffect, useState } from "react";
 import Edit from "@/components/scenario/Edit";
 import {
   Activity,
@@ -12,6 +13,7 @@ import {
   Play,
   FileText,
   Send,
+  Globe,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -26,7 +28,46 @@ export default function Information({
   onCancelEdit,
 }) {
   const { token } = useToken();
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+  const isReady = selectedScenario?.status === "READY";
+  const isOptimal = selectedScenario?.status === "OPTIMAL";
+  const isFeasible = selectedScenario?.status === "FEASIBLE";
+  const isPending = isReady ? pending : true;
+  const displayProgress = isReady ? progress : 100;
 
+  useEffect(() => {
+    if (!selectedScenario) {
+      setAnimatedProgress(0); // 데이터 없으면 0으로 초기화
+      return;
+    }
+    let startTimestamp = null;
+    const duration = 700;
+    const startProgress = animatedProgress;
+    const targetProgress = displayProgress;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progressRatio = Math.min(
+        (timestamp - startTimestamp) / duration,
+        1,
+      );
+
+      setAnimatedProgress(
+        Math.floor(
+          progressRatio * (targetProgress - startProgress) + startProgress,
+        ),
+      );
+
+      if (progressRatio < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    const animationId = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(animationId);
+  }, [displayProgress, selectedScenario?.id]); // 시나리오 ID가 바뀔 때마다 초기화
+
+  // 3. 훅 선언이 다 끝난 후에 "시나리오 선택 안됨" 화면을 보여줍니다.
   if (!selectedScenario) {
     return (
       <div className="h-full flex items-center justify-center text-slate-400 font-medium bg-white rounded-[32px] border border-dashed border-slate-200">
@@ -35,16 +76,10 @@ export default function Information({
     );
   }
 
+  // 수정 모드 체크
   if (editScenario) {
     return <Edit scenario={editScenario} onCancel={onCancelEdit} />;
   }
-
-  const isReady = selectedScenario.status === "READY";
-  const isOptimal = selectedScenario.status === "OPTIMAL";
-  const canSimulate =
-    selectedScenario.status === "READY" || selectedScenario.status === "FAIL";
-  const displayProgress = isReady ? progress : 100;
-  const ispending = isReady ? pending : true;
 
   function onTogglePublish() {
     if (selectedScenario.published) {
@@ -68,7 +103,7 @@ export default function Information({
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <span className="px-3 py-1 rounded-[32px] bg-slate-100 text-[10px] font-bold text-slate-500 rounded uppercase tracking-wider">
+                <span className="p-3 py-1 rounded-[32px] bg-slate-100 text-[10px] font-bold text-slate-500 rounded uppercase tracking-wider">
                   Scenario ID
                 </span>
                 <span className="text-xs font-mono text-slate-400">
@@ -102,7 +137,7 @@ export default function Information({
           <ScrollArea className="h-full w-full">
             <div className="px-4 pb-5 space-y-2">
               {/* 정보 카드 그리드 */}
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-2">
                 <InfoCard
                   icon={<Activity size={14} />}
                   label="Status"
@@ -128,26 +163,45 @@ export default function Information({
                   label="Workforce"
                   value={`${selectedScenario.maxWorkerCount}명`}
                 />
-              </div>
+                <InfoCard
+                  icon={
+                    <Globe
+                      size={14}
+                      className={
+                        selectedScenario.published
+                          ? "text-emerald-500"
+                          : "text-slate-400"
+                      }
+                    />
+                  }
+                  label="Publish Status"
+                  value={
+                    <div className="flex items-center justify-between w-full group/btn">
+                      {/* 왼쪽: 상태 표시 */}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${selectedScenario.published ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`}
+                        />
+                        <span
+                          className={`font-bold ${selectedScenario.published ? "text-emerald-600" : "text-rose-600"}`}
+                        >
+                          {selectedScenario.published ? "배포됨" : "미배포"}
+                        </span>
+                      </div>
 
-              {/* 배포 섹션 */}
-              <div className="bg-slate-50 rounded-2xl p-2 px-10 flex items-center justify-between border border-slate-100">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={`w-2 h-2 rounded-full ${selectedScenario.published ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`}
-                  />
-                  <div className="text-xs font-bold text-slate-700">
-                    {selectedScenario.published
-                      ? "현장에 배포됨"
-                      : "미배포 상태"}
-                  </div>
-                </div>
-                <button
-                  onClick={onTogglePublish}
-                  className="px-4 py-2 rounded-lg font-bold text-[11px] bg-white border border-slate-200"
-                >
-                  상태 변경
-                </button>
+                      {/* 오른쪽: 액션 버튼 (카드 안으로 쏙 들어감) */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // 카드 클릭 이벤트와 겹치지 않게 방지
+                          onTogglePublish();
+                        }}
+                        className="ml-4 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[10px] font-black text-slate-500 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm"
+                      >
+                        상태 변경
+                      </button>
+                    </div>
+                  }
+                />
               </div>
 
               {/* 생산 품목 리스트 */}
@@ -162,14 +216,19 @@ export default function Information({
                   {selectedScenario.products?.map((p, i) => (
                     <div
                       key={i}
-                      className="flex justify-around items-center bg-white border border-slate-50 px-7 py-1 rounded-xl shadow-sm"
+                      className="flex items-center bg-white border border-slate-50 px-6 py-1 rounded-xl shadow-sm"
                     >
-                      <span className="text-sm font-bold text-slate-700">
+                      <span className="w-70 text-center text-sm font-bold text-slate-700 truncate">
                         {p.product?.name}
                       </span>
-                      <span className="font-mono font-bold text-blue-600 text-[11px]">
-                        QTY: {p.qty}
-                      </span>
+                      <div className="flex items-center gap-2 border-l pl-4 border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                          Qty
+                        </span>
+                        <span className="font-mono font-black text-blue-600 text-sm">
+                          {p.qty}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -185,7 +244,7 @@ export default function Information({
               Simulation Progress
             </span>
             <span className="text-sm font-black text-blue-600 font-mono">
-              {displayProgress}%
+              {animatedProgress}%
             </span>
           </div>
 
@@ -198,25 +257,25 @@ export default function Information({
 
           <button
             onClick={onStart}
-            disabled={running && ispending}
+            disabled={running && isPending}
             className={`w-full py-3 rounded-2xl text-sm font-black transition-all shadow-lg active:scale-[0.98] 
     flex items-center justify-center gap-2
     ${
-      isOptimal
+      isOptimal || isFeasible
         ? "bg-indigo-600 text-white hover:bg-indigo-700"
-        : ispending
+        : isPending
           ? "bg-emerald-500 text-white cursor-wait"
           : running
             ? "bg-slate-100 text-slate-400 cursor-not-allowed"
             : "bg-blue-600 text-white hover:bg-blue-700"
     }`}
           >
-            {isOptimal ? (
+            {isOptimal || isFeasible ? (
               <>
                 <FileText size={18} />
                 결과 레포트 보기
               </>
-            ) : ispending ? (
+            ) : isPending ? (
               <>
                 <Loader2 size={18} className="animate-spin" />{" "}
                 {/* 스피너 애니메이션 */}

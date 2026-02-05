@@ -41,8 +41,9 @@ export default function AnnouncementDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex justify-between">
+    <div className="min-h-full bg-white w-full p-8">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex justify-between"></div>
         <Button
           variant="outline"
           onClick={() => router.push("/notice/announcements")}
@@ -75,8 +76,8 @@ export default function AnnouncementDetailPage() {
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground">
-            <Avatar className="size-15 h-10 mr-2 inline-block">
+          <div className="flex items-center gap-2 mt-4">
+            <Avatar className="h-10 w-10 overflow-hidden rounded-full border border-slate-100">
               <AvatarImage
                 src={"http://192.168.0.20:8080" + notice.writer.profileImageUrl}
               />
@@ -93,7 +94,7 @@ export default function AnnouncementDetailPage() {
                 minute: "2-digit",
               })}
             </span>
-          </p>
+          </div>
         </CardHeader>
 
         <CardContent>
