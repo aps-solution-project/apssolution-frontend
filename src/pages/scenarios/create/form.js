@@ -7,7 +7,6 @@ import {
   postScenario,
   simulateScenario,
 } from "@/api/scenario-api";
-import Header from "@/components/layout/Header";
 import Information from "@/components/scenario/Information";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthGuard } from "@/hooks/use-authGuard";
@@ -251,18 +250,11 @@ export default function ScenariosCreateForm() {
 
   return (
     // ✅ 전체 화면 고정 + 바깥 스크롤 제거
-    <div className="h-[100dvh] w-full bg-slate-50 overflow-hidden flex flex-col">
-      {/* 기존 헤더(사이드바/상단바) */}
-      <div className="shrink-0">
-        <Header />
-      </div>
-
+    <div className="h-[100dvh] flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* 페이지 타이틀바 */}
       <div className="shrink-0 h-16 px-8 flex items-center justify-between">
-        <div className="min-w-0">
-          <div className="text-2xl font-bold text-slate-800 mt-5">
-            시나리오 설계
-          </div>
+        <div className="text-2xl font-bold text-slate-800 mt-5">
+          시나리오 설계
         </div>
       </div>
 

@@ -1,9 +1,9 @@
-import { useState } from "react"; // useState 추가됨
+import { useState, useEffect } from "react";
 import { useAccount } from "@/stores/account-store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-import { Button } from "@/components/ui/button";
+import { useToken } from "@/stores/account-store";
+import { Calendar } from "@/components/ui/calendar";
 import { useRouter } from "next/router";
+import { getNotices } from "@/api/notice-api";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -11,18 +11,29 @@ import {
   FileText,
   Calendar as CalendarIcon,
   ArrowRight,
-  Calendar,
 } from "lucide-react";
 
 export default function DashboardPage() {
   const { account } = useAccount();
+  const { token } = useToken();
   const router = useRouter();
   const userRole = account?.role;
 
-  // 1. [해결 포인트] date와 setDate 상태 정의
   const [date, setDate] = useState(new Date());
+  const [notices, setNotices] = useState([]);
 
-  // 2. 근무 데이터 맵핑 함수
+  useEffect(() => {
+    if (!token) return;
+
+    getNotices(token)
+      .then((data) => {
+        const list = data?.notices ?? [];
+        setNotices(list.slice(0, 2));
+      })
+      .catch(console.error);
+  }, [token]);
+
+  // 근무 데이터 맵핑
   const scheduleData = {
     "2026-02-05": { status: "오늘", color: "bg-indigo-600" },
     "2026-02-06": { status: "야간", color: "bg-orange-400" },
@@ -89,135 +100,149 @@ export default function DashboardPage() {
         },
       ];
 
-  return (
-    <div className="h-[calc(100vh-120px)] bg-white -m-8 p-6 flex flex-col gap-6 overflow-hidden">
-      <header className="max-w-6xl mx-auto w-full flex items-center justify-between border-b pb-4 border-slate-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-            <LayoutDashboard size={20} />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 leading-none mb-1">
-              {isManager ? "Management" : "Workstation"}
-            </h1>
-            <p className="text-xs text-slate-400 font-medium">
-              Welcome back, {account?.name}님
-            </p>
-          </div>
-        </div>
-        <div className="text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-          {new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </div>
-      </header>
+  const formatKey = (day) =>
+    `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(
+      day.getDate(),
+    ).padStart(2, "0")}`;
 
-      <div className="max-w-6xl mx-auto w-full grid grid-cols-12 gap-6 flex-1 min-h-0">
-        <Card className="col-span-7 border-slate-100 shadow-sm rounded-[24px] flex flex-col bg-white overflow-hidden">
-          <CardHeader className="py-3 px-6 border-b border-slate-50 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-black flex items-center gap-2 text-slate-700">
-              <CalendarIcon size={16} className="text-indigo-500" />
+  const modifiers = {
+    work: (day) => {
+      const key = formatKey(day);
+      return scheduleData[key]?.status === "주간";
+    },
+    night: (day) => {
+      const key = formatKey(day);
+      return scheduleData[key]?.status === "야간";
+    },
+    off: (day) => {
+      const key = formatKey(day);
+      return scheduleData[key]?.status === "휴무";
+    },
+  };
+
+  function formatRelativeTime(dateString) {
+    const diff = Date.now() - new Date(dateString).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    const days = Math.floor(hours / 24);
+    return `${days}일 전`;
+  }
+
+  return (
+    <div className="flex flex-col gap-10 pb-12 px-6">
+      <div className="max-w-6xl mx-auto w-full pt-4">
+        <h1 className="text-2xl font-black text-slate-800">워크스페이스</h1>
+        <p className="text-sm text-slate-400 mt-1">
+          오늘의 일정과 주요 작업을 확인하세요
+        </p>
+      </div>
+      {/* 상단 메인 레이아웃: 달력과 버튼 */}
+      <div className="max-w-6xl mx-auto w-full grid grid-cols-12 gap-8 items-stretch">
+        {/* [왼쪽] 달력 영역 (4/12 비율) */}
+        <div className="col-span-5 bg-white rounded-[32px] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
+          <div className="py-5 px-6 border-b border-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-black text-slate-700 shrink-0">
+              <CalendarIcon size={18} className="text-indigo-500" />
               Work Schedule
-            </CardTitle>
-            <div className="flex gap-2 text-[10px] font-bold">
+            </div>
+            <div className="flex gap-2">
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> 주간
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400" /> 야간
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                야간
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> 휴무
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" /> 휴무
               </div>
             </div>
-          </CardHeader>
+          </div>
 
-          {/* 캘린더 컨테이너: h-full과 justify-center를 주어 꽉 차게 배치 */}
-          <CardContent className="flex-1 flex justify-center items-center p-4">
-            <div className="w-full h-full flex justify-center items-center calendar-container">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border-none"
-                // Shadcn 내부 스타일 테마가 꼬일 경우를 대비해 인라인 클래스 보정
-                classNames={{
-                  day: "h-12 w-12 p-0 font-bold aria-selected:opacity-100 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-900", // 날짜 색상 강제
-                  head_cell: "text-slate-400 font-medium w-12",
-                  nav_button: "border border-slate-200 hover:bg-slate-50",
-                }}
-                components={{
-                  DayContent: ({ date: day }) => {
-                    const data = getDayData(day);
-                    return (
-                      <div className="relative w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-sm">{day.getDate()}</span>
-                        {data && (
-                          <div
-                            className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${data.color} ring-2 ring-white`}
-                          />
-                        )}
-                      </div>
-                    );
-                  },
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <div className="p-6 flex justify-center">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              modifiers={modifiers}
+              modifiersClassNames={{
+                work: "after:bg-sky-400",
+                night: "after:bg-yellow-400",
+                off: "after:bg-gray-400",
+              }}
+              classNames={{
+                day: `
+      relative
+      after:content-['']
+      after:absolute
+      after:bottom-1
+      after:left-1/2
+      after:-translate-x-1/2
+      after:w-1.5
+      after:h-1.5
+      after:rounded-full
+    `,
+              }}
+            />
+          </div>
+        </div>
 
-        <div className="col-span-5 flex flex-col gap-3">
+        {/* [오른쪽] 버튼 영역 (8/12 비율 - 더 시원하게 늘어남) */}
+        <div className="col-span-7 flex flex-col gap-4">
           {actions.map((action) => (
             <button
               key={action.label}
               onClick={() => router.push(action.href)}
-              className="flex-1 group flex items-center p-4 rounded-[24px] border border-slate-100 bg-white hover:border-indigo-100 hover:shadow-md transition-all text-left"
+              className="group flex items-center p-6 bg-white rounded-[32px] border border-slate-100 hover:border-indigo-200 hover:shadow-[0_20px_50px_rgba(79,70,229,0.08)] transition-all text-left"
             >
               <div
-                className={`p-3 rounded-xl ${action.color} group-hover:scale-105 transition-transform mr-4`}
+                className={`p-5 rounded-2xl ${action.color} mr-6 group-hover:scale-110 transition-transform`}
               >
-                <action.icon size={20} />
+                <action.icon size={28} />
               </div>
+
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-xl font-black text-slate-800 group-hover:text-indigo-600 transition-colors">
                   {action.label}
                 </h3>
-                <p className="text-[10px] text-slate-400 font-medium">
+                <p className="text-sm text-slate-400 font-medium mt-1">
                   {action.desc}
                 </p>
               </div>
-              <ArrowRight
-                size={16}
-                className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-indigo-300"
-              />
+
+              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:rotate-[-45deg] transition-all duration-300">
+                <ArrowRight
+                  size={24}
+                  className="text-slate-300 group-hover:text-white transition-colors"
+                />
+              </div>
             </button>
           ))}
         </div>
       </div>
 
+      {/* 하단 업데이트 섹션 */}
       <footer className="max-w-6xl mx-auto w-full">
-        <div className="bg-slate-50/80 rounded-[24px] p-4 border border-slate-50">
-          <div className="flex items-center justify-between mb-3 px-2">
-            <h2 className="text-xs font-black text-slate-500 flex items-center gap-2 uppercase tracking-widest">
+        <div className="bg-slate-50/80 rounded-[32px] p-6 border border-slate-50">
+          <div className="flex items-center justify-between mb-4 px-2">
+            <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
               Recent Updates
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { title: "📌 하반기 안전 점검 실시", date: "2h ago" },
-              { title: "📣 사원 게시판 새 글 알림", date: "5h ago" },
-            ].map((news, idx) => (
+
+          <div className="grid grid-cols-2 gap-4">
+            {notices.map((notice) => (
               <div
-                key={idx}
-                className="bg-white px-4 py-3 rounded-xl border border-slate-100 flex items-center justify-between group cursor-pointer"
+                key={notice.id}
+                className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between"
               >
-                <span className="text-xs font-bold text-slate-600 truncate mr-2">
-                  {news.title}
+                <span className="text-sm font-bold text-slate-600 truncate mr-2">
+                  {notice.title}
                 </span>
-                <span className="text-[10px] font-medium text-slate-300 whitespace-nowrap">
-                  {news.date}
+                <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
+                  {formatRelativeTime(notice.createdAt)}
                 </span>
               </div>
             ))}
