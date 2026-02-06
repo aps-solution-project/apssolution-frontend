@@ -15,8 +15,9 @@ import {
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
 import Link from "next/link";
+import Header from "./Header";
+import { useAccount } from "@/stores/account-store"; // 계정 스토어 추가
 
-import { useStomp } from "@/stores/stomp-store";
 import {
   CalendarDays,
   Columns3Cog,
@@ -26,6 +27,20 @@ import {
   Wrench,
   MessageSquareMore,
 } from "lucide-react";
+import { useStomp } from "@/stores/stomp-store";
+
+export default function SideBar({ children }) {
+  useAuthGuard();
+  const { account } = useAccount(); // 현재 로그인한 사용자 정보 가져오기
+  const userRole = account?.role; // 'ADMIN', 'PLANNER', 'WORKER' 등
+  const hasUnread = useStomp((state) => state.hasUnread);
+
+  // 권한별 메뉴 구성 로직
+  const getFilteredSections = () => {
+    const isManager = userRole === "ADMIN" || userRole === "PLANNER";
+    const isWorker = userRole === "WORKER";
+
+    const sections = [];
 
 export default function SideBar() {
   const { account } = useAccount(); // 현재 로그인한 사용자 정보 가져오기
