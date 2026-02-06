@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import Header from "@/components/layout/Header";
 import SideBar from "@/components/layout/SideBar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
@@ -29,10 +30,10 @@ export default function App({ Component, pageProps }) {
   /* ===================== 2️⃣ 로그인 리다이렉트 ===================== */
   useEffect(() => {
     if (!router.isReady || !isHydrated) return;
-    if (!token && router.pathname !== "/login") {
+    if (!token && !isLoginPage) {
       router.replace("/login");
     }
-  }, [token, router.isReady, isHydrated]);
+  }, [token, router.isReady, isHydrated, isLoginPage]);
 
   /* ===================== 3️⃣ STOMP 연결 ===================== */
   useEffect(() => {
@@ -94,25 +95,31 @@ export default function App({ Component, pageProps }) {
   /* ===================== 5️⃣ 렌더 가드 (깜빡임 방지 핵심) ===================== */
   if (!router.isReady || !isHydrated) {
     return (
-      <div className="flex justify-center items-center h-screen w-screen">
+      <div className="flex items-center justify-center h-screen">
         <Spinner className="size-20" />
       </div>
     );
   }
 
-  if (!token && router.pathname !== "/login") {
+  if (!token && !isLoginPage) {
     return null;
   }
 
-  if (isLoginPage) {
-    return <Component {...pageProps} />;
-  }
+  return isLoginPage ? (
+    <Component {...pageProps} />
+  ) : (
+    <SidebarProvider>
+      <div className="flex h-screen w-screen">
+        <SideBar />
 
-  return (
-    <>
-      <SideBar>
-        <Component {...pageProps} />
-      </SideBar>
-    </>
+        <div className="flex flex-col flex-1 min-w-0">
+          <Header />
+
+          <main className="flex-1 overflow-y-auto bg-muted/30 p-4">
+            <Component {...pageProps} />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }

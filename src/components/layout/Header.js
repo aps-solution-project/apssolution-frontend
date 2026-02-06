@@ -36,10 +36,21 @@ export default function Header() {
   useEffect(() => {
     console.log("profileOpen changed:", profileOpen);
   }, [profileOpen]);
+
   return (
     <>
       <header className="sticky top-0 z-50 h-16 w-full border-b bg-background">
         <div className="flex h-full items-center gap-3 px-4 sm:gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard")}
+          >
+            <img
+              src="/images/Sponge Bob.jpeg"
+              alt="BakeFlow Logo"
+              className="h-12 object-contain"
+            />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

@@ -6,10 +6,8 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
-  SidebarProvider,
 } from "@/components/ui/sidebar";
 
-import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useAccount } from "@/stores/account-store"; // 계정 스토어 추가
 import {
   Collapsible,
@@ -27,8 +25,7 @@ import {
   PackageCheck,
   Settings,
   Wrench,
-  CalendarDays, // 아이콘 추가
-  Rocket, // 아이콘 추가
+  MessageSquareMore,
 } from "lucide-react";
 import { useStomp } from "@/stores/stomp-store";
 
@@ -45,8 +42,7 @@ export default function SideBar({ children }) {
 
     const sections = [];
 
-export default function SideBar({ children }) {
-  useAuthGuard();
+export default function SideBar() {
   const { account } = useAccount(); // 현재 로그인한 사용자 정보 가져오기
   const userRole = account?.role; // 'ADMIN', 'PLANNER', 'WORKER' 등
   const hasUnread = useStomp((state) => state.hasUnread);
@@ -80,28 +76,11 @@ export default function SideBar({ children }) {
     if (isWorker) {
       boardItems.push({ label: "사원 게시판", href: "/community/posts" });
     }
-
     sections.push({
       title: "게시판",
       icon: Inbox,
       items: boardItems,
     });
-
-    // 3. 도구 & 작업 (ADMIN, PLANNER 전용)
-    if (isManager) {
-      sections.push(
-        {
-          title: "도구",
-          icon: Wrench,
-          items: [{ label: "도구 관리", href: "/tools" }],
-        },
-        {
-          title: "작업 공정",
-          icon: PackageCheck,
-          items: [{ label: "작업 관리", href: "/tasks" }],
-        },
-      );
-    }
 
     // 4. 근무/배포 (WORKER 전용)
     if (isWorker) {
@@ -115,21 +94,24 @@ export default function SideBar({ children }) {
       });
     }
 
-    // 5. 관리 및 채팅 (공통 + 사원관리 분기)
-    const managementItems = [];
-    if (isManager) {
-      managementItems.push({ label: "사원 관리", href: "/management" });
-    }
-    managementItems.push(
+    const chatItems = [
       { label: "채팅하기", href: "/chat/chat-create" },
       { label: "채팅방 목록", href: "/chat/chat-list" },
-    );
-
+    ];
     sections.push({
-      title: "관리",
-      icon: Settings,
-      items: managementItems,
+      title: "채팅",
+      icon: MessageSquareMore,
+      items: chatItems,
     });
+
+    // 5. 관리 및 채팅 (공통 + 사원관리 분기)
+    if (isManager) {
+      sections.push({
+        title: "사원 관리",
+        icon: Settings,
+        items: [{ label: "사원 관리", href: "/management" }],
+      });
+    }
 
     return sections;
   };
@@ -137,61 +119,37 @@ export default function SideBar({ children }) {
   const filteredSections = getFilteredSections();
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-screen overflow-x-hidden">
-        <Sidebar>
-          <SidebarContent>
-            <SidebarMenu>
-              {filteredSections.map((section) => {
-                const Icon = section.icon;
+    <Sidebar>
+      <SidebarContent>
+        <SidebarMenu>
+          {filteredSections.map((section) => {
+            const Icon = section.icon;
 
-                return (
-                  <Collapsible key={section.title} defaultOpen>
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-bold">{section.title}</span>
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
+            return (
+              <Collapsible key={section.title} defaultOpen>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton>
+                      <Icon className="h-4 w-4" />
+                      <span className="font-bold">{section.title}</span>
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
 
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {section.items.map((item) => {
-                            const showUnreadDot =
-                              hasUnread && item.href === "/chat/chat-list";
-
-                            return (
-                              <SidebarMenuSubItem key={item.href}>
-                                <Link
-                                  href={item.href}
-                                  className="flex items-center justify-between w-full pr-2 py-1 text-sm hover:text-indigo-600 transition-colors"
-                                >
-                                  <span>{item.label}</span>
-                                  {showUnreadDot && (
-                                    <span className="relative flex h-2 w-2">
-                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                    </span>
-                                  )}
-                                </Link>
-                              </SidebarMenuSubItem>
-                            );
-                          })}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-
-        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-          <main className="bg-muted/30 min-h-0">{children}</main>
-        </div>
-      </div>
-    </SidebarProvider>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {section.items.map((item) => (
+                        <SidebarMenuSubItem key={item.href}>
+                          <Link href={item.href}>{item.label}</Link>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
   );
 }
