@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useAccount } from "@/stores/account-store"; // 계정 스토어 추가
 import {
   Collapsible,
   CollapsibleContent,
@@ -20,6 +21,7 @@ import Header from "./Header";
 import { useAccount } from "@/stores/account-store"; // 계정 스토어 추가
 
 import {
+  CalendarDays,
   Columns3Cog,
   Inbox,
   PackageCheck,
@@ -29,6 +31,19 @@ import {
   Rocket, // 아이콘 추가
 } from "lucide-react";
 import { useStomp } from "@/stores/stomp-store";
+
+export default function SideBar({ children }) {
+  useAuthGuard();
+  const { account } = useAccount(); // 현재 로그인한 사용자 정보 가져오기
+  const userRole = account?.role; // 'ADMIN', 'PLANNER', 'WORKER' 등
+  const hasUnread = useStomp((state) => state.hasUnread);
+
+  // 권한별 메뉴 구성 로직
+  const getFilteredSections = () => {
+    const isManager = userRole === "ADMIN" || userRole === "PLANNER";
+    const isWorker = userRole === "WORKER";
+
+    const sections = [];
 
 export default function SideBar({ children }) {
   useAuthGuard();
@@ -174,8 +189,7 @@ export default function SideBar({ children }) {
         </Sidebar>
 
         <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-          <Header />
-          <main className="bg-muted/30 p-6 min-h-0">{children}</main>
+          <main className="bg-muted/30 min-h-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>

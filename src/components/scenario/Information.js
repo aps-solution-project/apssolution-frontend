@@ -95,7 +95,7 @@ export default function Information({
   }
 
   return (
-    <section className="w-full h-full flex flex-col overflow-hidden">
+    <section className="w-full h-full flex flex-col">
       <div className="bg-white border-none rounded-[32px] h-full flex flex-col shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100 overflow-hidden">
         {/* 1. 고정 헤더 영역 (shrink-0) */}
         <div className="p-6 pb-4 shrink-0 bg-white">
