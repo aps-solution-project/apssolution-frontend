@@ -16,8 +16,6 @@ import {
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
 import Link from "next/link";
-import Header from "./Header";
-
 import {
   Columns3Cog,
   Inbox,
@@ -27,24 +25,33 @@ import {
 } from "lucide-react";
 import { useStomp } from "@/stores/stomp-store";
 
-const sections = [
-  {
-    title: "설계 엔진",
-    icon: Columns3Cog,
-    items: [
-      { label: "지희꺼", href: "/scenarios/create/form" },
-      { label: "주문 항목 생성", href: "/scenarios/create" },
-      {
-        label: "시뮬레이션 결과(gantt임시 페이지)",
-        href: "/simulations",
-      },
-    ],
-  },
+export default function SideBar() {
+  const { account } = useAccount(); // 현재 로그인한 사용자 정보 가져오기
+  const userRole = account?.role; // 'ADMIN', 'PLANNER', 'WORKER' 등
+  const hasUnread = useStomp((state) => state.hasUnread);
 
-  {
-    title: "게시판",
-    icon: Inbox,
-    items: [
+  // 권한별 메뉴 구성 로직
+  const getFilteredSections = () => {
+    const isManager = userRole === "ADMIN" || userRole === "PLANNER";
+    const isWorker = userRole === "WORKER";
+
+    const sections = [];
+
+    // 1. 설계 엔진 (ADMIN, PLANNER 전용)
+    if (isManager) {
+      sections.push({
+        title: "설계 엔진",
+        icon: Columns3Cog,
+        items: [
+          { label: "지희꺼", href: "/scenarios/create/form" },
+          { label: "주문 항목 생성", href: "/scenarios/create" },
+          { label: "시뮬레이션 결과", href: "/simulations" },
+        ],
+      });
+    }
+
+    // 2. 게시판 (공통 + 권한별 분기)
+    const boardItems = [
       { label: "공지사항", href: "/notice/announcements" },
       { label: "자료실", href: "/resources/products" },
       { label: "사원 게시판", href: "/community/posts" },
