@@ -91,19 +91,11 @@ export default function ResourcesPage() {
   };
 
   const processed = useMemo(() => {
-    const filtered = products.filter(
+    return products.filter(
       (p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.description.toLowerCase().includes(search.toLowerCase()),
     );
-
-    return filtered.sort((a, b) => {
-      const v1 = a[sortKey];
-      const v2 = b[sortKey];
-      if (v1 > v2) return sortDir === "asc" ? 1 : -1;
-      if (v1 < v2) return sortDir === "asc" ? -1 : 1;
-      return 0;
-    });
   }, [products, search, sortKey, sortDir]);
 
   const totalPages = Math.ceil(processed.length / PAGE_SIZE);
