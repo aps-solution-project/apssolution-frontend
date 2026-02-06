@@ -108,7 +108,6 @@ export default function SideBar({ children }) {
                                 >
                                   <span>{item.label}</span>
 
-                                  {/* 안 읽은 메시지가 있다면 레드닷 표시 */}
                                   {showUnreadDot && (
                                     <span className="relative flex h-2 w-2">
                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

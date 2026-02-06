@@ -4,10 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Rnd } from "react-rnd";
 import { useState } from "react";
 
-/* =========================
-   🎨 Status Theme System
-========================= */
-
 const STATUS_THEME = {
   design: "from-pink-400 to-rose-500",
   frontend: "from-emerald-400 to-teal-500",
@@ -16,18 +12,10 @@ const STATUS_THEME = {
   done: "from-slate-500 to-slate-700",
 };
 
-/* =========================
-   ⏱ Time System (24h / 5min)
-========================= */
-
 const MINUTE_STEP = 5;
 const TOTAL_MINUTES = 24 * 60;
-const SLOTS = TOTAL_MINUTES / MINUTE_STEP; // 288
-const CELL = 16; // px per 5 minutes
-
-/* =========================
-   📊 Project Data (minutes)
-========================= */
+const SLOTS = TOTAL_MINUTES / MINUTE_STEP;
+const CELL = 16;
 
 const initialProjects = [
   {
@@ -64,10 +52,6 @@ const initialProjects = [
   },
 ];
 
-/* =========================
-   🧱 Layout
-========================= */
-
 export default function ProjectTimeline() {
   const [projects, setProjects] = useState(initialProjects);
 
@@ -101,10 +85,6 @@ export default function ProjectTimeline() {
   );
 }
 
-/* =========================
-   🕒 Header (hours)
-========================= */
-
 function TimelineHeader() {
   return (
     <div className="flex ml-[160px]">
@@ -120,10 +100,6 @@ function TimelineHeader() {
     </div>
   );
 }
-
-/* =========================
-   📂 Sidebar
-========================= */
 
 function Sidebar() {
   return (
