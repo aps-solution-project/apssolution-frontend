@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccount, useToken } from "@/stores/account-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { List, SquarePen } from "lucide-react";
+import { List, SquarePen, Trash2 } from "lucide-react"; // Trash2 아이콘 추가
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
@@ -22,18 +22,17 @@ export default function AnnouncementDetailPage() {
     if (!noticeId || !token) return;
     getNotice(token, noticeId).then((obj) => {
       setNotice(obj);
-      if (account.accountId === obj.writer.id) {
+      if (account?.accountId === obj.writer.id) {
         setIsWriter(true);
       }
     });
-  }, [noticeId, token]);
+  }, [noticeId, token, account]);
 
   if (!notice) return null;
 
   function handleDelete(e) {
     e.preventDefault();
     if (!confirm("정말로 공지사항을 삭제하시겠습니까?")) return;
-    console.log("Delete notice:", noticeId);
     deleteNotice(token, noticeId).then(() => {
       window.alert("공지사항이 성공적으로 삭제되었습니다.");
       router.push("/notice/announcements");
@@ -41,117 +40,112 @@ export default function AnnouncementDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/notice/announcements")}
-        >
-          <List className="h-4 w-4" /> 목록으로
-        </Button>
-
-        {isWriter && (
+    // 1. bg-white와 min-h-full로 바닥까지 흰색 배경 통일
+    <div className="min-h-full bg-white w-full p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* 상단 버튼 영역: 목록보기와 삭제버튼을 양 끝으로 확실히 분리 */}
+        <div className="flex justify-between items-center border-b pb-4 border-slate-100">
           <Button
-            variant="outline"
-            onClick={handleDelete}
-            className="bg-red-500 text-white"
+            variant="ghost"
+            className="text-slate-500 hover:text-slate-800 gap-2 px-0"
+            onClick={() => router.push("/notice/announcements")}
           >
-            삭제
+            <List size={18} />
+            <span className="font-bold">목록으로 돌아가기</span>
           </Button>
-        )}
-      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between">
-            <CardTitle className="text-2xl">{notice.title}</CardTitle>
-            {isWriter && (
+          {isWriter && (
+            <div className="flex gap-2">
               <Button
                 variant="outline"
+                className="border-slate-200 text-slate-600 hover:bg-slate-50 gap-2"
                 onClick={() => router.push(`/notice/${noticeId}/edit`)}
               >
-                <SquarePen />
+                <SquarePen size={16} /> 수정
               </Button>
-            )}
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            <Avatar className="size-15 h-10 mr-2 inline-block">
-              <AvatarImage
-                src={"http://192.168.0.20:8080" + notice.writer.profileImageUrl}
-              />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            작성자 - {notice.writer.name} ·{" "}
-            <span>
-              {new Date(notice.createdAt).toLocaleString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                weekday: "short",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </p>
-        </CardHeader>
-
-        <CardContent>
-          <EditorBlank html={notice.content} />
-        </CardContent>
-      </Card>
-      {/* 첨부 파일 섹션 */}
-      <Card className="mt-4">
-        <CardHeader className="py-2">
-          <CardTitle className="text-sm font-semibold flex items-center">
-            첨부 파일 ({notice.attachments ? notice.attachments.length : 0})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {notice.attachments && notice.attachments.length > 0 ? (
-            notice.attachments.map((file, index) => {
-              const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
-                file.fileUrl.replace("/apssolution/notices/", ""),
-              )}`;
-
-              return (
-                <div
-                  key={index}
-                  className="flex items-center p-2 rounded-md border bg-muted/50"
-                >
-                  <span className="text-blue-500 mr-2">📎</span>
-                  <a
-                    href={downloadUrl}
-                    className="text-sm font-medium hover:underline text-blue-600 truncate flex-1"
-                  >
-                    {file.fileName}
-                  </a>
-                </div>
-              );
-            })
-          ) : (
-            // 파일이 없을 때 보여줄 안내 문구
-            <div className="text-center py-4 text-sm text-gray-400 italic">
-              첨부된 파일이 없습니다.
+              <Button
+                onClick={handleDelete}
+                className="bg-rose-50 hover:bg-rose-100 text-rose-600 border-none shadow-none gap-2 font-bold"
+              >
+                <Trash2 size={16} /> 삭제
+              </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-      {/* <div>
-        {notice.attachments.length > 0 && (
-          <div>
-            {notice.attachments.map((file, index) => (
-              <div key={index} className="mb-2">
-                <a
-                  href={`http://192.168.0.20:8080/api/notices/files/download?path=${file.fileUrl.replace("/apssolution/notices/", "")}`}
-                >
-                  {file.fileName} - 다운로드 수정중({file.fileUrl})
-                </a>
+        </div>
+
+        {/* 본문 영역: 불필요한 테두리를 빼고 여백 강조 */}
+        <article className="py-4">
+          <header className="mb-10">
+            <h1 className="text-4xl font-black text-slate-900 leading-tight mb-6">
+              {notice.title}
+            </h1>
+            
+            <div className="flex items-center gap-3 p-4 bg-slate-50/50 rounded-2xl">
+              <Avatar className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
+                <AvatarImage
+                  src={"http://192.168.0.20:8080" + notice.writer.profileImageUrl}
+                  className="object-cover h-full w-full"
+                />
+                <AvatarFallback className="bg-slate-200 text-slate-500 flex items-center justify-center">
+                  {notice.writer.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-slate-800">
+                  {notice.writer.name}
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {new Date(notice.createdAt).toLocaleString("ko-KR", {
+                    year: "numeric", month: "long", day: "numeric",
+                    hour: "2-digit", minute: "2-digit"
+                  })}
+                </span>
               </div>
-            ))}
+            </div>
+          </header>
+
+          <section className="prose prose-slate max-w-none min-h-[300px]">
+            <EditorBlank html={notice.content} />
+          </section>
+        </article>
+
+        {/* 첨부 파일 섹션: 카드 스타일 유지하되 더 깔끔하게 */}
+        <div className="pt-10 border-t border-slate-100">
+          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            Attachments <span className="text-blue-600 font-mono">[{notice.attachments?.length || 0}]</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {notice.attachments && notice.attachments.length > 0 ? (
+              notice.attachments.map((file, index) => {
+                const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
+                  file.fileUrl.replace("/apssolution/notices/", ""),
+                )}`;
+
+                return (
+                  <a
+                    key={index}
+                    href={downloadUrl}
+                    className="flex items-center p-4 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 hover:shadow-md transition-all group"
+                  >
+                    <div className="p-2 bg-blue-50 text-blue-500 rounded-lg mr-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <List size={16} />
+                    </div>
+                    <span className="text-sm font-bold text-slate-600 truncate flex-1">
+                      {file.fileName}
+                    </span>
+                  </a>
+                );
+              })
+            ) : (
+              <div className="col-span-full py-10 rounded-3xl border border-dashed border-slate-200 text-center text-slate-400 text-sm font-medium">
+                첨부된 파일이 없습니다.
+              </div>
+            )}
           </div>
-        )}
-      </div> */}
+        </div>
+      </div>
     </div>
   );
 }
