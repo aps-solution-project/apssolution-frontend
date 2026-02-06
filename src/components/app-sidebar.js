@@ -55,7 +55,11 @@ export function AppSidebar() {
             href: "/scenarios/create/form",
             icon: FlaskConical,
           },
-          { label: "시뮬레이션 결과", href: "/simulations", icon: Settings },
+          {
+            label: "시뮬레이션 결과",
+            href: "/simulations",
+            icon: Settings,
+          },
         ],
       });
     }
