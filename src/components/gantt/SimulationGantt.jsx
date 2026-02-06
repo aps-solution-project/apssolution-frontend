@@ -119,9 +119,8 @@ export default function SimulationGantt({ products, scenarioStart }) {
 
   return (
     <div className="w-full h-[calc(100vh-140px)] rounded-xl border border-slate-200 bg-white overflow-hidden ">
-      <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold text-slate-800">시뮬레이션</span>
+      <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-slate-200 bg-white h-14">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             {[
               { label: "5분", v: 5 },
@@ -146,19 +145,16 @@ export default function SimulationGantt({ products, scenarioStart }) {
               );
             })}
           </div>
-        </div>
 
-        <div className="text-xs text-slate-500">
-          {rows.filter((r) => r.type === "task").length} tasks ·{" "}
-          {formatScenarioStart(scenarioStart)}
+          <div className="text-xs text-slate-500">
+            {rows.filter((r) => r.type === "task").length} tasks ·{" "}
+            {formatScenarioStart(scenarioStart)}
+          </div>
         </div>
       </div>
 
       <div className="h-[calc(100%-44px)] overflow-auto">
-        <div
-          className="flex min-w-max"
-          style={{ minWidth: panelWidth + canvasWidth }}
-        >
+        <div className="flex w-full min-w-0">
           <div
             style={{ width: panelWidth, minWidth: panelWidth }}
             className="sticky left-0 z-30 relative shrink-0 border-r border-slate-200 bg-white"
@@ -179,7 +175,7 @@ export default function SimulationGantt({ products, scenarioStart }) {
             />
           </div>
 
-          <div className="relative" style={{ width: canvasWidth }}>
+          <div className="relative flex-1 min-w-0">
             <Timeline
               rows={rows}
               minuteWidth={minuteWidth}

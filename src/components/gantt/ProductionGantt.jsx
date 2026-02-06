@@ -1,4 +1,4 @@
-// 간트 UI를 위한 레이아웃/스크롤 동기화/타임라인 데이터 생성 Provider 삭제 절대 금지
+// 간트 UI를 위한 레이아웃/스크롤 동기화/타임라인 데이터 생성 Provider 삭제 절대
 
 import { atom, useAtom } from "jotai";
 import throttle from "lodash.throttle";
@@ -70,7 +70,10 @@ export function GanttProvider({
     >
       <div
         ref={scrollRef}
-        className={cn("relative grid overflow-auto", className)}
+        className={cn(
+          "relative grid overflow-y-auto overflow-x-hidden",
+          className,
+        )}
         style={{
           ...cssVars,
           gridTemplateColumns: "var(--gantt-sidebar-width) 1fr",

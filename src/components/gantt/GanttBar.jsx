@@ -57,9 +57,6 @@ export default function GanttBar({
 
           {showText ? (
             <div className="flex items-center gap-2 min-w-0">
-              <span className={`text-[12px] font-bold truncate ${text}`}>
-                {row.taskName}
-              </span>
               <span
                 className={`text-[10px] font-medium opacity-55 truncate ${text}`}
               >

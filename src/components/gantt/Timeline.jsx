@@ -24,6 +24,12 @@ export default function Timeline({
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(600);
 
+  const dragRef = useRef({
+    active: false,
+    startX: 0,
+    startScrollLeft: 0,
+  });
+
   useEffect(() => {
     const el = bodyElRef.current;
     if (!el) return;
@@ -43,23 +49,19 @@ export default function Timeline({
   const visibleRows = rows.slice(start, end);
 
   const minorStep = 5;
-
   const innerWidth = Math.max(1, totalMinutes * minuteWidth);
 
   const gridStyle = useMemo(() => {
     const x = minorStep * minuteWidth;
     const y = rowHeight;
 
-    // SVG pattern (no CSS gradients) for crisp grid lines
-    const stroke = "rgba(2,6,23,0.07)";
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${x}" height="${y}" viewBox="0 0 ${x} ${y}">
-  <path d="M ${x} 0 V ${y} M 0 ${y} H ${x}" fill="none" stroke="${stroke}" stroke-width="1"/>
-</svg>`;
-
     return {
-      backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`,
-      backgroundRepeat: "repeat",
-      backgroundPosition: "0 0",
+      backgroundImage: [
+        "linear-gradient(to right, rgba(148,163,184,0.18) 1px, transparent 1px)",
+        "linear-gradient(to bottom, rgba(148,163,184,0.18) 1px, transparent 1px)",
+      ].join(", "),
+      backgroundSize: `${x}px ${y}px`,
+      backgroundPosition: `0 0`,
     };
   }, [minorStep, minuteWidth, rowHeight]);
 
@@ -83,12 +85,46 @@ export default function Timeline({
     }
   };
 
+  const onPointerDown = (e) => {
+    if (e.button !== 0) return;
+
+    const el = bodyElRef.current;
+    if (!el) return;
+
+    dragRef.current.active = true;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.startScrollLeft = el.scrollLeft;
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e) => {
+    if (!dragRef.current.active) return;
+
+    const el = bodyElRef.current;
+    if (!el) return;
+
+    const dx = e.clientX - dragRef.current.startX;
+    el.scrollLeft = dragRef.current.startScrollLeft - dx;
+  };
+
+  const onPointerUp = (e) => {
+    dragRef.current.active = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+  };
+
   return (
     <div className="flex-1 relative bg-white">
       <div
         ref={scaleElRef}
         onScroll={handleHeaderScroll}
-        className="sticky top-0 z-30 overflow-x-hidden border-b border-slate-200 bg-white"
+        className="sticky top-0 z-30 overflow-x-hidden border-b bg-white "
         style={{ height: 45 }}
       >
         <TimeScale
@@ -102,7 +138,11 @@ export default function Timeline({
       <div
         ref={bodyElRef}
         onScroll={handleScroll}
-        className="gantt-body overflow-x-auto overflow-y-hidden relative"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="gantt-body overflow-x-auto overflow-y-auto relative cursor-grab active:cursor-grabbing select-none"
         style={{ height: `calc(100% - ${headerHeight}px)` }}
       >
         <div
@@ -113,7 +153,7 @@ export default function Timeline({
           }}
         >
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 pointer-events-none"
             style={{
               width: innerWidth,
               height: rows.length * rowHeight,
@@ -128,11 +168,12 @@ export default function Timeline({
             return (
               <div
                 key={`bg:${r.key}`}
-                className="absolute left-0 right-0"
+                className="absolute left-0 right-0 pointer-events-none"
                 style={{
                   top,
                   height: rowHeight,
-                  backgroundColor: "rgba(2,6,23,0.035)",
+                  background:
+                    "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
                 }}
               />
             );
@@ -156,8 +197,9 @@ export default function Timeline({
         style={{
           top: headerHeight,
           right: 0,
-          height: 10,
-          backgroundColor: "rgba(2,6,23,0.035)",
+          height: 12,
+          background:
+            "linear-gradient(to bottom, rgba(15,23,42,0.06), rgba(15,23,42,0))",
         }}
       />
 
