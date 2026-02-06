@@ -10,6 +10,7 @@ import { Client } from "@stomp/stompjs";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
+import MainLayout from "@/main-layout";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
@@ -105,21 +106,9 @@ export default function App({ Component, pageProps }) {
     return null;
   }
 
-  return isLoginPage ? (
-    <Component {...pageProps} />
-  ) : (
-    <SidebarProvider>
-      <div className="flex h-screen w-screen">
-        <SideBar />
-
-        <div className="flex flex-col flex-1 min-w-0">
-          <Header />
-
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-4">
-            <Component {...pageProps} />
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+  return (
+    <MainLayout>
+      <Component {...pageProps} />
+    </MainLayout>
   );
 }
