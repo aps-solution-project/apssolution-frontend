@@ -24,10 +24,12 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function ProductManagementPage() {
   useAuthGuard();
+  const router = useRouter();
   const token = useToken((state) => state.token);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -139,7 +141,7 @@ export default function ProductManagementPage() {
 
       await bulkUpsertProducts(payload, token);
       alert("성공적으로 저장되었습니다.");
-      loadData();
+      router.push("/resources/products");
     } catch (e) {
       alert(e.message);
     } finally {
