@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { FileInput, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
+import { useRouter } from "next/router";
 
 /**
  * Task Management Page
@@ -23,6 +24,7 @@ import { FileInput, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
  */
 export default function TaskManagementPage() {
   useAuthGuard();
+  const router = useRouter();
   const token = useToken((state) => state.token);
   const [tasks, setTasks] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -156,8 +158,7 @@ export default function TaskManagementPage() {
       alert(
         `저장 완료\n생성: ${res.created}\n수정: ${res.updated}\n삭제: ${res.deleted}`,
       );
-
-      loadServerData();
+      router.push("/resources/tasks");
     } catch (e) {
       alert("저장 실패: " + e.message);
     }
