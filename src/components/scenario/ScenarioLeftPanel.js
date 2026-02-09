@@ -51,123 +51,178 @@ export default function ScenarioLeftPanel({
 
           {/* FORM */}
           {showForm && (
-            <div className="rounded-2xl border border-blue-100 bg-white p-6 mb-4 shadow-sm ring-2 ring-blue-50/40 space-y-5">
-              <input
-                className="w-full rounded-xl px-4 py-3 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="시나리오 제목"
-                value={form.title}
-                onChange={(e) =>
-                  setForm((v) => ({ ...v, title: e.target.value }))
-                }
-              />
-              {errors.title && (
-                <p className="text-xs text-red-500">{errors.title}</p>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[28px] border border-slate-100 bg-white p-6 mb-6 shadow-sm ring-1 ring-slate-100 space-y-6">
+              {/* 1. Title 섹션 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.15em] ml-1">
+                  Scenario Title
+                </label>
                 <input
-                  type="date"
-                  className="rounded-xl px-4 py-3 bg-slate-50 outline-none"
-                  value={form.date}
-                  onChange={(e) => {
-                    setForm((v) => ({ ...v, date: e.target.value }));
-                    e.target.blur();
-                  }}
+                  className="w-full rounded-2xl px-4 py-3.5 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-300 text-sm font-bold"
+                  placeholder="시나리오 제목을 입력하세요"
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((v) => ({ ...v, title: e.target.value }))
+                  }
                 />
-                <input
-                  type="time"
-                  className="rounded-xl px-4 py-3 bg-slate-50 outline-none"
-                  value={form.time}
-                  onChange={(e) => {
-                    setForm((v) => ({ ...v, time: e.target.value }));
-                    e.target.blur();
-                  }}
-                />
+                {errors.title && (
+                  <p className="text-[11px] text-rose-500 ml-1 font-bold">
+                    {errors.title}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">
-                  Workers
+                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.15em] ml-1">
+                  Scenario Description
+                </label>
+                <input
+                  className="w-full rounded-2xl px-4 py-3.5 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-300 text-sm font-bold"
+                  placeholder="시나리오 설명을 입력하세요"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((v) => ({ ...v, description: e.target.value }))
+                  }
+                />
+                {errors.title && (
+                  <p className="text-[11px] text-rose-500 ml-1 font-bold">
+                    {errors.title}
+                  </p>
+                )}
+              </div>
+
+              {/* 2. Start Schedule 섹션 (날짜 & 시간) */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.15em] ml-1">
+                  Start Schedule
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="date"
+                    className="rounded-2xl px-4 py-3 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-700"
+                    value={form.date}
+                    onChange={(e) => {
+                      setForm((v) => ({ ...v, date: e.target.value }));
+                      e.target.blur();
+                    }}
+                  />
+                  <input
+                    type="time"
+                    className="rounded-2xl px-4 py-3 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-700"
+                    value={form.time}
+                    onChange={(e) => {
+                      setForm((v) => ({ ...v, time: e.target.value }));
+                      e.target.blur();
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* 3. Workers 섹션 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.15em] ml-1">
+                  Max Workforce
                 </label>
                 <div className="relative">
                   <Users
                     size={16}
-                    className="absolute left-4 top-3.5 text-slate-400"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     type="number"
-                    className="w-full bg-slate-50 rounded-2xl pl-11 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="최대 작업 인원"
+                    className="w-full bg-slate-50 rounded-2xl pl-12 pr-4 py-3.5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-100"
                     value={form.maxWorkerCount}
                     onChange={(e) =>
-                      setForm((v) => ({
-                        ...v,
-                        maxWorkerCount: e.target.value,
-                      }))
+                      setForm((v) => ({ ...v, maxWorkerCount: e.target.value }))
                     }
                   />
                 </div>
                 {errors.maxWorkerCount && (
-                  <p className="text-xs text-red-500 ml-1">
+                  <p className="text-[11px] text-rose-500 ml-1 font-bold">
                     {errors.maxWorkerCount}
                   </p>
                 )}
               </div>
 
-              {/* PRODUCTS */}
-              {form.scenarioProductList.map((item, i) => (
-                <div key={i} className="flex gap-2">
-                  <select
-                    className="flex-1 rounded-xl px-3 py-2 bg-slate-50"
-                    value={item.productId}
-                    onChange={(e) =>
-                      onUpdateItem(i, "productId", e.target.value)
-                    }
-                  >
-                    <option value="">품목 선택</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    className="w-24 rounded-xl px-3 py-2 bg-slate-50"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      onUpdateItem(i, "quantity", e.target.value)
-                    }
-                  />
-
-                  {form.scenarioProductList.length > 1 && (
-                    <button
-                      onClick={() => onRemoveItem(i)}
-                      className="text-slate-400 hover:text-red-500 transition"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+              {/* 4. Products 섹션 */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.15em]">
+                    Production Items
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    Total: {form.scenarioProductList.length}
+                  </span>
                 </div>
-              ))}
 
-              <button
-                onClick={onAddItem}
-                className="text-sm font-bold text-blue-600 hover:text-blue-700"
-              >
-                + 품목 추가
-              </button>
+                <div className="space-y-2">
+                  {form.scenarioProductList.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex gap-2 items-center group animate-in fade-in slide-in-from-top-1"
+                    >
+                      <select
+                        className="flex-1 rounded-xl px-4 py-3 bg-slate-50 border-none outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-700 appearance-none"
+                        value={item.productId}
+                        onChange={(e) =>
+                          onUpdateItem(i, "productId", e.target.value)
+                        }
+                      >
+                        <option value="">품목 선택</option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
 
-              <div className="flex gap-2">
+                      <div className="relative w-28">
+                        <input
+                          type="number"
+                          placeholder="수량"
+                          className="w-full rounded-xl px-4 py-3 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-right pr-10"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            onUpdateItem(i, "quantity", e.target.value)
+                          }
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">
+                          QTY
+                        </span>
+                      </div>
+
+                      {form.scenarioProductList.length > 1 && (
+                        <button
+                          onClick={() => onRemoveItem(i)}
+                          className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={onAddItem}
+                  className="w-full py-3 rounded-xl border-2 border-dashed border-slate-100 text-slate-400 text-xs font-bold hover:border-indigo-200 hover:text-indigo-500 hover:bg-indigo-50/30 transition-all mt-2"
+                >
+                  + 품목 추가하기
+                </button>
+              </div>
+
+              {/* 5. Action 버튼 */}
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={onAddScenario}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"
+                  className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
                 >
-                  생성
+                  시나리오 생성 완료
                 </button>
                 <button
                   onClick={onResetForm}
-                  className="px-5 py-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition"
+                  className="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all"
                 >
                   취소
                 </button>
