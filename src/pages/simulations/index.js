@@ -19,6 +19,7 @@ import {
   RefreshCwIcon,
   Package,
   Users,
+  PlayCircle,
 } from "lucide-react";
 
 import SimulationGantt from "@/components/gantt/SimulationGantt";
@@ -75,11 +76,11 @@ export default function SimulationPage() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="h-full w-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-[1800px] mx-auto px-6 py-4">
-          <Breadcrumb>
+      <div className="bg-white border-b border-slate-200 shrink-0 rounded-t-[32px]">
+        <div className="mb-3">
+          {/* <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href="/" className="flex items-center gap-2">
@@ -98,28 +99,41 @@ export default function SimulationPage() {
                 <BreadcrumbPage>시뮬레이션</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
-          </Breadcrumb>
+          </Breadcrumb> */}
 
           {/* Page Title & Actions */}
-          <div className="flex items-center justify-between mt-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+          <div className="flex justify-between items-end">
+            <div className="space-y-1">
+              {/* 공지사항의 Notice 뱃지 느낌을 Simulation으로 재해석 */}
+              <div className="flex items-center gap-2 text-indigo-600 mb-1">
+                <PlayCircle size={20} />
+                <span className="text-xs font-black uppercase tracking-widest">
+                  Simulation
+                </span>
+              </div>
+
+              {/* 메인 타이틀: font-black & 3xl 적용 */}
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
                 {scenario.title || "시뮬레이션"}
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
-                {scenario.description || "생산 일정 시뮬레이션 및 작업 관리"}
+
+              {/* 설명 문구: 총 작업 수 등을 포함하여 디테일 추가 */}
+              <p className="text-sm text-slate-400 font-medium">
+                {scenario.description || "생산 일정 시뮬레이션 및 작업 관리"}{" "}
+                (총{" "}
+                <span className="text-slate-600 font-bold">{totalTasks}</span>
+                개의 작업)
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* 액션 버튼: 공지 작성 버튼처럼 둥글고 존재감 있게 */}
+            <div className="flex items-center gap-3 mb-5">
               <Button
-                variant="outline"
-                size="sm"
                 onClick={handleRefresh}
-                className="gap-2"
+                className="h-11 px-8 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold shadow-sm hover:bg-slate-100 transition flex items-center gap-2"
               >
-                <RefreshCwIcon className="w-4 h-4" />
-                새로고침
+                <RefreshCwIcon size={16} className="text-slate-500" />
+                <span>새로고침</span>
               </Button>
             </div>
           </div>
@@ -127,8 +141,8 @@ export default function SimulationPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1800px] mx-auto px-6 py-6">
-        <div className="flex gap-6 mb-6">
+      <div className="flex-1 overflow-auto bg-slate-50/50 rounded-b-2xl">
+        <div className="p-6 space-y-6 min-w-[1000px]">
           <Card className="p-6">
             <div className="space-y-6">
               {/* 시뮬레이션 ID */}

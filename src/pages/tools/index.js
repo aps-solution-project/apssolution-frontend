@@ -11,14 +11,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
 
 export default function ToolManagementPage() {
   useAuthGuard();
+  // 1. 페이징 관련 상태 추가
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [tools, setTools] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const token = useToken((state) => state.token);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = tools.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(tools.length / itemsPerPage);
 
   // 1. 데이터 로드
   useEffect(() => {
@@ -144,6 +160,12 @@ export default function ToolManagementPage() {
     }
   };
 
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-stone-600">도구 관리</h1>
@@ -213,17 +235,16 @@ export default function ToolManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!isAdding && (
+              {currentPage === 1 && !isAdding && (
                 <TableRow
-                  className="cursor-pointer hover:bg-stone-50 border-b-2 border-dashed group transition-colors bg-stone-50/50"
+                  className="cursor-pointer bg-stone-50/50"
                   onClick={handleAddRow}
                 >
                   <TableCell
                     colSpan={5}
-                    className="text-center py-4 text-stone-400 group-hover:text-emerald-600 font-medium text-sm"
+                    className="text-center py-4 text-stone-400 font-medium"
                   >
-                    <Plus className="inline-block mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                    새 도구 추가
+                    <Plus className="inline-block mr-2 h-5 w-5" /> 새 도구 추가
                   </TableCell>
                 </TableRow>
               )}

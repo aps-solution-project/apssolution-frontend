@@ -13,7 +13,7 @@ import { getProducts } from "@/api/product-api";
 
 import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
 import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
-import { Activity } from "lucide-react";
+import { Activity, DraftingCompass } from "lucide-react";
 import { useStomp } from "@/stores/stomp-store";
 
 export default function ScenariosCreateForm() {
@@ -280,9 +280,9 @@ export default function ScenariosCreateForm() {
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
       <div className="flex justify-between items-end border-b border-slate-100 shrink-0">
-        <div className="">
+        <div className="mb-3">
           <div className="flex items-center gap-2 text-indigo-600">
-            <Activity size={20} />
+            <DraftingCompass size={20} />
             <span className="text-xs font-black uppercase tracking-widest">
               Management
             </span>
