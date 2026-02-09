@@ -209,8 +209,8 @@ export default function ToolManagementPage() {
               onClick={handleSaveAll}
               className="bg-emerald-600 hover:bg-emerald-500 shadow-sm"
             >
+              <Save className="size-4" />
               저장
-              <Save className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>

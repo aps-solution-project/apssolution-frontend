@@ -67,6 +67,37 @@ export default function ProductManagementPage() {
     });
   };
 
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const data = await parseToolXls(file, token);
+
+      const newItems = (data.tools || []).map((item) => ({
+        id: item.id,
+
+        // ⭐ 프론트 표준 구조로 변환
+        categoryId: item.category?.id || "",
+        category: item.category ? { id: item.category.id } : { id: "" },
+
+        description: item.description || "",
+
+        isSaved: false,
+      }));
+
+      setTools((prev) => [...prev, ...newItems]);
+
+      alert(
+        `${newItems.length}건의 데이터를 불러왔습니다. '전체 저장'을 눌러 확정하세요.`,
+      );
+
+      e.target.value = "";
+    } catch (err) {
+      alert("엑셀 파싱 실패: " + err.message);
+    }
+  };
+
   const handleAddRow = () => {
     setIsAdding(true);
     setProducts([
@@ -123,9 +154,7 @@ export default function ProductManagementPage() {
       {/* 헤더 영역 생략 (기존과 동일) */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-stone-700">
-            품목 관리
-          </h1>
+          <h1 className="text-2xl font-bold text-stone-700">품목 관리</h1>
           <p className="text-sm text-stone-400">
             품목 정보를 일괄 수정하거나 추가할 수 있습니다.
           </p>
@@ -135,13 +164,30 @@ export default function ProductManagementPage() {
             <RefreshCw className="size-4 mr-2" />
             새로고침
           </Button>
+          {/* 엑셀 추가 버튼 */}
+          <Button
+            asChild
+            className="bg-indigo-900 hover:bg-indigo-500 text-white cursor-pointer"
+          >
+            <label>
+              <Input
+                type="file"
+                accept=".xls,.xlsx"
+                className="hidden"
+                onChange={handleExcelUpload}
+              />
+              <FileInput className="ml-2 h-4 w-4" />
+              엑셀 추가
+            </label>
+          </Button>
+
           <Button
             onClick={handleSaveAll}
             disabled={loading}
             className="bg-emerald-600 hover:bg-emerald-500"
           >
-            일괄 저장
-            <Save className="ml-2 size-4" />
+            <Save className="size-4" />
+            저장
           </Button>
         </div>
       </div>
