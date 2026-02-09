@@ -1,11 +1,8 @@
-import { useEffect, useState } from "react";
 import {
-  getProducts,
   bulkUpsertProducts,
+  getProducts,
   upLoadFiles,
 } from "@/api/product-api";
-import { useToken } from "@/stores/account-store";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,15 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
 import {
-  Plus,
-  Trash2,
-  Save,
-  RefreshCw,
-  FileInput,
   CheckCircle2,
+  FileInput,
+  Plus,
+  RefreshCw,
+  Save,
+  Trash2,
   XCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ProductManagementPage() {
   useAuthGuard();
@@ -72,21 +72,19 @@ export default function ProductManagementPage() {
     if (!file) return;
 
     try {
-      const data = await parseToolXls(file, token);
+      const data = await upLoadFiles(file, token);
 
-      const newItems = (data.tools || []).map((item) => ({
+      const newItems = (data.products || []).map((item) => ({
         id: item.id,
 
         // ⭐ 프론트 표준 구조로 변환
-        categoryId: item.category?.id || "",
-        category: item.category ? { id: item.category.id } : { id: "" },
-
+        name: item.name || "",
         description: item.description || "",
-
+        active: item.active || false,
         isSaved: false,
       }));
 
-      setTools((prev) => [...prev, ...newItems]);
+      setProducts((prev) => [...prev, ...newItems]);
 
       alert(
         `${newItems.length}건의 데이터를 불러왔습니다. '전체 저장'을 눌러 확정하세요.`,

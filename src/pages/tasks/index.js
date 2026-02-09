@@ -149,20 +149,9 @@ export default function TaskManagementPage() {
           requiredWorkers: Number(t.requiredWorkers),
         })),
       };
+      
 
-      const res = await upsertTasks(
-        token,
-        tasks.map((t) => ({
-          taskId: t.id,
-          productId: t.productId,
-          categoryId: t.toolCategoryId,
-          seq: Number(t.seq),
-          name: t.name,
-          description: t.description,
-          duration: Number(t.duration),
-          requiredWorkers: Number(t.requiredWorkers),
-        })),
-      );
+      const res = await upsertTasks(token, payload.tasks);
 
       alert(
         `저장 완료\n생성: ${res.created}\n수정: ${res.updated}\n삭제: ${res.deleted}`,
