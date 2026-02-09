@@ -106,15 +106,6 @@ export default function ChatRoom() {
     };
   }, [stomp, chatId, token]);
 
-  // 채팅 상세 페이지에서 현재 채팅방 등록
-  useEffect(() => {
-    setCurrentChatId(chatId);
-
-    return () => {
-      setCurrentChatId(null);
-    };
-  }, [chatId]);
-
   // 하단 스크롤
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });

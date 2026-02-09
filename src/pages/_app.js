@@ -1,33 +1,40 @@
 import "@/styles/globals.css";
 
 import { Spinner } from "@/components/ui/spinner";
+import MainLayout from "@/components/MainLayout";
+
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
+
 import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import SockJS from "sockjs-client";
-import MainLayout from "@/components/MainLayout";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
+
   const token = useToken((s) => s.token);
   const account = useAccount((s) => s.account);
   const stomp = useStomp((s) => s.stomp);
 
-  const [isHydrated, setIsHydrated] = useState(false);
   const stompRef = useRef(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const isLoginPage = router.pathname === "/login";
 
-  /* ===================== 1️⃣ Zustand persist 복구 ===================== */
+  /* ===================== 1️⃣ persist 복구 ===================== */
   useEffect(() => {
-    useToken.persist.rehydrate().then(() => setIsHydrated(true));
+    useToken.persist.rehydrate().then(() => {
+      setIsHydrated(true);
+    });
   }, []);
 
-  /* ===================== 2️⃣ 로그인 리다이렉트 ===================== */
+  /* ===================== 2️⃣ 로그인 가드 ===================== */
   useEffect(() => {
     if (!router.isReady || !isHydrated) return;
+
     if (!token && !isLoginPage) {
       router.replace("/login");
     }
@@ -49,8 +56,6 @@ export default function App({ Component, pageProps }) {
       onDisconnect: () => {
         console.log("❌ STOMP disconnected");
       },
-
-      debug: (str) => console.log("[STOMP]", str),
     });
 
     client.activate();
@@ -64,33 +69,42 @@ export default function App({ Component, pageProps }) {
     };
   }, [token]);
 
-  /* ===================== 4️⃣ 전체 채팅방 구독 ===================== */
+  /* ===================== 4️⃣ 전역 알림 구독 ===================== */
   useEffect(() => {
-    if (!stomp || !stomp.connected || !token || !account) return;
+    if (!stomp || !stomp.connected || !account) return;
 
     console.log("🌍 GLOBAL CHAT SUBSCRIBE");
 
-    const sub = stomp.subscribe(
-      `/topic/user/${account?.accountId}`,
-      (frame) => {
+    const sub = stomp.subscribe(`/topic/user/${account.accountId}`, (frame) => {
+      try {
         const body = JSON.parse(frame.body);
-        if (body.msg === "refresh") {
-          stomp.hasUnread = true;
-          const { increaseUnreadIfNeeded } = useStomp.getState();
-          const currentAccount = useAccount.getState().account;
-          if (!currentAccount) return;
 
-          increaseUnreadIfNeeded(body, currentAccount.accountId);
+        // refresh = 안 읽은 메시지 발생 알림
+        if (body.msg === "refresh") {
+          const { currentChatId } = useStomp.getState();
+
+          // 👉 현재 채팅방 보고 있으면 무시
+          if (currentChatId) return;
+
+          useStomp.getState().markChatUnread();
+          return;
+
+          // 🔥 판단은 store에서만
+          useStomp
+            .getState()
+            .increaseUnreadIfNeeded(body, currentAccount.accountId);
         }
-      },
-    );
+      } catch (e) {
+        console.error("❌ STOMP handler error", e);
+      }
+    });
 
     return () => {
       sub.unsubscribe();
     };
-  }, [stomp, token, account]);
+  }, [stomp, account]);
 
-  /* ===================== 5️⃣ 렌더 가드 (깜빡임 방지 핵심) ===================== */
+  /* ===================== 5️⃣ 렌더 가드 ===================== */
   if (!router.isReady || !isHydrated) {
     return (
       <div className="flex items-center justify-center h-screen">
