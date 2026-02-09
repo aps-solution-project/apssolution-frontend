@@ -14,10 +14,12 @@ import { getProducts } from "@/api/product-api";
 import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
 import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
 import { Activity } from "lucide-react";
+import { useStomp } from "@/stores/stomp-store";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
   const { token } = useToken();
+  const { stomp } = useStomp();
 
   const [scenarioData, setScenarioData] = useState([]);
   const [selectedId, setSelectedId] = useState(0);
@@ -31,6 +33,7 @@ export default function ScenariosCreateForm() {
   const [progress, setProgress] = useState(0);
   const [running, setRunning] = useState(false);
   const [pending, setPending] = useState(false);
+  const [displayProgress, setDisplayProgress] = useState(0);
 
   const scrollAreaRef = useRef(null);
 
@@ -44,6 +47,29 @@ export default function ScenariosCreateForm() {
   });
 
   /* ===================== Effect ===================== */
+
+  useEffect(() => {
+    if (!stomp || !stomp.connected) return;
+
+    console.log("📡 시나리오 스톰프 구독 시작:!!!!!!");
+
+    const sub = stomp.subscribe(
+      `/topic/scenario/${selectedScenario?.id}`,
+      (frame) => {
+        const body = JSON.parse(frame.body);
+        if (body.message === "refresh") {
+          getScenario(token, selectedScenario?.id).then((obj) => {
+            setSelectedScenario(obj.scenario);
+          });
+        }
+      },
+    );
+
+    return () => {
+      console.log("❌ 시나리오 구독 해제");
+      sub.unsubscribe();
+    };
+  }, [stomp, selectedScenario?.id]);
 
   useEffect(() => {
     if (!token) return;
@@ -60,6 +86,41 @@ export default function ScenariosCreateForm() {
       setSelectedScenario(res.scenario),
     );
   }, [selectedId, token]);
+
+  const handleStartSimulation = async () => {
+    if (!selectedId) return alert("시나리오를 선택해주세요.");
+
+    setRunning(true);
+    setProgress(0);
+    setPending(false);
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+
+          // 100% 도달 시점: 이제부터 서버 응답을 기다림 (Loader 표시 시점)
+          setPending(true);
+
+          simulateScenario(token, selectedId)
+            .then(() => {
+              // 서버 응답 완료 시
+              setRunning(false);
+              setPending(false);
+              handleRefreshDetail(selectedId);
+            })
+            .catch((err) => {
+              console.error(err);
+              setRunning(false);
+              setPending(false);
+            });
+
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 100);
+  };
 
   /* ===================== Handler ===================== */
 
@@ -263,9 +324,10 @@ export default function ScenariosCreateForm() {
             selectedScenario={selectedScenario}
             onRefreshDetail={handleRefreshDetail}
             progress={progress}
+            displayProgress={displayProgress}
             running={running}
             pending={pending}
-            onStart={() => setRunning(true)}
+            onStart={handleStartSimulation}
             editScenario={editScenario}
             onEdit={setEditScenario}
             onCancelEdit={() => setEditScenario(null)}

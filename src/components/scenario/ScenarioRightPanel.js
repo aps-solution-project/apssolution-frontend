@@ -103,7 +103,7 @@ export default function ScenarioRightPannel({
       <div className="border-none rounded-[32px] h-full flex flex-col shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100 bg-white overflow-hidden">
         {/* 1. 고정 헤더 & 정보 카드 (절대 밀려나지 않음) */}
         <div className="p-6 pb-4 shrink-0 bg-white">
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex justify-between items-start mb-2">
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <span className="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -116,6 +116,10 @@ export default function ScenarioRightPannel({
               <h1 className="text-2xl font-black text-slate-800 tracking-tight">
                 {selectedScenario.title}
               </h1>
+              <p className="mt-1 text-sm font-medium text-slate-500 leading-relaxed line-clamp-2">
+                {selectedScenario.description ||
+                  "등록된 시나리오 설명이 없습니다."}
+              </p>
             </div>
             <button
               onClick={() => onEdit?.(selectedScenario)}
@@ -126,7 +130,7 @@ export default function ScenarioRightPannel({
           </div>
 
           {/* 정보 카드 그리드 (배포 상태 포함 5개 카드) */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 mt-3">
             <InfoCard
               icon={<Activity size={14} />}
               label="Status"
@@ -153,12 +157,11 @@ export default function ScenarioRightPannel({
               value={`${selectedScenario.maxWorkerCount}명`}
             />
 
-            {/* 배포 상태 카드 (가로 전체 차지) */}
             <div className="col-span-2">
               <InfoCard
                 icon={
                   <Globe
-                    size={16}
+                    size={14}
                     className={
                       selectedScenario.published
                         ? "text-emerald-500"
@@ -168,34 +171,27 @@ export default function ScenarioRightPannel({
                 }
                 label="Publish Status"
                 value={
-                  <div className="flex items-center justify-between w-full mt-0.5">
-                    {/* 상태 표시 (점 + 텍스트) */}
+                  /* 이미지 4b2c42 스타일: 가로 배치(justify-between) */
+                  <div className="flex items-center justify-between w-full mt-1">
+                    {/* 왼쪽: 상태 표시 */}
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          selectedScenario.published
-                            ? "bg-emerald-500 animate-pulse"
-                            : "bg-rose-500"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${selectedScenario.published ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`}
                       />
                       <span
-                        className={`text-sm font-black ${
-                          selectedScenario.published
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                        }`}
+                        className={`text-sm font-black ${selectedScenario.published ? "text-emerald-600" : "text-rose-600"}`}
                       >
                         {selectedScenario.published ? "배포됨" : "미배포"}
                       </span>
                     </div>
 
-                    {/* 상태 변경 버튼 */}
+                    {/* 오른쪽: 작고 깔끔한 버튼 (둥근 스타일) */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onTogglePublish();
                       }}
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black text-slate-500 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
+                      className="px-4 py-1.5 rounded-full border border-slate-200 bg-white text-[11px] font-bold text-slate-500 hover:border-slate-300 hover:text-slate-700 transition-all shadow-sm active:scale-95"
                     >
                       상태 변경
                     </button>
@@ -260,9 +256,39 @@ export default function ScenarioRightPannel({
           </div>
           <button
             onClick={onStart}
-            className="w-full py-4 rounded-2xl text-sm font-black transition-all shadow-lg flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.95]"
+            // 실행 중이거나 분석 대기 중일 때는 클릭 방지
+            disabled={
+              running ||
+              (isReady && pending) ||
+              (!isReady && selectedScenario.status === "PENDING")
+            }
+            className={`w-full py-4 rounded-2xl text-sm font-black transition-all shadow-lg flex items-center justify-center gap-2 active:scale-[0.95]
+    ${
+      isOptimal || isFeasible
+        ? "bg-indigo-600 text-white hover:bg-indigo-700" // 완료 상태
+        : running || pending
+          ? "bg-emerald-500 text-white cursor-wait" // 진행 중 상태
+          : "bg-blue-600 text-white hover:bg-blue-700" // 시작 가능 상태
+    }`}
           >
-            <Play size={18} fill="currentColor" /> 시뮬레이션 시작
+            {isOptimal || isFeasible ? (
+              <>
+                <FileText size={18} />
+                결과 레포트 보기
+              </>
+            ) : running || pending ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                {pending ? "엔진 분석 중..." : "데이터 전송 중..."}
+              </>
+            ) : (
+              <>
+                <Play size={18} fill="currentColor" />
+                {selectedScenario.status === "FAIL"
+                  ? "재시뮬레이션 시작"
+                  : "시뮬레이션 시작"}
+              </>
+            )}
           </button>
         </div>
       </div>
