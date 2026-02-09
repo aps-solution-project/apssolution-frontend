@@ -11,7 +11,7 @@ export default function MainLayout({ children }) {
         <AppSidebar />
 
         {/* 2. 메인 콘텐츠 영역 */}
-        <main className="flex flex-1 flex-col min-w-0 bg-background">
+        <main className="flex flex-1 flex-col min-w-0 min-h-0 bg-background overflow-hidden">
           <header className="flex h-16 shrink-0 items-center justify-between border-b px-6">
             <div className="flex items-center gap-4">
               {/* 사이드바 열고 닫는 버튼은 여기서 관리 */}
@@ -28,7 +28,7 @@ export default function MainLayout({ children }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-15">{children}</div>
+          <div className="flex-1 min-h-0 overflow-hidden p-8">{children}</div>
         </main>
       </div>
     </SidebarProvider>

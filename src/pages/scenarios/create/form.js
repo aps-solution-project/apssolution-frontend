@@ -1,36 +1,36 @@
-import { getProducts } from "@/api/product-api";
-import {
-  copyScenario,
-  deleteScenario,
-  getScenario,
-  getScenarios,
-  postScenario,
-  simulateScenario,
-} from "@/api/scenario-api";
-import Information from "@/components/scenario/Information";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef, useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
-import { Calendar, Copy, Plus, Trash2, Users, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  getScenarios,
+  getScenario,
+  postScenario,
+  deleteScenario,
+  copyScenario,
+  simulateScenario,
+} from "@/api/scenario-api";
+import { getProducts } from "@/api/product-api";
+
+import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
+import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
+import { Activity } from "lucide-react";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
+  const { token } = useToken();
 
   const [scenarioData, setScenarioData] = useState([]);
   const [selectedId, setSelectedId] = useState(0);
+  const [selectedScenario, setSelectedScenario] = useState(null);
+
   const [showForm, setShowForm] = useState(false);
   const [errors, setErrors] = useState({});
+  const [products, setProducts] = useState([]);
+  const [editScenario, setEditScenario] = useState(null);
 
   const [progress, setProgress] = useState(0);
   const [running, setRunning] = useState(false);
   const [pending, setPending] = useState(false);
-
-  const { token } = useToken();
-
-  const [selectedScenario, setSelectedScenario] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [editScenario, setEditScenario] = useState(null);
 
   const scrollAreaRef = useRef(null);
 
@@ -43,135 +43,37 @@ export default function ScenariosCreateForm() {
     scenarioProductList: [{ productId: "", quantity: "" }],
   });
 
-  // API 데이터 로드
+  /* ===================== Effect ===================== */
+
   useEffect(() => {
     if (!token) return;
-
-    getScenarios(token)
-      .then((obj) => setScenarioData(obj.scenarios || []))
-      .catch(() => setScenarioData([]));
-
-    getProducts(token)
-      .then((obj) => setProducts(obj.products || []))
-      .catch(() => setProducts([]));
+    getScenarios(token).then((res) => setScenarioData(res.scenarios || []));
+    getProducts(token).then((res) => setProducts(res.products || []));
   }, [token]);
 
-  // 시뮬레이션 관련
-  useEffect(() => {
-    if (progress === 100 && selectedScenario?.status === "READY") {
-      selectedScenario.status = "PENDING";
-      simulateScenario(token, selectedScenario.id)
-        .then(() => {
-          setRunning(false);
-          setPending(true);
-        })
-        .catch(() => {
-          setRunning(false);
-          setPending(false);
-        });
-    }
-  }, [progress, selectedScenario, token]);
-
-  useEffect(() => {
-    if (!running) return;
-
-    if (progress >= 100) {
-      setRunning(false);
-      setPending(true);
-      return;
-    }
-
-    const t = setTimeout(() => setProgress((p) => p + 1), 10);
-    return () => clearTimeout(t);
-  }, [running, progress]);
-
-  // 상세 데이터 로드
   useEffect(() => {
     if (!selectedId || !token) {
       setSelectedScenario(null);
       return;
     }
-
-    getScenario(token, selectedId)
-      .then((obj) => setSelectedScenario(obj.scenario || null))
-      .catch(() => setSelectedScenario(null));
+    getScenario(token, selectedId).then((res) =>
+      setSelectedScenario(res.scenario),
+    );
   }, [selectedId, token]);
 
-  const handleStart = () => {
-    setProgress(0);
-    setPending(false);
-    setRunning(true);
-  };
-
-  const resetForm = () => {
-    setForm({
-      title: "",
-      description: "",
-      date: "",
-      time: "",
-      maxWorkerCount: "",
-      scenarioProductList: [{ productId: "", quantity: "" }],
-    });
-    setErrors({});
-    setShowForm(false);
-  };
-
-  const addItem = () =>
-    setForm((prev) => ({
-      ...prev,
-      scenarioProductList: [
-        ...prev.scenarioProductList,
-        { productId: "", quantity: "" },
-      ],
-    }));
-
-  const removeItem = (i) =>
-    setForm((prev) => ({
-      ...prev,
-      scenarioProductList: prev.scenarioProductList.filter(
-        (_, idx) => idx !== i,
-      ),
-    }));
-
-  const updateItem = (i, key, value) => {
-    setForm((prev) => {
-      const copy = [...prev.scenarioProductList];
-      copy[i] = { ...copy[i], [key]: value };
-      return { ...prev, scenarioProductList: copy };
-    });
-  };
+  /* ===================== Handler ===================== */
 
   const scrollToTop = () => {
-    // ScrollArea 안의 anchor로 이동 (안전)
     setTimeout(() => {
       document.getElementById("scroll-top-anchor")?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    }, 50);
-  };
-
-  const handleToggleForm = () => {
-    setShowForm((v) => !v);
-    if (!showForm) scrollToTop();
-  };
-
-  const validate = () => {
-    const e = {};
-    if (!form.title) e.title = "제목을 입력해주세요.";
-    if (!form.date) e.date = "날짜를 선택해주세요.";
-    if (!form.time) e.time = "시간을 선택해주세요.";
-    if (!form.maxWorkerCount) e.maxWorkerCount = "인원을 입력해주세요.";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+    }, 100);
   };
 
   const handleSelectScenario = (id) => {
-    if (
-      editScenario &&
-      !confirm("수정 중인 내용이 사라집니다. 이동하시겠습니까?")
-    )
-      return;
+    if (editScenario && !confirm("수정 중인 내용이 사라집니다.")) return;
 
     const isSameId = String(selectedId) === String(id);
     const nextId = isSameId ? 0 : id;
@@ -180,22 +82,59 @@ export default function ScenariosCreateForm() {
     setEditScenario(null);
 
     setScenarioData((prev) =>
-      (prev || []).map((s) =>
+      prev.map((s) =>
         String(s.id) === String(id) ? { ...s, isNew: false } : s,
       ),
     );
 
     if (nextId) {
-      const clicked = (scenarioData || []).find(
-        (s) => String(s.id) === String(id),
-      );
-      if (clicked) setSelectedScenario(clicked);
+      getScenario(token, nextId).then((res) => {
+        setSelectedScenario(res.scenario);
+      });
+    } else {
+      setSelectedScenario(null);
     }
   };
 
-  const handleAddScenario = () => {
-    if (!validate()) return;
+  const handleCopyScenario = (id) => {
+    copyScenario(token, id).then((obj) => {
+      const newScenario = {
+        ...obj.cloneScenario,
+        status: "READY",
+        makespan: null,
+        isNew: true, // 복사 직후 배지 활성화
+      };
 
+      setScenarioData((prev) => [newScenario, ...(prev || [])]);
+
+      setShowForm(false);
+
+      scrollToTop();
+    });
+  };
+
+  const handleAddItem = () =>
+    setForm((v) => ({
+      ...v,
+      scenarioProductList: [
+        ...v.scenarioProductList,
+        { productId: "", quantity: "" },
+      ],
+    }));
+
+  const handleRemoveItem = (i) =>
+    setForm((v) => ({
+      ...v,
+      scenarioProductList: v.scenarioProductList.filter((_, idx) => idx !== i),
+    }));
+
+  const handleUpdateItem = (i, key, value) => {
+    const newList = [...form.scenarioProductList];
+    newList[i] = { ...newList[i], [key]: value };
+    setForm({ ...form, scenarioProductList: newList });
+  };
+
+  const handleAddScenario = () => {
     const payload = {
       title: form.title,
       description: form.description,
@@ -207,372 +146,131 @@ export default function ScenariosCreateForm() {
       })),
     };
 
-    postScenario(token, payload)
-      .then((obj) => {
-        const newScenario = { ...obj.scenario, isNew: true };
-        setScenarioData((prev) => [newScenario, ...(prev || [])]);
-        handleSelectScenario(newScenario.id);
-        resetForm();
-        scrollToTop();
-      })
-      .catch((err) => {
-        console.error("생성 실패:", err);
-        alert("시나리오 생성 중 오류가 발생했습니다.");
+    postScenario(token, payload).then((res) => {
+      const newS = { ...res.scenario, isCreated: true };
+      setScenarioData((prev) => [newS, ...(prev || [])]);
+      setSelectedId(newS.id);
+      setShowForm(false);
+      setForm({
+        title: "",
+        description: "",
+        date: "",
+        time: "",
+        maxWorkerCount: "",
+        scenarioProductList: [{ productId: "", quantity: "" }],
       });
-  };
-
-  const copyScenarioHandle = (id) => {
-    copyScenario(token, id).then((obj) => {
-      const newScenario = {
-        ...obj.cloneScenario,
-        status: "READY",
-        makespan: null,
-        isNew: true,
-      };
-      setScenarioData((prev) => [newScenario, ...(prev || [])]);
       scrollToTop();
     });
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("삭제할까요?")) return;
-    try {
-      await deleteScenario(token, id);
-      setScenarioData((prev) => (prev || []).filter((s) => s.id !== id));
-      setSelectedId(0);
-      setSelectedScenario(null);
-    } catch (e) {
-      alert("삭제 실패");
+  const onToggleForm = () => {
+    if (!showForm) {
+      setForm({
+        title: "",
+        description: "",
+        date: "",
+        time: "",
+        maxWorkerCount: "",
+        scenarioProductList: [{ productId: "", quantity: "" }],
+      });
+      setShowForm(true);
+
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          const viewport = scrollAreaRef.current.querySelector(
+            "[data-radix-scroll-area-viewport]",
+          );
+          if (viewport) {
+            viewport.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }
+      }, 50);
+    } else {
+      setShowForm(false);
     }
   };
 
-  if (!token) return <div>Loading...</div>;
+  const handleDeleteScenario = async (id) => {
+    if (!confirm("삭제할까요?")) return;
+    await deleteScenario(token, id);
+    setScenarioData((prev) => prev.filter((s) => s.id !== id));
+    if (selectedId === id) setSelectedId(0);
+  };
+
+  // 목록과 상세 데이터를 모두 최신화하는 함수
+  const handleRefreshDetail = (id) => {
+    if (!id || !token) return;
+
+    // 1. 상세 데이터 다시 가져오기 (우측 패널용)
+    getScenario(token, id).then((res) => {
+      setSelectedScenario(res.scenario);
+
+      // 2. 목록 데이터도 부분 업데이트 (좌측 패널용)
+      setScenarioData((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(id) ? res.scenario : item,
+        ),
+      );
+    });
+  };
+
+  if (!token) return null;
 
   return (
-    // ✅ 전체 화면 고정 + 바깥 스크롤 제거
-    <div className="h-[100dvh] flex flex-col flex-1 min-h-0 overflow-hidden">
-      {/* 페이지 타이틀바 */}
-      <div className="shrink-0 h-16 px-8 flex items-center justify-between">
-        <div className="text-2xl font-bold text-slate-800 mt-5">
-          시나리오 설계
+    <div className="flex flex-col h-full min-h-0 bg-white">
+      <div className="flex justify-between items-end border-b border-slate-100 shrink-0">
+        <div className="">
+          <div className="flex items-center gap-2 text-indigo-600">
+            <Activity size={20} />
+            <span className="text-xs font-black uppercase tracking-widest">
+              Management
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            시나리오 관리
+          </h1>
+          <p className="text-sm text-slate-400 font-medium">
+            생산 시뮬레이션을 위한 시나리오를 구성하고 분석합니다.
+          </p>
         </div>
       </div>
 
-      {/* ✅ 본문: 남은 영역만 사용 */}
-      <div className="flex-1 min-h-0 overflow-hidden p-5">
-        {/* ✅ 카드 프레임 */}
-        <div className="h-full min-h-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-          <div className="h-full min-h-0 flex overflow-hidden">
-            {/* ===================== 왼쪽 ===================== */}
-            <section className="w-[45%] min-h-0 border-r border-slate-100 bg-slate-100 flex flex-col overflow-hidden">
-              {/* left header */}
-              <div className="shrink-0 px-6 py-5  backdrop-blur">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-slate-800">
-                      시나리오 목록
-                    </h2>
-                    <p className="text-[12px] text-slate-500 font-normal mt-1">
-                      목록에서 선택하거나 새 시나리오를 생성하세요.
-                    </p>
-                  </div>
+      <div className="flex flex-1 min-h-0 mt-6 gap-6 overflow-hidden">
+        <section className="w-[50%] flex flex-col min-h-0 border border-slate-200 rounded-[32px] bg-slate-50/30 overflow-hidden shadow-sm">
+          <ScenarioLeftPanel
+            scenarioData={scenarioData}
+            selectedId={selectedId}
+            showForm={showForm}
+            form={form}
+            errors={errors}
+            products={products}
+            scrollAreaRef={scrollAreaRef}
+            setForm={setForm}
+            onToggleForm={onToggleForm}
+            onSelectScenario={handleSelectScenario}
+            onAddScenario={handleAddScenario}
+            onResetForm={() => setShowForm(false)}
+            onAddItem={handleAddItem}
+            onRemoveItem={handleRemoveItem}
+            onUpdateItem={handleUpdateItem}
+            onCopyScenario={handleCopyScenario}
+            onDeleteScenario={handleDeleteScenario}
+          />
+        </section>
 
-                  <button
-                    onClick={handleToggleForm}
-                    type="button"
-                    className={[
-                      "shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition",
-                      showForm
-                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200/60",
-                    ].join(" ")}
-                  >
-                    {showForm ? <X size={14} /> : <Plus size={14} />}
-                    {showForm ? "닫기" : "새 시나리오"}
-                  </button>
-                </div>
-              </div>
-              {/* left scroll */}
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <ScrollArea ref={scrollAreaRef} className="h-full">
-                  <div className="p-6">
-                    <div id="scroll-top-anchor" className="h-2 w-0" />
-
-                    {/* FORM */}
-                    <div
-                      className={[
-                        "transition-all duration-500 ease-in-out overflow-hidden",
-                        showForm
-                          ? "max-h-[1200px] opacity-100 mb-6"
-                          : "max-h-0 opacity-0 mb-0",
-                      ].join(" ")}
-                    >
-                      <div className="rounded-[28px] border border-blue-100 bg-white p-6 shadow-sm ring-4 ring-blue-50/60 space-y-5">
-                        <div className="space-y-1.5">
-                          <label className="text-[11px] font-black text-slate-100 uppercase tracking-wider ml-1">
-                            Title
-                          </label>
-                          <input
-                            className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                            placeholder="시나리오 제목"
-                            value={form.title}
-                            onChange={(e) =>
-                              setForm({ ...form, title: e.target.value })
-                            }
-                          />
-                          {errors.title && (
-                            <p className="text-xs text-red-500 ml-1">
-                              {errors.title}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">
-                              Date
-                            </label>
-                            <input
-                              type="date"
-                              className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                              value={form.date}
-                              onChange={(e) =>
-                                setForm({ ...form, date: e.target.value })
-                              }
-                            />
-                            {errors.date && (
-                              <p className="text-xs text-red-500 ml-1">
-                                {errors.date}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">
-                              Time
-                            </label>
-                            <input
-                              type="time"
-                              className="w-full bg-slate-50 rounded-2xl px-4 py-3 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                              value={form.time}
-                              onChange={(e) =>
-                                setForm({ ...form, time: e.target.value })
-                              }
-                            />
-                            {errors.time && (
-                              <p className="text-xs text-red-500 ml-1">
-                                {errors.time}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">
-                            Workers
-                          </label>
-                          <div className="relative">
-                            <Users
-                              size={16}
-                              className="absolute left-4 top-3.5 text-slate-400"
-                            />
-                            <input
-                              type="number"
-                              className="w-full bg-slate-50 rounded-2xl pl-11 pr-4 py-3 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                              placeholder="인원"
-                              value={form.maxWorkerCount}
-                              onChange={(e) =>
-                                setForm({
-                                  ...form,
-                                  maxWorkerCount: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                          {errors.maxWorkerCount && (
-                            <p className="text-xs text-red-500 ml-1">
-                              {errors.maxWorkerCount}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 pt-1">
-                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">
-                            Production Items
-                          </label>
-
-                          <div className="space-y-2">
-                            {form.scenarioProductList.map((item, i) => (
-                              <div key={i} className="flex gap-2 items-center">
-                                <select
-                                  className="flex-1 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                                  value={item.productId}
-                                  onChange={(e) =>
-                                    updateItem(i, "productId", e.target.value)
-                                  }
-                                >
-                                  <option value="">품목 선택</option>
-                                  {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <input
-                                  type="number"
-                                  className="w-24 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none ring-1 ring-transparent focus:ring-2 focus:ring-blue-500"
-                                  placeholder="수량"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    updateItem(i, "quantity", e.target.value)
-                                  }
-                                />
-
-                                {form.scenarioProductList.length > 1 && (
-                                  <button
-                                    onClick={() => removeItem(i)}
-                                    type="button"
-                                    className="p-2 rounded-xl text-red-400 hover:bg-red-50"
-                                    title="삭제"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-
-                          <button
-                            onClick={addItem}
-                            type="button"
-                            className="inline-flex items-center gap-1.5 text-sm font-black text-blue-600 hover:text-blue-700"
-                          >
-                            <Plus size={16} /> 품목 추가
-                          </button>
-                        </div>
-
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            onClick={handleAddScenario}
-                            type="button"
-                            className="flex-1 bg-blue-600 text-white font-black py-3 rounded-2xl text-sm shadow-md shadow-blue-200/70 hover:bg-blue-700 active:scale-[0.99] transition"
-                          >
-                            시나리오 생성
-                          </button>
-                          <button
-                            onClick={resetForm}
-                            type="button"
-                            className="px-5 py-3 bg-slate-100 text-slate-600 font-black rounded-2xl text-sm hover:bg-slate-200 active:scale-[0.99] transition"
-                          >
-                            취소
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* LIST */}
-                    <div className="grid grid-cols-1 gap-3">
-                      {scenarioData.map((s) => {
-                        const active = String(selectedId) === String(s.id);
-                        return (
-                          <div
-                            key={s.id}
-                            onClick={() => handleSelectScenario(s.id)}
-                            className={`group relative p-6 border-2 rounded-[28px] cursor-pointer transition-all duration-300 ${
-                              active
-                                ? "bg-white border-blue-500 shadow-2xl translate-x-2"
-                                : "bg-white border-transparent hover:border-slate-200 shadow-sm"
-                            }`}
-                          >
-                            {s.isNew && (
-                              <span className="absolute -top-2 -right-1 bg-yellow-500 text-white text-[10px] px-2.5 py-1 rounded-full font-black animate-pulse z-30">
-                                NEW COPY
-                              </span>
-                            )}
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-3">
-                                <h3
-                                  className={`font-bold text-base transition-colors ${active ? "text-blue-600" : "text-slate-700"}`}
-                                >
-                                  {s.title}
-                                </h3>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                    <Calendar
-                                      size={12}
-                                      className="text-slate-500"
-                                    />
-                                    <span className="text-[11px] font-bold text-slate-500">
-                                      {s.startAt?.slice(0, 10)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-lg">
-                                    <Users
-                                      size={12}
-                                      className="text-blue-500"
-                                    />
-                                    <span className="text-[11px] font-bold text-blue-500">
-                                      {s.maxWorkerCount}명
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div
-                                className={`flex flex-col gap-1 transition-all ${active ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                              >
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copyScenarioHandle(s.id);
-                                  }}
-                                  className="p-2 hover:bg-blue-50 rounded-xl text-slate-400 hover:text-blue-600"
-                                >
-                                  <Copy size={18} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(s.id);
-                                  }}
-                                  className="p-2 hover:bg-red-50 rounded-xl text-slate-400 hover:text-red-500"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </div>
-                            </div>
-                            {active && (
-                              <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-10 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </ScrollArea>
-              </div>
-            </section>
-
-            {/* ===================== 오른쪽 ===================== */}
-            <section className="w-[55%] min-h-0 bg-white flex flex-col">
-              {/* ✅ 오른쪽도 ScrollArea로 통일 */}
-              <div className="flex-1 h-full bg-slate-50/40">
-                <div className="p-3 h-full">
-                  <Information
-                    selectedScenario={selectedScenario}
-                    progress={progress}
-                    running={running}
-                    pending={pending}
-                    onStart={handleStart}
-                    onEdit={(scenario) => setEditScenario(scenario)}
-                    onCancelEdit={() => setEditScenario(null)}
-                    editScenario={editScenario}
-                  />
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
+        <section className="w-[50%] flex flex-col min-h-0 border border-slate-200 rounded-[32px] bg-white overflow-hidden shadow-sm">
+          <ScenarioRightPanel
+            selectedScenario={selectedScenario}
+            onRefreshDetail={handleRefreshDetail}
+            progress={progress}
+            running={running}
+            pending={pending}
+            onStart={() => setRunning(true)}
+            editScenario={editScenario}
+            onEdit={setEditScenario}
+            onCancelEdit={() => setEditScenario(null)}
+          />
+        </section>
       </div>
     </div>
   );

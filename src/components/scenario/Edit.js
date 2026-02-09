@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export default function EditScenarioForm({ scenario, onCancel }) {
+export default function EditScenarioForm({ scenario, onCancel, onRefreshDetail }) {
   const { token } = useToken();
   const [products, setProducts] = useState([]);
 
@@ -75,8 +75,10 @@ export default function EditScenarioForm({ scenario, onCancel }) {
 
     editScenario(token, scenario.id, payload).then(() => {
       window.alert("시나리오가 수정되었습니다.");
-      onCancel();
-      window.location.reload();
+      if (onRefreshDetail) {
+        onRefreshDetail(scenario.id); // 부모의 데이터를 최신화함
+      }
+      onCancel(); // 수정 창을 닫고 정보 화면으로 돌아감
     });
   };
 
