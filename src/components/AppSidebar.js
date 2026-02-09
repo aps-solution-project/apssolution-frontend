@@ -122,7 +122,7 @@ export function AppSidebar() {
           className="flex items-center gap-2 font-bold text-xl cursor-pointer"
           onClick={() => router.push("/dashboard")}
         >
-          <img src="/images/logo.png" alt="logo" className="h-12 w-auto" />
+          <img src="/images/logo.png" alt="logo" className="h-6 w-auto" />
 
           <span className="group-data-[collapsible=icon]:hidden">BakeFlow</span>
         </div>

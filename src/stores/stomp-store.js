@@ -5,18 +5,35 @@ export const useStomp = create((set, get) => ({
 
   totalUnreadCount: 0,
 
-  // 메뉴/경로별 unread 상태
   hasUnread: {
     "/chat/chat-list": false,
   },
 
   currentChatId: null,
 
+  /* =========================
+     현재 보고 있는 채팅방
+  ========================= */
   setCurrentChatId: (id) => set({ currentChatId: id }),
 
+  /* =========================
+     🔥 refresh 전용
+  ========================= */
+  markChatUnread: () =>
+    set((state) => ({
+      hasUnread: {
+        ...state.hasUnread,
+        "/chat/chat-list": true,
+      },
+    })),
+
+  /* =========================
+     🔥 실제 메시지 전용
+  ========================= */
   increaseUnreadIfNeeded: (msg, myUserId) => {
     const { currentChatId, totalUnreadCount, hasUnread } = get();
 
+    if (!msg?.chatId) return;
     if (msg.type === "LEAVE") return;
     if (String(msg.talker?.userId) === String(myUserId)) return;
     if (String(msg.chatId) === String(currentChatId)) return;
@@ -25,11 +42,14 @@ export const useStomp = create((set, get) => ({
       totalUnreadCount: totalUnreadCount + 1,
       hasUnread: {
         ...hasUnread,
-        "/chat/chat-list": true, // 채팅 메뉴에 배지
+        "/chat/chat-list": true,
       },
     });
   },
 
+  /* =========================
+     초기화 / 제어
+  ========================= */
   clearUnread: (path) =>
     set((state) => ({
       hasUnread: {
@@ -38,10 +58,6 @@ export const useStomp = create((set, get) => ({
       },
     })),
 
-  clearStomp: () => set({ stomp: null }),
-
-  setStomp: (newStomp) => set({ stomp: newStomp }),
-
   setTotalUnreadCount: (count) =>
     set({
       totalUnreadCount: count,
@@ -49,4 +65,7 @@ export const useStomp = create((set, get) => ({
         "/chat/chat-list": count > 0,
       },
     }),
+
+  setStomp: (client) => set({ stomp: client }),
+  clearStomp: () => set({ stomp: null }),
 }));
