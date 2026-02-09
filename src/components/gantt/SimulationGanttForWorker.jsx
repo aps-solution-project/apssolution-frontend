@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import LeftPanel from "./LeftPanel";
+import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
 const MINUTES_PER_DAY = 24 * 60; // 1440 minutes
 
-export default function SimulationGantt({ products, scenarioStart }) {
+export default function SimulationGanttForWorker({ products, scenarioStart }) {
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
@@ -35,74 +35,140 @@ export default function SimulationGantt({ products, scenarioStart }) {
     };
   }, []);
 
-  const [openProducts, setOpenProducts] = useState(() => {
+  // 작업자별 open/close 상태 관리
+  const [openWorkers, setOpenWorkers] = useState(() => {
     const list = Array.isArray(products) ? products : [];
-    return Object.fromEntries(list.map((p) => [p.id, true]));
+    const workers = new Set();
+
+    list.forEach((p) => {
+      const schedules = Array.isArray(p.scenarioSchedules)
+        ? p.scenarioSchedules
+        : [];
+      schedules.forEach((s) => {
+        const workerId = s?.worker?.id || "unassigned";
+        workers.add(workerId);
+      });
+    });
+
+    return Object.fromEntries(Array.from(workers).map((w) => [w, true]));
   });
 
   useEffect(() => {
     const list = Array.isArray(products) ? products : [];
-    setOpenProducts((prev) => {
+    const workers = new Set();
+
+    list.forEach((p) => {
+      const schedules = Array.isArray(p.scenarioSchedules)
+        ? p.scenarioSchedules
+        : [];
+      schedules.forEach((s) => {
+        const workerId = s?.worker?.id || "unassigned";
+        workers.add(workerId);
+      });
+    });
+
+    setOpenWorkers((prev) => {
       const next = { ...prev };
-      for (const p of list) if (next[p.id] === undefined) next[p.id] = true;
+      workers.forEach((w) => {
+        if (next[w] === undefined) next[w] = true;
+      });
 
       for (const k of Object.keys(next)) {
-        if (!list.find((p) => p.id === k)) delete next[k];
+        if (!workers.has(k)) delete next[k];
       }
       return next;
     });
   }, [products]);
 
-  const toggleProduct = (id) =>
-    setOpenProducts((p) => ({ ...p, [id]: !p[id] }));
+  const toggleWorker = (workerId) =>
+    setOpenWorkers((p) => ({ ...p, [workerId]: !p[workerId] }));
 
+  // 작업자 기준으로 rows 생성 (작업자 > 작업)
   const rows = useMemo(() => {
     const list = Array.isArray(products) ? products : [];
     let r = 0;
 
-    return list.flatMap((p) => {
+    // 1. 모든 작업을 작업자별로 그룹화
+    const workerTasksMap = new Map();
+
+    list.forEach((p) => {
       const schedules = Array.isArray(p.scenarioSchedules)
         ? p.scenarioSchedules
         : [];
 
-      const groupRow = {
-        type: "group",
-        key: `group:${p.id}`,
-        row: r++,
-        productId: p.id,
-        productName: p.name || p.id,
-        count: schedules.length,
-        open: Boolean(openProducts[p.id]),
-      };
+      schedules.forEach((s, idx) => {
+        const workerId = s?.worker?.id || "unassigned";
+        const workerName = s?.worker?.name || "미배정";
 
-      if (!openProducts[p.id]) return [groupRow];
+        if (!workerTasksMap.has(workerId)) {
+          workerTasksMap.set(workerId, {
+            workerId,
+            workerName,
+            tasks: [],
+          });
+        }
 
-      const taskRows = schedules.map((s, idx) => {
         const duration =
           Number(s?.scheduleTask?.duration) ||
           minutesBetween(s?.startAt, s?.endAt) ||
           0;
 
-        return {
+        workerTasksMap.get(workerId).tasks.push({
           type: "task",
-          key: `task:${p.id}:${s?.id ?? idx}`,
-          row: r++,
+          key: `task:${workerId}:${p.id}:${s?.id ?? idx}`,
+          row: -1, // will be set later
+          workerId,
+          workerName,
           productId: p.id,
           productName: p.name || p.id,
           taskName: s?.scheduleTask?.name || "작업",
-          workerName: s?.worker?.name || "미배정",
           toolId: s?.toolId || "미지정",
           startAt: s?.startAt,
           endAt: s?.endAt,
           start: minutesFromStart(s?.startAt, scenarioStart),
           duration,
           raw: s,
-        };
+        });
       });
-
-      return [groupRow, ...taskRows];
     });
-  }, [products, openProducts, scenarioStart]);
+
+    // 2. 작업자별로 정렬 (미배정을 마지막에)
+    const workerGroups = Array.from(workerTasksMap.values()).sort((a, b) => {
+      if (a.workerId === "unassigned") return 1;
+      if (b.workerId === "unassigned") return -1;
+      return a.workerName.localeCompare(b.workerName);
+    });
+
+    // 3. rows 생성
+    const allRows = [];
+
+    workerGroups.forEach((workerGroup) => {
+      const { workerId, workerName, tasks } = workerGroup;
+
+      // 작업자 그룹 row
+      const groupRow = {
+        type: "group",
+        key: `group:${workerId}`,
+        row: r++,
+        workerId,
+        workerName,
+        count: tasks.length,
+        open: Boolean(openWorkers[workerId]),
+      };
+
+      allRows.push(groupRow);
+
+      // 열려있으면 작업들 추가
+      if (openWorkers[workerId]) {
+        tasks.forEach((task) => {
+          task.row = r++;
+          allRows.push(task);
+        });
+      }
+    });
+
+    return allRows;
+  }, [products, openWorkers, scenarioStart]);
 
   const totalMinutes = useMemo(() => {
     let maxEnd = 0;
@@ -198,11 +264,11 @@ export default function SimulationGantt({ products, scenarioStart }) {
             style={{ width: panelWidth, minWidth: panelWidth }}
             className="sticky left-0 z-30 relative shrink-0 border-r border-slate-200 bg-white"
           >
-            <LeftPanel
+            <LeftPanelForWorker
               width={panelWidth}
               products={products}
-              open={openProducts}
-              onToggle={toggleProduct}
+              open={openWorkers}
+              onToggle={toggleWorker}
               rows={rows}
               rowHeight={ROW_HEIGHT}
               headerHeight={HEADER_HEIGHT}

@@ -3,16 +3,22 @@ export default function TimeScale({
   totalMinutes = 24 * 60,
   minorStep = 5,
   scenarioStart,
+  dayOffset = 0, // New prop: offset in minutes for the current day
 }) {
   const width = Math.max(1, totalMinutes * minuteWidth);
 
   const ticks = [];
 
+  // Calculate the actual start time for this day
+  const dayStartMinutes = dayOffset;
+
   // scenarioStart의 다음 정각 또는 30분을 찾기
   let firstLabelOffset = 0;
   if (scenarioStart) {
-    const startDate = new Date(scenarioStart);
-    const minutes = startDate.getMinutes();
+    const dayStartDate = new Date(
+      new Date(scenarioStart).getTime() + dayStartMinutes * 60000,
+    );
+    const minutes = dayStartDate.getMinutes();
 
     // 다음 30분 단위까지의 분 계산
     if (minutes === 0) {
@@ -28,16 +34,19 @@ export default function TimeScale({
     const isHour = m % 60 === 0;
     const isHalf = m % 30 === 0;
 
+    // Calculate actual time including day offset
+    const actualMinutes = dayStartMinutes + m;
+
     let label;
     if (scenarioStart) {
       const startDate = new Date(scenarioStart);
-      const currentDate = new Date(startDate.getTime() + m * 60000);
+      const currentDate = new Date(startDate.getTime() + actualMinutes * 60000);
       const hh = String(currentDate.getHours()).padStart(2, "0");
       const mi = String(currentDate.getMinutes()).padStart(2, "0");
       label = `${hh}:${mi}`;
     } else {
-      const hh = String(Math.floor(m / 60)).padStart(2, "0");
-      const mi = String(m % 60).padStart(2, "0");
+      const hh = String(Math.floor(actualMinutes / 60)).padStart(2, "0");
+      const mi = String(actualMinutes % 60).padStart(2, "0");
       label = `${hh}:${mi}`;
     }
 

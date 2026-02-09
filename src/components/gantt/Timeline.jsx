@@ -12,6 +12,7 @@ export default function Timeline({
   onBodyScroll,
   scenarioStart,
   totalMinutes = 24 * 60,
+  dayOffset = 0,
   rowHeight = 44,
   headerHeight = 44,
 }) {
@@ -131,6 +132,7 @@ export default function Timeline({
           minuteWidth={minuteWidth}
           totalMinutes={totalMinutes}
           scenarioStart={scenarioStart}
+          dayOffset={dayOffset}
           minorStep={minorStep}
         />
       </div>
@@ -163,20 +165,56 @@ export default function Timeline({
 
           {visibleRows.map((r, i) => {
             const top = (start + i) * rowHeight;
-            if (r.type !== "group") return null;
 
-            return (
-              <div
-                key={`bg:${r.key}`}
-                className="absolute left-0 right-0 pointer-events-none"
-                style={{
-                  top,
-                  height: rowHeight,
-                  background:
-                    "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
-                }}
-              />
-            );
+            // workerGroup 배경
+            if (r.type === "workerGroup") {
+              return (
+                <div
+                  key={`bg:${r.key}`}
+                  className="absolute left-0 right-0 pointer-events-none"
+                  style={{
+                    top,
+                    height: rowHeight,
+                    background:
+                      "linear-gradient(to right, rgba(15,23,42,0.08), rgba(15,23,42,0))",
+                  }}
+                />
+              );
+            }
+
+            // productGroup 배경
+            if (r.type === "productGroup") {
+              return (
+                <div
+                  key={`bg:${r.key}`}
+                  className="absolute left-0 right-0 pointer-events-none"
+                  style={{
+                    top,
+                    height: rowHeight,
+                    background:
+                      "linear-gradient(to right, rgba(59,130,246,0.05), rgba(59,130,246,0))",
+                  }}
+                />
+              );
+            }
+
+            // group 배경 (품목별 뷰용)
+            if (r.type === "group") {
+              return (
+                <div
+                  key={`bg:${r.key}`}
+                  className="absolute left-0 right-0 pointer-events-none"
+                  style={{
+                    top,
+                    height: rowHeight,
+                    background:
+                      "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
+                  }}
+                />
+              );
+            }
+
+            return null;
           })}
 
           {visibleRows.map((r, i) => (
@@ -187,6 +225,7 @@ export default function Timeline({
               rowHeight={rowHeight}
               scenarioStart={scenarioStart}
               totalMinutes={totalMinutes}
+              dayOffset={dayOffset}
             />
           ))}
         </div>

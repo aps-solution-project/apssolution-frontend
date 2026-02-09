@@ -1,4 +1,7 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,13 +21,23 @@ import {
   RefreshCwIcon,
   CheckCircle2Icon,
   CircleDashedIcon,
+  Package,
+  Users,
 } from "lucide-react";
 
-import WorkerGantt from "@/components/gantt/WorkerGantt";
+import SimulationGantt from "@/components/gantt/SimulationGantt";
+import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
 import scenarioMock from "@/data/scenarioMock.json";
 
 export default function WorkerIndex() {
   const [data, setData] = useState(scenarioMock);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL에서 뷰 모드 읽기, 기본값은 "worker"
+  const [viewMode, setViewMode] = useState(
+    searchParams.get("view") || "worker",
+  );
 
   const scenario = data?.scenario || {};
   const products = data?.scenarioProductList || [];
@@ -83,6 +96,20 @@ export default function WorkerIndex() {
     console.log("Refreshing data...");
     setData({ ...scenarioMock });
   };
+
+  // 뷰 모드 변경 핸들러 - URL도 함께 업데이트
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    router.push(`?view=${mode}`, { scroll: false });
+  };
+
+  // URL 변경 감지하여 뷰 모드 동기화
+  useEffect(() => {
+    const view = searchParams.get("view");
+    if (view && (view === "product" || view === "worker")) {
+      setViewMode(view);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -249,9 +276,56 @@ export default function WorkerIndex() {
           </Card>
         </div>
 
-        {/* Gantt Chart - 작업자별 */}
+        {/* Gantt Chart - 뷰 모드 전환 */}
         <Card className="overflow-hidden">
-          <WorkerGantt workers={workers} scenarioStart={scenario.startAt} />
+          {/* 뷰 모드 전환 버튼 */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50/50">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+                <Button
+                  variant={viewMode === "worker" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleViewModeChange("worker")}
+                  className="gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  작업자별
+                </Button>
+                <Button
+                  variant={viewMode === "product" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleViewModeChange("product")}
+                  className="gap-2"
+                >
+                  <Package className="h-4 w-4" />
+                  품목별
+                </Button>
+              </div>
+
+              <div className="h-4 w-px bg-slate-200 mx-2" />
+
+              <p className="text-xs text-slate-500">
+                {viewMode === "worker"
+                  ? "작업자별로 스케줄을 확인합니다"
+                  : "품목별로 스케줄을 확인합니다"}
+              </p>
+            </div>
+          </div>
+
+          {/* Gantt Chart */}
+          {viewMode === "worker" ? (
+            <SimulationGanttForWorker
+              key="worker-gantt"
+              products={products}
+              scenarioStart={scenario.startAt}
+            />
+          ) : (
+            <SimulationGantt
+              key="product-gantt"
+              products={products}
+              scenarioStart={scenario.startAt}
+            />
+          )}
         </Card>
       </div>
     </div>

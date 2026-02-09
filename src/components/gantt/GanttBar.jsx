@@ -6,15 +6,37 @@ export default function GanttBar({
   rowHeight,
   scenarioStart,
   totalMinutes,
+  dayOffset = 0, // New prop: offset in minutes for the current day
 }) {
   if (!row || row.type !== "task") return null;
 
+  const taskStart = row.start || 0;
+  const taskDuration = row.duration || 0;
+  const taskEnd = taskStart + taskDuration;
+
+  // Calculate the visible portion of the task for the current day
+  const dayStart = dayOffset;
+  const dayEnd = dayOffset + totalMinutes;
+
+  // Check if task overlaps with current day
+  if (taskEnd <= dayStart || taskStart >= dayEnd) {
+    return null; // Task not visible in this day
+  }
+
+  // Calculate visible start and duration
+  const visibleStart = Math.max(taskStart, dayStart);
+  const visibleEnd = Math.min(taskEnd, dayEnd);
+  const visibleDuration = visibleEnd - visibleStart;
+
+  // Position relative to current day
+  const relativeStart = visibleStart - dayStart;
+
   const left = clamp(
-    (row.start || 0) * minuteWidth,
+    relativeStart * minuteWidth,
     0,
     totalMinutes * minuteWidth,
   );
-  const width = Math.max(2, (row.duration || 0) * minuteWidth);
+  const width = Math.max(2, visibleDuration * minuteWidth);
 
   const barHeight = 28;
   const top = row.row * rowHeight + (rowHeight - barHeight) / 2;
@@ -22,8 +44,12 @@ export default function GanttBar({
   const { bg, text, border } = toolColor(row.toolId, row.taskName);
 
   // scenarioStart 기준 실제 시간으로 표시
-  const startLabel = formatFromScenario(scenarioStart, row.start || 0);
+  const startLabel = formatFromScenario(scenarioStart, visibleStart);
   const showText = width >= 90;
+
+  // Visual indicator if task continues from previous day or to next day
+  const continuesFromPrev = taskStart < dayStart;
+  const continuesToNext = taskEnd > dayEnd;
 
   return (
     <div
@@ -37,12 +63,20 @@ export default function GanttBar({
           backgroundColor: bg,
           borderColor: border,
           borderWidth: 1,
-          borderRadius: 6,
+          borderRadius: continuesFromPrev
+            ? continuesToNext
+              ? 0
+              : "0 6px 6px 0"
+            : continuesToNext
+              ? "6px 0 0 6px"
+              : 6,
+          borderLeftWidth: continuesFromPrev ? 0 : 1,
+          borderRightWidth: continuesToNext ? 0 : 1,
         }}
       >
         <div
           style={{
-            width: 8,
+            width: continuesFromPrev ? 0 : 8,
             height: "100%",
             backgroundColor: border,
             flexShrink: 0,
@@ -70,6 +104,16 @@ export default function GanttBar({
             </span>
           )}
         </div>
+
+        {/* Continuation indicators */}
+        {continuesToNext && (
+          <div
+            className="absolute right-0 top-0 bottom-0 w-1"
+            style={{
+              background: `linear-gradient(to right, transparent, ${border})`,
+            }}
+          />
+        )}
       </div>
     </div>
   );
