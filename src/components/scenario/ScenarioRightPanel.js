@@ -268,7 +268,13 @@ export default function ScenarioRightPannel({
             />
           </div>
           <button
-            onClick={onStart}
+            onClick={() => {
+              if (isOptimal || isFeasible) {
+                router.push(`/simulations/${selectedScenario.id}`);
+                return;
+              }
+              onStart();
+            }}
             // 실행 중이거나 분석 대기 중일 때는 클릭 방지
             disabled={
               running ||
@@ -287,13 +293,7 @@ export default function ScenarioRightPannel({
             {isOptimal || isFeasible ? (
               <>
                 <FileText size={18} />
-                <button
-                  onClick={() =>
-                    router.push(`/simulations/${selectedScenario.id}`)
-                  }
-                >
-                  결과 레포트 보기
-                </button>
+                결과 레포트 보기
               </>
             ) : running || pending ? (
               <>
