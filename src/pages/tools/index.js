@@ -21,12 +21,15 @@ import {
 } from "@/components/ui/pagination";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Plus, Trash2, Save, RefreshCw, FileInput } from "lucide-react";
+import { useRouter } from "next/router";
 
 export default function ToolManagementPage() {
   useAuthGuard();
   // 1. 페이징 관련 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const router = useRouter();
+  const { highlight } = router.query;
   const [tools, setTools] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const token = useToken((state) => state.token);
@@ -35,6 +38,7 @@ export default function ToolManagementPage() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = tools.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(tools.length / itemsPerPage);
+  const tableRef = useRef(null);
 
   // 1. 데이터 로드
   useEffect(() => {
