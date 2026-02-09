@@ -8,7 +8,6 @@ import {
   Megaphone,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 
@@ -120,7 +119,14 @@ export default function GlobalSearch() {
             title="Notices"
             icon={<Megaphone size={14} />}
             items={results.notices}
-            path="/community/posts"
+            path="/notice"
+            onLink={handleItemClick}
+          />
+          <SearchSection
+            title="Tools"
+            icon={<Wrench size={14} />}
+            items={results.tools}
+            path="/resources/tools"
             onLink={handleItemClick}
           />
           {Object.values(results).every((arr) => !arr || arr.length === 0) && (
@@ -142,22 +148,35 @@ function SearchSection({ title, icon, items, path, onLink }) {
         {icon} {title}
       </div>
       <div className="space-y-0.5">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onLink(`${path}/${item.id}`)}
-            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors group"
-          >
-            <div className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600">
-              {item.title || item.name}
-            </div>
-            {item.description && (
-              <div className="text-xs text-slate-400 truncate leading-relaxed">
-                {item.description}
+        {items.map((item) => {
+          // 🌟 Tools처럼 상세 페이지가 없는 경우 처리
+          // path가 '/resources/tools'라면 id를 붙이지 않고 이동
+          const targetPath =
+            path === "/resources/tools"
+              ? `${path}?highlight=${item.id}` // 쿼리 파라미터 추가
+              : `${path}/${item.id}`;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onLink(targetPath)}
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors group"
+            >
+              <div className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600">
+                {item.title || item.name || item.id}
+                {item.category?.name && (
+                  <span className="ml-2 text-[10px] bg-indigo-50 text-indigo-500 px-1.5 py-0.5 rounded uppercase">
+                    {item.category.name}
+                  </span>
+                )}
               </div>
-            )}
-          </button>
-        ))}
+              {item.description && (
+                <div className="text-xs text-slate-400 truncate mt-0.5">
+                  {item.description}
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
