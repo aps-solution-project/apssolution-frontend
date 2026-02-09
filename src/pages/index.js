@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     if (token) {
-      router.replace("/scenarios/create/form");
+      router.replace("/dashboard");
     } else {
       router.replace("/login");
     }

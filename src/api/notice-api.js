@@ -82,31 +82,29 @@ async function getNotice(token, noticeId) {
 }
 
 async function searchNotice(token, keyword, scenarioId) {
-  const resp = await fetch(
-    `${URL}/api/notices/search?keyword=${keyword}&scenarioId=${scenarioId}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-  if (!resp.ok) {
-    throw new Error("공지사항 검색에 실패했습니다.");
-  }
-  return resp.json();
-}
+  const params = new URLSearchParams();
 
-async function getMyNotice(token) {
-  const resp = await fetch(`${URL}/api/notices/myNotice`, {
+  // keyword 있을 때만 추가
+  if (keyword && keyword.trim() !== "") {
+    params.append("keyword", keyword.trim());
+  }
+
+  // scenarioId 있을 때만 추가
+  if (scenarioId) {
+    params.append("scenarioId", scenarioId);
+  }
+
+  const resp = await fetch(`${URL}/api/notices/search?${params.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+
   if (!resp.ok) {
-    throw new Error("내가 쓴 공지사항 조회에 실패했습니다.");
+    throw new Error("공지사항 검색에 실패했습니다.");
   }
+
   return resp.json();
 }
 

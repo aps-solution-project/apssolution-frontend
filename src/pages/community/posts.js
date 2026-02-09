@@ -12,7 +12,7 @@ import { useToken } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { MessageSquare, PenLine } from "lucide-react"; // 아이콘 추가
+import { MessageSquare, Paperclip, PenLine } from "lucide-react"; // 아이콘 추가
 
 export default function PostsPage() {
   useAuthGuard();
@@ -41,7 +41,7 @@ export default function PostsPage() {
 
   return (
     // 1. 배경색 분리 방지를 위해 min-h-full bg-white 적용
-    <div className="min-h-screen bg-white -m-8 p-8 space-y-6">
+    <div className="space-y-6">
       {/* 헤더 섹션: 더 깔끔하고 세련되게 변경 */}
       <div className="flex justify-between items-end border-b pb-6 border-slate-100">
         <div className="space-y-1">
@@ -107,12 +107,25 @@ export default function PostsPage() {
                     <span className="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
                       {post.title}
                     </span>
-                    {post.commentCount > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full ring-1 ring-indigo-100">
-                        <MessageSquare size={10} fill="currentColor" />
-                        {post.commentCount}
-                      </span>
-                    )}
+
+                    {/* 배지 컨테이너: 댓글과 첨부파일을 묶어줍니다 */}
+                    <div className="flex items-center gap-1.5">
+                      {/* 댓글 개수 표시 */}
+                      {post.commentCount > 0 && (
+                        <span className="flex items-center gap-1 text-[11px] font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ring-1 ring-amber-100">
+                          <MessageSquare size={10} fill="currentColor" />
+                          {post.commentCount}
+                        </span>
+                      )}
+
+                      {/* 첨부파일 개수 표시 추가 */}
+                      {post.attachmentCount > 0 && (
+                        <span className="flex items-center gap-1 text-[11px] font-black text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full ring-1 ring-sky-100">
+                          <Paperclip size={10} strokeWidth={3} />
+                          {post.attachmentCount}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="py-4">

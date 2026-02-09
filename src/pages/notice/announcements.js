@@ -1,100 +1,168 @@
-import { getNotices } from "@/api/notice-api";
+import { useEffect, useState, useRef } from "react";
+import { getNotices, searchNotice } from "@/api/notice-api";
+import { useToken, useAccount } from "@/stores/account-store";
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToken } from "@/stores/account-store";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
+  Paperclip,
+  Megaphone,
+  Search,
+  MegaphoneIcon,
+  Plus,
+} from "lucide-react";
 
 export default function AnnouncementsPage() {
-  useAuthGuard();
   const router = useRouter();
-  const [notices, setNotices] = useState([]);
   const { token } = useToken();
-  // 임시 데이터 (API 붙이면 제거)
+  const { role } = useAccount();
+
+  const [keyword, setKeyword] = useState("");
+  const [notices, setNotices] = useState([]);
+  const debounceTimer = useRef(null);
+
   useEffect(() => {
     if (!token) return;
-    getNotices(token).then((obj) => {
-      setNotices(obj.notices);
-    });
+
+    getNotices(token)
+      .then((res) => setNotices(res.notices))
+      .catch(() => setNotices([]));
   }, [token]);
 
+  // 검색 debounce 적용된 API 호출
+  useEffect(() => {
+    if (!token) return;
+
+    const fetch = async () => {
+      if (keyword.trim()) {
+        const res = await searchNotice(token, keyword);
+        setNotices(res);
+      } else {
+        const res = await getNotices(token);
+        setNotices(res.notices);
+      }
+    };
+
+    fetch();
+  }, [keyword, token]);
+
   return (
-    <div className="min-h-screen bg-white -m-8 p-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-end gap-3">
-          <h1 className="text-2xl font-bold text-slate-800">공지사항</h1>
-          <span className="text-sm font-medium text-muted-foreground pb-1">
-            전체
-            <span className="text-blue-600 font-bold">{notices.length}</span>건
-          </span>
+    <div className="flex flex-col flex-1 min-h-0">
+      {/* 페이지 컨테이너 */}
+      <div className="space-y-6">
+        {/* 헤더 섹션 */}
+        <div className="flex justify-between items-end border-b pb-6 border-slate-100">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <MegaphoneIcon size={20} />
+              <span className="text-xs font-black uppercase tracking-widest">
+                Notice
+              </span>
+            </div>
+
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              공지사항
+            </h1>
+
+            <p className="text-sm text-slate-400 font-medium">
+              회사의 주요 소식을 안내합니다. (총{" "}
+              <span className="text-slate-600 font-bold">{notices.length}</span>
+              건)
+            </p>
+          </div>
+          {token && role?.toUpperCase() !== "WORKER" && (
+            <Button
+              onClick={() => router.push("/notice/announcements-create")}
+              className="h-11 px-10 rounded-full bg-indigo-500 text-white font-bold shadow-sm hover:bg-indigo-700 transition"
+            >
+              <span>
+                <Plus size={16} />
+              </span>
+
+              <span>공지 작성</span>
+            </Button>
+          )}
         </div>
-        <Button
-          className="bg-indigo-900 hover:bg-indigo-500 text-white cursor-pointer"
-          onClick={() => router.push("/notice/announcements-create")}
-        >
-          공지 작성
-        </Button>
-      </div>
 
-      <div className="rounded-xl border border-slate-100 overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead className="w-[80px] font-bold text-slate-600">
-                ID
-              </TableHead>
-              <TableHead className="font-bold text-slate-600">제목</TableHead>
-              <TableHead className="w-[140px] font-bold text-slate-600">
-                작성자
-              </TableHead>
-              <TableHead className="w-[160px] font-bold text-slate-600">
-                작성일
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+        {/* 검색 */}
+        <div className="max-w-2xl">
+          <div className="relative">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="공지사항을 검색하세요"
+              className="
+              w-full h-12 pl-12 pr-5
+              rounded-full
+              bg-white
+              border border-slate-200
+              shadow-sm
+              focus:outline-none
+              focus:ring-2 focus:ring-indgo-500
+            "
+              spellCheck={false}
+            />
+          </div>
+        </div>
 
-          <TableBody>
-            {notices.map((notice) => (
-              <TableRow
-                key={notice.id}
-                className="cursor-pointer hover:bg-slate-50/80 transition-colors"
-                onClick={() => router.push(`/notice/${notice.id}`)}
-              >
-                <TableCell lassName="font-mono text-slate-500">
-                  {notice.id}
-                </TableCell>
-                <TableCell className="font-semibold text-slate-700">
-                  {notice.title}
-                </TableCell>
-                <TableCell className="text-slate-600">
-                  {notice.writer.id}
-                </TableCell>
-                <TableCell className="text-slate-500">
-                  <span>{notice.createdAt.split("T")[0]}</span>
-                </TableCell>
-              </TableRow>
-            ))}
-
-            {notices.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-32 text-center text-slate-400"
+        {/* 공지 카드 목록 */}
+        <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {notices.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center py-20 text-slate-400">
+              <Megaphone className="w-10 h-10 mb-4 opacity-40" />
+              등록된 공지사항이 없습니다.
+            </div>
+          ) : (
+            notices.map(
+              ({ id, title, writer, createdAt, attachmentCount }) => (
+                <article
+                  key={id}
+                  onClick={() => router.push(`/notice/${id}`)}
+                  className="
+                  group cursor-pointer
+                  rounded-3xl
+                  bg-white
+                  p-6
+                  shadow-sm
+                  hover:shadow-xl
+                  hover:-translate-y-1
+                  transition-all
+                "
                 >
-                  등록된 공지사항이 없습니다.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  {/* 상단 메타 */}
+                  <div className="flex justify-between items-center text-xs text-slate-400 mb-3">
+                    <span className="font-mono">#{id}</span>
+                    <time>{createdAt?.slice(0, 10)}</time>
+                  </div>
+
+                  {/* 제목 */}
+                  <h2
+                    className="
+                  text-lg font-bold text-slate-800
+                  mb-4 line-clamp-2
+                  group-hover:text-indigo-600 transition-colors
+                "
+                  >
+                    {title}
+                  </h2>
+
+                  {/* 하단 */}
+                  <footer className="flex justify-between items-center text-sm text-slate-600">
+                    <span className="font-medium">{writer?.name || "익명"}</span>
+
+                    {attachmentCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-600 text-xs font-bold">
+                        <Paperclip size={14} />
+                        {attachmentCount}
+                      </span>
+                    )}
+                  </footer>
+                </article>
+              ),
+            )
+          )}
+        </main>
       </div>
     </div>
   );

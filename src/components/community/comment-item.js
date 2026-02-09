@@ -80,7 +80,7 @@ export default function CommentItem({
               <div className="flex items-center gap-2">
                 {/* 이름과 시간을 나란히 배치 */}
                 <span className="text-sm font-bold text-slate-900">
-                  {comment.writerId}
+                  {comment.writerName}
                 </span>
                 <span className="text-[10px] text-slate-400">
                   {new Date(comment.createdAt).toLocaleString()}

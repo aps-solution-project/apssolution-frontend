@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import { useStomp } from "@/stores/stomp-store";
 import {
   Sidebar,
   SidebarContent,
@@ -14,26 +15,17 @@ import {
   Home,
   NotebookPen,
   MessageSquareMore,
-  Settings,
-  Columns3,
-  UserCog,
-  Inbox,
-  FlaskConical,
-  Flag,
-  BookMarked,
+  ClipboardCheck,
+  CalendarDays,
+  FlaskRound,
+  Brain,
   ContactRound,
   Captions,
+  BookOpenText,
+  MessagesSquare,
 } from "lucide-react";
 import { useAccount } from "@/stores/account-store";
-
-const items = [
-  { title: "대시보드", url: "/dashboard", icon: Home },
-  { title: "시나리오", url: "/scenarios/create/form" },
-  { title: "시뮬레이션 결과", url: "/simulations" },
-  { title: "게시판", url: "/notice/announcements", icon: NotebookPen },
-  { title: "채팅", url: "/chat/chat-list", icon: MessageSquareMore },
-  { title: "설정", url: "/settings", icon: Settings },
-];
+import Badge from "@/components/common/Badge";
 
 export function AppSidebar() {
   const router = useRouter();
@@ -41,6 +33,12 @@ export function AppSidebar() {
   const userRole = account?.role;
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
   const isWorker = userRole === "WORKER";
+  const hasUnread = useStomp((state) => state.hasUnread);
+  const isLoginPage = router.pathname === "/login";
+
+  if (isLoginPage) {
+    return null;
+  }
 
   const getFilteredSections = () => {
     const sections = [];
@@ -53,17 +51,21 @@ export function AppSidebar() {
           {
             label: "시나리오 설계",
             href: "/scenarios/create/form",
-            icon: FlaskConical,
+            icon: FlaskRound,
           },
-          { label: "시뮬레이션 결과", href: "/simulations", icon: Settings },
+          {
+            label: "시뮬레이션 결과",
+            href: "/simulations",
+            icon: BookOpenText,
+          },
         ],
       });
     }
 
     // 2. 게시판 (공통 + 권한 분기)
     const boardItems = [
-      { label: "공지사항", href: "/notice/announcements", icon: Flag },
-      { label: "자료실", href: "/resources/products", icon: BookMarked },
+      { label: "공지사항", href: "/notice/announcements", icon: NotebookPen },
+      { label: "자료실", href: "/resources/products", icon: Brain },
     ];
     if (isWorker) {
       boardItems.push({
@@ -79,8 +81,8 @@ export function AppSidebar() {
       sections.push({
         title: "나의 업무",
         items: [
-          { label: "근무표", href: "/schedule", icon: Settings },
-          { label: "배포 작업", href: "/deployment", icon: Settings },
+          { label: "근무표", href: "/schedule", icon: CalendarDays },
+          { label: "배포 작업", href: "/deployment", icon: ClipboardCheck },
         ],
       });
     }
@@ -94,7 +96,7 @@ export function AppSidebar() {
           href: "/chat/chat-create",
           icon: MessageSquareMore,
         },
-        { label: "채팅방 목록", href: "/chat/chat-list", icon: Settings },
+        { label: "채팅방 목록", href: "/chat/chat-list", icon: MessagesSquare },
       ],
     });
 
@@ -120,7 +122,7 @@ export function AppSidebar() {
           className="flex items-center gap-2 font-bold text-xl cursor-pointer"
           onClick={() => router.push("/dashboard")}
         >
-          <img src="/images/logo.png" alt="logo" className="h-6 w-auto" />
+          <img src="/images/logo.png" alt="logo" className="h-12 w-auto" />
 
           <span className="group-data-[collapsible=icon]:hidden">BakeFlow</span>
         </div>
@@ -136,14 +138,14 @@ export function AppSidebar() {
               <SidebarMenu>
                 {section.items.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    {/* 💡 tooltip={item.label}을 넣어줘야 접었을 때 이름이 나옵니다 */}
                     <SidebarMenuButton
                       tooltip={item.label}
                       onClick={() => router.push(item.href)}
                       isActive={router.pathname === item.href}
                     >
-                      {item.icon && <item.icon className="w-2 h-2" />}
+                      {item.icon && <item.icon className="w-4 h-4" />}
                       <span>{item.label}</span>
+                      <Badge show={hasUnread[item.href]} />
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

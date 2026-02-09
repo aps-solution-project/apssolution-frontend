@@ -3,7 +3,6 @@ import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { LogOut, Menu, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import {
   DropdownMenu,
@@ -41,10 +40,7 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-50 h-16 w-full border-b bg-background">
         <div className="flex h-full items-center gap-3 px-4 sm:gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard")}
-          >
+          <Button variant="ghost" onClick={() => router.push("/dashboard")}>
             <img
               src="/images/Sponge Bob.jpeg"
               alt="BakeFlow Logo"
