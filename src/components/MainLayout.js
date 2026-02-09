@@ -2,8 +2,19 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { UserNav } from "./UserNav";
+import { usePathname } from "next/navigation";
 
 export default function MainLayout({ children }) {
+  const pathname = usePathname();
+
+  // 로그인 페이지 여부 확인
+  const isLoginPage = pathname === "/login";
+
+  // 1. 로그인 페이지일 경우: 아무런 레이아웃 없이 내용만 렌더링
+  if (isLoginPage) {
+    return <main className="w-full h-screen">{children}</main>;
+  }
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden">
