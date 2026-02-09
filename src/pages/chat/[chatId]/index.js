@@ -50,6 +50,16 @@ export default function ChatRoom() {
   const fileInputRef = useRef(null);
   const documentInputRef = useRef(null);
 
+  useEffect(() => {
+    if (!chatId) return;
+
+    setCurrentChatId(chatId);
+
+    return () => {
+      setCurrentChatId(null);
+    };
+  }, [chatId, setCurrentChatId]);
+
   // 1. 초기 데이터 로드
   useEffect(() => {
     if (!chatId || !token) return;

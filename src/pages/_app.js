@@ -1,8 +1,5 @@
 import "@/styles/globals.css";
 
-import Header from "@/components/layout/Header";
-import SideBar from "@/components/layout/SideBar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
@@ -10,7 +7,7 @@ import { Client } from "@stomp/stompjs";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
-import MainLayout from "@/main-layout";
+import MainLayout from "@/components/MainLayout";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();

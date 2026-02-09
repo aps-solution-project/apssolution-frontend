@@ -236,14 +236,23 @@ export default function DashboardPage() {
             {notices.map((notice) => (
               <div
                 key={notice.id}
-                className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between"
+                onClick={() =>
+                  router.push(`/notice/${notice.id}`)
+                }
+                className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between cursor-pointer hover:border-indigo-200 hover:shadow-sm hover:-translate-y-0.5 transition-all group"
               >
-                <span className="text-sm font-bold text-slate-600 truncate mr-2">
+                <span className="text-sm font-bold text-slate-600 truncate mr-2 group-hover:text-indigo-600 transition-colors">
                   {notice.title}
                 </span>
-                <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
-                  {formatRelativeTime(notice.createdAt)}
-                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
+                    {formatRelativeTime(notice.createdAt)}
+                  </span>
+                  <ArrowRight
+                    size={14}
+                    className="text-slate-200 group-hover:text-indigo-400"
+                  />
+                </div>
               </div>
             ))}
           </div>

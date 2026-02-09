@@ -41,9 +41,8 @@ export default function AnnouncementDetailPage() {
 
   return (
     // 1. bg-white와 min-h-full로 바닥까지 흰색 배경 통일
-    <div className="min-h-full bg-white w-full p-8">
+    <div className="bg-white w-full">
       <div className="max-w-4xl mx-auto space-y-8">
-        
         {/* 상단 버튼 영역: 목록보기와 삭제버튼을 양 끝으로 확실히 분리 */}
         <div className="flex justify-between items-center border-b pb-4 border-slate-100">
           <Button
@@ -80,11 +79,13 @@ export default function AnnouncementDetailPage() {
             <h1 className="text-4xl font-black text-slate-900 leading-tight mb-6">
               {notice.title}
             </h1>
-            
+
             <div className="flex items-center gap-3 p-4 bg-slate-50/50 rounded-2xl">
               <Avatar className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
                 <AvatarImage
-                  src={"http://192.168.0.20:8080" + notice.writer.profileImageUrl}
+                  src={
+                    "http://192.168.0.20:8080" + notice.writer.profileImageUrl
+                  }
                   className="object-cover h-full w-full"
                 />
                 <AvatarFallback className="bg-slate-200 text-slate-500 flex items-center justify-center">
@@ -97,8 +98,11 @@ export default function AnnouncementDetailPage() {
                 </span>
                 <span className="text-xs text-slate-400 font-medium">
                   {new Date(notice.createdAt).toLocaleString("ko-KR", {
-                    year: "numeric", month: "long", day: "numeric",
-                    hour: "2-digit", minute: "2-digit"
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </div>
@@ -113,9 +117,12 @@ export default function AnnouncementDetailPage() {
         {/* 첨부 파일 섹션: 카드 스타일 유지하되 더 깔끔하게 */}
         <div className="pt-10 border-t border-slate-100">
           <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            Attachments <span className="text-blue-600 font-mono">[{notice.attachments?.length || 0}]</span>
+            Attachments{" "}
+            <span className="text-blue-600 font-mono">
+              [{notice.attachments?.length || 0}]
+            </span>
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {notice.attachments && notice.attachments.length > 0 ? (
               notice.attachments.map((file, index) => {
