@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
+import { getProducts } from "@/api/product-api";
 import {
-  getScenarios,
-  getScenario,
-  postScenario,
-  deleteScenario,
   copyScenario,
+  deleteScenario,
+  getScenario,
+  getScenarios,
+  postScenario,
   simulateScenario,
 } from "@/api/scenario-api";
-import { getProducts } from "@/api/product-api";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
+import { useEffect, useRef, useState } from "react";
 
 import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
 import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
-import { Activity, DraftingCompass } from "lucide-react";
 import { useStomp } from "@/stores/stomp-store";
+import { DraftingCompass } from "lucide-react";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
@@ -24,6 +24,7 @@ export default function ScenariosCreateForm() {
   const [scenarioData, setScenarioData] = useState([]);
   const [selectedId, setSelectedId] = useState(0);
   const [selectedScenario, setSelectedScenario] = useState(null);
+  const [isLoadingScenario, setIsLoadingScenario] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [errors, setErrors] = useState({});
@@ -51,15 +52,17 @@ export default function ScenariosCreateForm() {
   useEffect(() => {
     if (!stomp || !stomp.connected) return;
 
-    console.log("📡 시나리오 스톰프 구독 시작:!!!!!!");
+    console.log("📡 시나리오 stomp 구독 시작:!!!!!!");
 
     const sub = stomp.subscribe(
       `/topic/scenario/${selectedScenario?.id}`,
       (frame) => {
         const body = JSON.parse(frame.body);
         if (body.message === "refresh") {
+          setIsLoadingScenario(true);
           getScenario(token, selectedScenario?.id).then((obj) => {
             setSelectedScenario(obj.scenario);
+            setIsLoadingScenario(false);
           });
         }
       },
@@ -80,11 +83,14 @@ export default function ScenariosCreateForm() {
   useEffect(() => {
     if (!selectedId || !token) {
       setSelectedScenario(null);
+      setIsLoadingScenario(false);
       return;
     }
-    getScenario(token, selectedId).then((res) =>
-      setSelectedScenario(res.scenario),
-    );
+    setIsLoadingScenario(true);
+    getScenario(token, selectedId).then((res) => {
+      setSelectedScenario(res.scenario);
+      setIsLoadingScenario(false);
+    });
   }, [selectedId, token]);
 
   const handleStartSimulation = async () => {
@@ -262,9 +268,12 @@ export default function ScenariosCreateForm() {
   const handleRefreshDetail = (id) => {
     if (!id || !token) return;
 
+    setIsLoadingScenario(true);
+
     // 1. 상세 데이터 다시 가져오기 (우측 패널용)
     getScenario(token, id).then((res) => {
       setSelectedScenario(res.scenario);
+      setIsLoadingScenario(false);
 
       // 2. 목록 데이터도 부분 업데이트 (좌측 패널용)
       setScenarioData((prev) =>
@@ -322,6 +331,7 @@ export default function ScenariosCreateForm() {
         <section className="w-[50%] flex flex-col min-h-0 border border-slate-200 rounded-[32px] bg-white overflow-hidden shadow-sm">
           <ScenarioRightPanel
             selectedScenario={selectedScenario}
+            isLoadingScenario={isLoadingScenario}
             onRefreshDetail={handleRefreshDetail}
             progress={progress}
             displayProgress={displayProgress}

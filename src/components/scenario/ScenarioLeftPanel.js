@@ -1,5 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Copy, Plus, Trash2, Users, X } from "lucide-react";
+import { Spinner } from "../ui/spinner";
 
 export default function ScenarioLeftPanel({
   scenarioData,
