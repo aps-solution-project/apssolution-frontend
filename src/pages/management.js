@@ -1,3 +1,7 @@
+import { Loader2, MoreHorizontal, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,8 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, MoreHorizontal, Search } from "lucide-react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 
 import {
   flexRender,
@@ -27,17 +29,17 @@ import {
 } from "@tanstack/react-table";
 
 import { createAccount, deleteAccount, getAllAccounts } from "@/api/auth-api";
-import { useAccount, useToken } from "@/stores/account-store";
-import { useEffect, useState } from "react";
 import AdminProfileEditModal from "@/components/layout/modal/adminProfileSetting";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useAccount, useToken } from "@/stores/account-store";
 
 export default function ManagementPage() {
   useAuthGuard();
 
   const token = useToken((state) => state.token);
   const loginAccount = useAccount((state) => state.account);
-
   if (!loginAccount) return null;
+
   const isAdmin = loginAccount.role === "ADMIN";
 
   const [data, setData] = useState([]);
@@ -46,20 +48,61 @@ export default function ManagementPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [target, setTarget] = useState({});
+
   const [newAccount, setNewAccount] = useState({
     name: "",
     email: "",
     role: "WORKER",
   });
 
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [target, setTarget] = useState({});
+  /* =========================
+     컬럼 정의
+  ========================= */
+
+  const roleColor = {
+    ADMIN: "bg-red-500/10 text-red-600",
+    PLANNER: "bg-blue-500/10 text-blue-600",
+    WORKER: "bg-emerald-500/10 text-emerald-600",
+  };
 
   const columns = [
-    { accessorKey: "accountId", header: "사원번호" },
-    { accessorKey: "accountName", header: "이름" },
-    { accessorKey: "role", header: "권한" },
-    { accessorKey: "accountEmail", header: "이메일" },
+    {
+      accessorKey: "accountId",
+      header: "사원번호",
+      cell: ({ row }) => (
+        <span className="font-mono text-sm">{row.getValue("accountId")}</span>
+      ),
+    },
+    {
+      accessorKey: "accountName",
+      header: "이름",
+      cell: ({ row }) => (
+        <span className="font-medium">{row.getValue("accountName")}</span>
+      ),
+    },
+    {
+      accessorKey: "role",
+      header: "권한",
+      cell: ({ row }) => {
+        const role = row.getValue("role");
+        return (
+          <Badge variant="outline" className={roleColor[role]}>
+            {role}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "accountEmail",
+      header: "이메일",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.getValue("accountEmail")}
+        </span>
+      ),
+    },
     {
       accessorKey: "workedAt",
       header: "입사일",
@@ -70,27 +113,31 @@ export default function ManagementPage() {
     },
     {
       accessorKey: "resignedAt",
-      header: "퇴사일",
+      header: "상태",
       cell: ({ row }) =>
-        row.getValue("resignedAt")
-          ? new Date(row.getValue("resignedAt")).toLocaleDateString()
-          : "-",
+        row.getValue("resignedAt") ? (
+          <Badge variant="secondary">퇴직 | {row.getValue("resignedAt")}</Badge>
+        ) : (
+          <Badge className="bg-emerald-500/10 text-emerald-600">재직중</Badge>
+        ),
     },
     {
       id: "option",
-      header: "옵션",
+      header: "",
       cell: ({ row }) => {
         const account = row.original;
 
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal />
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>옵션</DropdownMenuLabel>
+
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>관리</DropdownMenuLabel>
+
               <DropdownMenuItem
                 onClick={() => {
                   setProfileOpen(true);
@@ -107,9 +154,10 @@ export default function ManagementPage() {
               >
                 상세 정보
               </DropdownMenuItem>
-              {!account.resignedAt && (
+
+              {!account.resignedAt && isAdmin && (
                 <DropdownMenuItem
-                  className="text-red-600"
+                  className="text-red-600 focus:text-red-600"
                   onClick={() => account.onDelete(account.accountId)}
                 >
                   퇴사 처리
@@ -121,6 +169,10 @@ export default function ManagementPage() {
       },
     },
   ];
+
+  /* =========================
+     데이터 로딩
+  ========================= */
 
   useEffect(() => {
     if (!token) return;
@@ -138,14 +190,14 @@ export default function ManagementPage() {
     fetchAccounts();
   }, [token]);
 
+  /* =========================
+     이벤트
+  ========================= */
+
   const handleSave = async () => {
-    if (!isAdmin) {
-      alert("ADMIN만 가능합니다.");
-      return;
-    }
+    if (!isAdmin) return alert("ADMIN만 가능합니다.");
 
     setIsSaving(true);
-
     try {
       const res = await createAccount(
         {
@@ -157,29 +209,19 @@ export default function ManagementPage() {
       );
 
       setData((prev) => [{ ...res, onDelete: handleDelete }, ...prev]);
-
       alert(
-        "사원 계정이 생성되었습니다.\n임시 비밀번호는 입력한 이메일로 발송되었습니다.",
+        "사원 계정이 생성되었습니다.\n임시 비밀번호는 이메일로 발송되었습니다.",
       );
 
       setIsAdding(false);
-      setNewAccount({
-        name: "",
-        email: "",
-        role: "WORKER",
-      });
-    } catch (e) {
-      alert(e.message);
+      setNewAccount({ name: "", email: "", role: "WORKER" });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (accountId) => {
-    if (!isAdmin) {
-      alert("ADMIN만 가능합니다.");
-      return;
-    }
+    if (!isAdmin) return alert("ADMIN만 가능합니다.");
     if (!confirm("정말 퇴사 처리하시겠습니까?")) return;
 
     await deleteAccount(accountId, token);
@@ -204,24 +246,37 @@ export default function ManagementPage() {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  /* =========================
+     렌더링
+  ========================= */
+
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between py-4">
-        <div className="relative w-64">
-          <Input
-            placeholder="사원번호 검색"
-            value={table.getColumn("accountId")?.getFilterValue() ?? ""}
-            onChange={(e) =>
-              table.getColumn("accountId")?.setFilterValue(e.target.value)
-            }
-            className="pl-8"
-          />
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="w-full space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">사원 관리</h2>
+          <p className="text-sm text-muted-foreground">
+            사원 계정 생성 및 권한 관리
+          </p>
         </div>
-        <Button variant="outline" onClick={() => setIsAdding(true)}>
-          + 사원 추가하기
-        </Button>
+
+        {isAdmin && (
+          <Button onClick={() => setIsAdding(true)}>+ 사원 추가</Button>
+        )}
       </div>
+
+      <div className="relative w-64">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="사원번호 검색"
+          className="pl-8"
+          value={table.getColumn("accountId")?.getFilterValue() ?? ""}
+          onChange={(e) =>
+            table.getColumn("accountId")?.setFilterValue(e.target.value)
+          }
+        />
+      </div>
+
       <AdminProfileEditModal
         open={profileOpen}
         onOpenChange={setProfileOpen}
@@ -251,7 +306,6 @@ export default function ManagementPage() {
                 <TableCell className="text-muted-foreground">
                   자동 생성
                 </TableCell>
-
                 <TableCell>
                   <Input
                     placeholder="사원 이름"
@@ -261,7 +315,6 @@ export default function ManagementPage() {
                     }
                   />
                 </TableCell>
-
                 <TableCell>
                   <select
                     className="border rounded px-2 py-1"
@@ -275,23 +328,17 @@ export default function ManagementPage() {
                     <option value="ADMIN">ADMIN</option>
                   </select>
                 </TableCell>
-
                 <TableCell>
                   <Input
-                    placeholder="이메일 (ex: example@naver.com)"
+                    placeholder="이메일"
                     value={newAccount.email}
                     onChange={(e) =>
                       setNewAccount({ ...newAccount, email: e.target.value })
                     }
                   />
                 </TableCell>
-
-                <TableCell className="text-muted-foreground">
-                  자동 설정
-                </TableCell>
-
                 <TableCell>-</TableCell>
-
+                <TableCell>-</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleSave} disabled={isSaving}>
@@ -304,7 +351,6 @@ export default function ManagementPage() {
                         "저장"
                       )}
                     </Button>
-
                     <Button
                       size="sm"
                       variant="outline"
@@ -318,7 +364,10 @@ export default function ManagementPage() {
             )}
 
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                className={row.original.resignedAt ? "opacity-60" : ""}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
