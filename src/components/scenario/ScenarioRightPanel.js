@@ -1,6 +1,7 @@
 import { publishScenario, unpublishScenario } from "@/api/scenario-api";
 import Edit from "@/components/scenario/Edit";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
 import { useToken } from "@/stores/account-store";
 import {
   Activity,
@@ -11,13 +12,14 @@ import {
   Loader2,
   Package,
   Play,
-  Send,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function ScenarioRightPannel({
   selectedScenario,
+  isLoadingScenario,
   editScenario,
   progress,
   running,
@@ -34,6 +36,7 @@ export default function ScenarioRightPannel({
   const isFeasible = selectedScenario?.status === "FEASIBLE";
   const isPending = isReady ? pending : true;
   const displayProgress = isReady ? progress : 100;
+  const router = useRouter();
 
   useEffect(() => {
     if (!selectedScenario) {
@@ -72,6 +75,16 @@ export default function ScenarioRightPannel({
     return (
       <div className="h-full flex items-center justify-center text-slate-400 font-medium bg-white rounded-[32px] border border-dashed border-slate-200">
         시나리오를 선택해주세요.
+      </div>
+    );
+  }
+
+  // 로딩 중일 때 스피너 표시
+  if (isLoadingScenario) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-white rounded-[32px]">
+        <Spinner className="size-20" />
+        <p className="mt-4 text-slate-400 font-medium">시나리오 로딩 중...</p>
       </div>
     );
   }
@@ -274,7 +287,13 @@ export default function ScenarioRightPannel({
             {isOptimal || isFeasible ? (
               <>
                 <FileText size={18} />
-                결과 레포트 보기
+                <button
+                  onClick={() =>
+                    router.push(`/simulations/${selectedScenario.id}`)
+                  }
+                >
+                  결과 레포트 보기
+                </button>
               </>
             ) : running || pending ? (
               <>
