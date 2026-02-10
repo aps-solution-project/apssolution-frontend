@@ -1,9 +1,10 @@
+import { editScenarioSchedule } from "@/api/scenario-api";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
-import { editScenarioSchedule } from "@/api/scenario-api";
+import { getAllTools } from "@/api/tool-api";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
@@ -15,6 +16,7 @@ export default function SimulationGanttForWorker({
   workers = [],
   token,
 }) {
+  const [tools, setTools] = useState([]);
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
@@ -64,16 +66,34 @@ export default function SimulationGanttForWorker({
     };
   }, []);
 
-  // 도구 목록 추출
-  const tools = useMemo(() => {
-    const s = new Set();
-    for (const p of Array.isArray(products) ? products : [])
-      for (const sc of p.scenarioSchedules || [])
-        if (sc.toolId) s.add(sc.toolId);
-    return Array.from(s)
-      .sort()
-      .map((id) => ({ id, name: id }));
-  }, [products]);
+  // 도구 목록 추출: 가능한 경우 도구의 categoryId/name 포함
+  // const tools = useMemo(() => {
+  //   const map = new Map();
+  //   for (const p of Array.isArray(products) ? products : []) {
+  //     for (const sc of p.scenarioSchedules || []) {
+  //       const id = sc?.tool?.id ?? sc?.toolId;
+  //       if (!id) continue;
+  //       const key = String(id);
+  //       if (!map.has(key)) {
+  //         map.set(key, {
+  //           id: key,
+  //           name: sc?.tool?.name ?? String(id),
+  //           categoryId: sc?.tool?.categoryId ?? sc?.tool?.category?.id ?? null,
+  //         });
+  //       }
+  //     }
+  //   }
+  //   return Array.from(map.values()).sort((a, b) =>
+  //     String(a.name).localeCompare(String(b.name)),
+  //   );
+  // }, [products]);
+
+  useEffect(() => {
+    if (!token) return;
+    getAllTools(token).then((obj) => {
+      setTools(() => obj.tools);
+    });
+  }, [token]);
 
   const [openWorkers, setOpenWorkers] = useState(() => {
     const list = Array.isArray(products) ? products : [];
@@ -161,6 +181,8 @@ export default function SimulationGanttForWorker({
           duration,
           workerName,
           toolId: ov?.toolId || s?.toolId || "미지정",
+          // 제품의 categoryId를 바에 포함시켜 GanttBar 등에서 사용 가능하게 함
+          productCategoryId: p?.categoryId ?? p?.category?.id ?? null,
           raw: s,
         });
       });
