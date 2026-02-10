@@ -1,20 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 function Collapse({ open, duration = 260, children }) {
   const innerRef = useRef(null);
@@ -80,78 +65,9 @@ export default function LeftPanel({
   headerHeight = 44,
   scrollRef,
   onScroll,
-
-  workers = [],
-  tools = [],
-  onSaveAssignment,
 }) {
   const containerRef = useRef(null);
   const innerRef = scrollRef || containerRef;
-
-  const [activeKey, setActiveKey] = useState(null);
-  const [overrides, setOverrides] = useState({});
-
-  const [draft, setDraft] = useState({
-    rowKey: null,
-    scheduleId: null,
-    productId: null,
-    workerId: "",
-    toolId: "",
-  });
-
-  const hasWorkerOptions = Array.isArray(workers) && workers.length > 0;
-  const hasToolOptions = Array.isArray(tools) && tools.length > 0;
-
-  const resolveWorkerName = (workerId) => {
-    const w = (workers || []).find((x) => String(x.id) === String(workerId));
-    return w?.name || (workerId ? String(workerId) : "미배정");
-  };
-
-  const openEditorForRow = (row) => {
-    const ov = overrides[row.key];
-    const initialWorkerId = ov?.workerId ?? row.workerId ?? "";
-    const initialToolId = ov?.toolId ?? row.toolId ?? "";
-
-    setDraft({
-      rowKey: row.key,
-      scheduleId: row.scheduleId ?? null,
-      productId: row.productId,
-      workerId: initialWorkerId,
-      toolId: initialToolId,
-    });
-    setActiveKey(row.key);
-  };
-
-  const closeEditor = () => {
-    setActiveKey(null);
-    setDraft({
-      rowKey: null,
-      scheduleId: null,
-      productId: null,
-      workerId: "",
-      toolId: "",
-    });
-  };
-
-  const handleSave = async () => {
-    const { rowKey, scheduleId, productId, workerId, toolId } = draft;
-    if (!rowKey) return;
-
-    setOverrides((prev) => ({
-      ...prev,
-      [rowKey]: {
-        workerId,
-        workerName: resolveWorkerName(workerId),
-        toolId,
-      },
-    }));
-
-    try {
-      await onSaveAssignment?.({ scheduleId, productId, workerId, toolId });
-    } finally {
-      closeEditor();
-    }
-  };
 
   const groups = useMemo(() => {
     if (Array.isArray(rows) && rows.length) {
@@ -196,11 +112,9 @@ export default function LeftPanel({
       const taskRows = schedules.map((s, idx) => ({
         type: "task",
         key: `task:${p.id}:${s?.id ?? idx}`,
-        scheduleId: s?.id ?? null,
         productId: p.id,
         productName: p.name || p.id,
         taskName: s?.scheduleTask?.name || "작업",
-        workerId: s?.worker?.id ?? "",
         workerName: s?.worker?.name || "미배정",
         toolId: s?.toolId || "",
       }));
@@ -264,7 +178,6 @@ export default function LeftPanel({
                     onClick={() => onToggle?.(g.productId)}
                     className={[
                       "w-full h-full flex items-center justify-between rounded-xl px-3 transition",
-
                       isOpen
                         ? "bg-sky-50 text-sky-900"
                         : "bg-white text-slate-800 hover:bg-sky-50/50",
@@ -294,10 +207,6 @@ export default function LeftPanel({
                 <Collapse open={isOpen}>
                   <div>
                     {g.tasks.map((r, i) => {
-                      const ov = overrides[r.key];
-                      const shownWorkerName = ov?.workerName ?? r.workerName;
-                      const shownToolId = ov?.toolId ?? r.toolId;
-
                       const isFirst = i === 0;
                       const isLast = i === g.tasks.length - 1;
 
@@ -316,172 +225,9 @@ export default function LeftPanel({
                               <div className="text-sm font-medium text-slate-800 truncate leading-5">
                                 {r.taskName}
                               </div>
-
-                              <Popover
-                                open={activeKey === r.key}
-                                onOpenChange={(v) => {
-                                  if (v) openEditorForRow(r);
-                                  else if (activeKey === r.key) closeEditor();
-                                }}
-                              >
-                                <PopoverTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="mt-0.5 text-[11px] text-slate-500 hover:text-slate-700 truncate text-left leading-4"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title="작업자/도구 변경"
-                                  >
-                                    {shownWorkerName} ·{" "}
-                                    {shownToolId || "미지정"}
-                                  </button>
-                                </PopoverTrigger>
-
-                                <PopoverContent
-                                  align="start"
-                                  side="bottom"
-                                  className="w-72 p-3"
-                                  onOpenAutoFocus={(e) => e.preventDefault()}
-                                >
-                                  <div className="text-sm font-semibold text-slate-800">
-                                    작업자 / 도구 변경
-                                  </div>
-                                  <div className="text-[11px] text-slate-500 mt-0.5">
-                                    {r.taskName}
-                                  </div>
-
-                                  <div className="mt-3 space-y-2">
-                                    {/* Worker */}
-                                    <div className="space-y-1">
-                                      <div className="text-[11px] font-medium text-slate-600">
-                                        작업자(workerId)
-                                      </div>
-
-                                      {hasWorkerOptions ? (
-                                        <Select
-                                          value={
-                                            draft.rowKey === r.key
-                                              ? draft.workerId
-                                              : ""
-                                          }
-                                          onValueChange={(v) =>
-                                            setDraft((prev) => ({
-                                              ...prev,
-                                              workerId: v,
-                                            }))
-                                          }
-                                        >
-                                          <SelectTrigger className="h-9">
-                                            <SelectValue placeholder="작업자 선택" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {workers.map((w) => (
-                                              <SelectItem
-                                                key={String(w.id)}
-                                                value={String(w.id)}
-                                              >
-                                                {w.name} ({String(w.id)})
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      ) : (
-                                        <Input
-                                          className="h-9"
-                                          placeholder="workerId 입력"
-                                          value={
-                                            draft.rowKey === r.key
-                                              ? draft.workerId
-                                              : ""
-                                          }
-                                          onChange={(e) =>
-                                            setDraft((prev) => ({
-                                              ...prev,
-                                              workerId: e.target.value,
-                                            }))
-                                          }
-                                        />
-                                      )}
-                                    </div>
-
-                                    {/* Tool */}
-                                    <div className="space-y-1">
-                                      <div className="text-[11px] font-medium text-slate-600">
-                                        도구(toolId)
-                                      </div>
-
-                                      {hasToolOptions ? (
-                                        <Select
-                                          value={
-                                            draft.rowKey === r.key
-                                              ? draft.toolId
-                                              : ""
-                                          }
-                                          onValueChange={(v) =>
-                                            setDraft((prev) => ({
-                                              ...prev,
-                                              toolId: v,
-                                            }))
-                                          }
-                                        >
-                                          <SelectTrigger className="h-9">
-                                            <SelectValue placeholder="도구 선택" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {tools.map((t) => (
-                                              <SelectItem
-                                                key={String(t.id)}
-                                                value={String(t.id)}
-                                              >
-                                                {t.name
-                                                  ? `${t.name} (${t.id})`
-                                                  : String(t.id)}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      ) : (
-                                        <Input
-                                          className="h-9"
-                                          placeholder="toolId 입력 (예: T-TBL-STS-001)"
-                                          value={
-                                            draft.rowKey === r.key
-                                              ? draft.toolId
-                                              : ""
-                                          }
-                                          onChange={(e) =>
-                                            setDraft((prev) => ({
-                                              ...prev,
-                                              toolId: e.target.value,
-                                            }))
-                                          }
-                                        />
-                                      )}
-                                    </div>
-
-                                    <div className="flex items-center justify-end gap-2 pt-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          closeEditor();
-                                        }}
-                                      >
-                                        취소
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          handleSave();
-                                        }}
-                                      >
-                                        저장
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
+                              <div className="mt-0.5 text-[11px] text-slate-400 truncate leading-4">
+                                미지정
+                              </div>
                             </div>
                           </div>
 

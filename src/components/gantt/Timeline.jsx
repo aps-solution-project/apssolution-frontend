@@ -15,6 +15,9 @@ export default function Timeline({
   dayOffset = 0,
   rowHeight = 44,
   headerHeight = 44,
+  workers = [],
+  tools = [],
+  onBarChange,
 }) {
   const localScaleRef = useRef(null);
   const localBodyRef = useRef(null);
@@ -166,7 +169,6 @@ export default function Timeline({
           {visibleRows.map((r, i) => {
             const top = (start + i) * rowHeight;
 
-            // workerGroup 배경
             if (r.type === "workerGroup") {
               return (
                 <div
@@ -182,7 +184,6 @@ export default function Timeline({
               );
             }
 
-            // productGroup 배경
             if (r.type === "productGroup") {
               return (
                 <div
@@ -198,7 +199,6 @@ export default function Timeline({
               );
             }
 
-            // group 배경 (품목별 뷰용)
             if (r.type === "group") {
               return (
                 <div
@@ -226,6 +226,9 @@ export default function Timeline({
               scenarioStart={scenarioStart}
               totalMinutes={totalMinutes}
               dayOffset={dayOffset}
+              workers={workers}
+              tools={tools}
+              onBarChange={onBarChange}
             />
           ))}
         </div>
