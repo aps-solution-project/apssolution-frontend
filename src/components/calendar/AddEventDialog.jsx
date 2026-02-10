@@ -19,71 +19,86 @@ import {
 } from "@/components/ui/select";
 import { getShiftType } from "@/lib/date";
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
+export default function AddEventDialog({
+  defaultDateKey,
+  onAdd,
+  trigger,
+  editEvent,
+}) {
   const [open, setOpen] = useState(false);
 
   const init = useMemo(
     () => ({
       title: "",
       date: defaultDateKey || "",
-      start: "10:00",
-      end: "11:00",
+      startTime: "07:00",
+      endTime: "22:00",
       location: "",
       color: "blue",
       shift: "day",
-      todosText: "",
-      participantsText: "",
+      description: "",
     }),
     [defaultDateKey],
   );
 
   const [form, setForm] = useState(init);
 
+  // 수정 모드: editEvent가 있으면 폼에 채움
+  useEffect(() => {
+    if (editEvent && open) {
+      setForm({
+        title: editEvent.title || "",
+        date: editEvent.date || defaultDateKey || "",
+        startTime: editEvent.startTime || "10:00",
+        endTime: editEvent.endTime || "11:00",
+        location: editEvent.location || "",
+        color: editEvent.color || "blue",
+        shift: editEvent.shift || "day",
+        description: editEvent.description || "",
+      });
+    }
+  }, [editEvent, open, defaultDateKey]);
+
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   // 시작 시간 변경 시 shift 자동 감지 및 색상 자동 설정
   useEffect(() => {
-    const detectedShift = getShiftType(form.start);
+    const detectedShift = getShiftType(form.startTime);
     if (detectedShift) {
       setForm((p) => ({
         ...p,
         shift: detectedShift,
-        color: detectedShift === "night" ? "night" : p.color === "night" ? "blue" : p.color,
+        color:
+          detectedShift === "night"
+            ? "night"
+            : p.color === "night"
+              ? "blue"
+              : p.color,
       }));
     }
-  }, [form.start]);
+  }, [form.startTime]);
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.title.trim()) return;
 
-    const todos = form.todosText
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((text) => ({ id: uid(), text, done: false }));
-
-    const participants = form.participantsText
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    onAdd({
-      id: uid(),
+    const eventData = {
       title: form.title.trim(),
       date: form.date || defaultDateKey,
-      start: form.start,
-      end: form.end,
+      startTime: form.startTime,
+      endTime: form.endTime,
       location: form.location.trim(),
       color: form.color,
       shift: form.shift,
-      reminder: "2hr",
-      participants,
-      todos,
-    });
+      description: form.description.trim(),
+      todos: editEvent?.todos || [],
+    };
+
+    // 수정 모드면 id 포함
+    if (editEvent?.id != null) {
+      eventData.id = editEvent.id;
+    }
+
+    await onAdd(eventData);
 
     setOpen(false);
     setForm(init);
@@ -96,7 +111,7 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
       <DialogContent className="sm:max-w-[520px] rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-slate-800 font-bold">
-            Add event
+            {editEvent ? "Edit event" : "Add event"}
           </DialogTitle>
         </DialogHeader>
 
@@ -129,22 +144,19 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
               <Label className="text-slate-600 font-semibold text-xs">
                 Color
               </Label>
-              <Select
-                value={form.color}
-                onValueChange={(v) => set("color", v)}
-              >
+              <Select value={form.color} onValueChange={(v) => set("color", v)}>
                 <SelectTrigger className="rounded-xl border-slate-200">
                   <SelectValue placeholder="Color" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="blue">🔵 Blue</SelectItem>
-                  <SelectItem value="sky">🩵 Sky</SelectItem>
-                  <SelectItem value="violet">🟣 Violet</SelectItem>
-                  <SelectItem value="pink">🩷 Pink</SelectItem>
-                  <SelectItem value="rose">🌹 Rose</SelectItem>
-                  <SelectItem value="amber">🟡 Amber</SelectItem>
-                  <SelectItem value="teal">🩶 Teal</SelectItem>
-                  <SelectItem value="night">🌙 Night (Blue)</SelectItem>
+                  <SelectItem value="blue">Blue</SelectItem>
+                  <SelectItem value="sky"> Sky</SelectItem>
+                  <SelectItem value="violet">Violet</SelectItem>
+                  <SelectItem value="pink"> Pink</SelectItem>
+                  <SelectItem value="rose"> Rose</SelectItem>
+                  <SelectItem value="amber"> Amber</SelectItem>
+                  <SelectItem value="teal">Teal</SelectItem>
+                  <SelectItem value="night"> Night (Blue)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -156,8 +168,8 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
                 Start
               </Label>
               <Input
-                value={form.start}
-                onChange={(e) => set("start", e.target.value)}
+                value={form.startTime}
+                onChange={(e) => set("startTime", e.target.value)}
                 placeholder="10:00"
                 className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100"
               />
@@ -167,8 +179,8 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
                 End
               </Label>
               <Input
-                value={form.end}
-                onChange={(e) => set("end", e.target.value)}
+                value={form.endTime}
+                onChange={(e) => set("endTime", e.target.value)}
                 placeholder="11:00"
                 className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100"
               />
@@ -177,10 +189,7 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
               <Label className="text-slate-600 font-semibold text-xs">
                 Shift
               </Label>
-              <Select
-                value={form.shift}
-                onValueChange={(v) => set("shift", v)}
-              >
+              <Select value={form.shift} onValueChange={(v) => set("shift", v)}>
                 <SelectTrigger className="rounded-xl border-slate-200">
                   <SelectValue />
                 </SelectTrigger>
@@ -221,24 +230,13 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
 
           <div className="grid gap-2">
             <Label className="text-slate-600 font-semibold text-xs">
-              Participants (comma separated)
-            </Label>
-            <Input
-              value={form.participantsText}
-              onChange={(e) => set("participantsText", e.target.value)}
-              placeholder="Alex, Jordan, Sam"
-              className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-slate-600 font-semibold text-xs">
-              Todos (one per line)
+              Description
             </Label>
             <Textarea
-              value={form.todosText}
-              onChange={(e) => set("todosText", e.target.value)}
-              rows={3}
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              rows={2}
+              placeholder="일정 설명..."
               className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100"
             />
           </div>
@@ -255,7 +253,7 @@ export default function AddEventDialog({ defaultDateKey, onAdd, trigger }) {
               onClick={submit}
               className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-200"
             >
-              Create
+              {editEvent ? "Save" : "Create"}
             </Button>
           </div>
         </div>

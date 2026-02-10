@@ -16,7 +16,10 @@ const tone = {
 
 export default function EventChip({ event, onClick, rightSlot }) {
   const cls = tone[event.color] || tone.blue;
-  const time = event.start && event.end ? `${event.start} - ${event.end}` : "";
+  const time =
+    event.startTime && event.endTime
+      ? `${event.startTime} - ${event.endTime}`
+      : "";
 
   return (
     <button onClick={onClick} className="w-full text-left">

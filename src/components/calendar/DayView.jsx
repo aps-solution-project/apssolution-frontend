@@ -113,8 +113,8 @@ export default function DayView({ dateKey, events = [], onSelectEvent }) {
 
             {/* events */}
             {events.map((ev) => {
-              const s = clamp(timeToMinutes(ev.start) - startMin, 0, total);
-              const e = clamp(timeToMinutes(ev.end) - startMin, 0, total);
+              const s = clamp(timeToMinutes(ev.startTime) - startMin, 0, total);
+              const e = clamp(timeToMinutes(ev.endTime) - startMin, 0, total);
               const top = (s / total) * H;
               const height = Math.max(28, ((e - s) / total) * H);
 
@@ -134,7 +134,7 @@ export default function DayView({ dateKey, events = [], onSelectEvent }) {
                 >
                   <div className="font-bold truncate">{ev.title}</div>
                   <div className="opacity-70 text-[11px]">
-                    {ev.start} - {ev.end}
+                    {ev.startTime} - {ev.endTime}
                   </div>
                   {ev.location ? (
                     <div className="opacity-70 text-[11px] truncate">

@@ -5,17 +5,67 @@ const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /* ── event card color map ── */
 const cardColors = {
-  blue:   { bg: "bg-blue-50",   border: "border-l-blue-400",   text: "text-blue-800",   sub: "text-blue-500" },
-  sky:    { bg: "bg-sky-50",    border: "border-l-sky-400",    text: "text-sky-800",    sub: "text-sky-500" },
-  pink:   { bg: "bg-pink-50",   border: "border-l-pink-400",   text: "text-pink-800",   sub: "text-pink-500" },
-  rose:   { bg: "bg-rose-50",   border: "border-l-rose-400",   text: "text-rose-800",   sub: "text-rose-500" },
-  amber:  { bg: "bg-amber-50",  border: "border-l-amber-400",  text: "text-amber-800",  sub: "text-amber-600" },
-  violet: { bg: "bg-violet-50", border: "border-l-violet-400", text: "text-violet-800", sub: "text-violet-500" },
-  teal:   { bg: "bg-teal-50",   border: "border-l-teal-400",   text: "text-teal-800",   sub: "text-teal-500" },
-  slate:  { bg: "bg-slate-50",  border: "border-l-slate-400",  text: "text-slate-800",  sub: "text-slate-500" },
+  blue: {
+    bg: "bg-blue-50",
+    border: "border-l-blue-400",
+    text: "text-blue-800",
+    sub: "text-blue-500",
+  },
+  sky: {
+    bg: "bg-sky-50",
+    border: "border-l-sky-400",
+    text: "text-sky-800",
+    sub: "text-sky-500",
+  },
+  pink: {
+    bg: "bg-pink-50",
+    border: "border-l-pink-400",
+    text: "text-pink-800",
+    sub: "text-pink-500",
+  },
+  rose: {
+    bg: "bg-rose-50",
+    border: "border-l-rose-400",
+    text: "text-rose-800",
+    sub: "text-rose-500",
+  },
+  amber: {
+    bg: "bg-amber-50",
+    border: "border-l-amber-400",
+    text: "text-amber-800",
+    sub: "text-amber-600",
+  },
+  violet: {
+    bg: "bg-violet-50",
+    border: "border-l-violet-400",
+    text: "text-violet-800",
+    sub: "text-violet-500",
+  },
+  teal: {
+    bg: "bg-teal-50",
+    border: "border-l-teal-400",
+    text: "text-teal-800",
+    sub: "text-teal-500",
+  },
+  slate: {
+    bg: "bg-slate-50",
+    border: "border-l-slate-400",
+    text: "text-slate-800",
+    sub: "text-slate-500",
+  },
   /* shift */
-  day:    { bg: "bg-amber-50",  border: "border-l-amber-400",  text: "text-amber-900",  sub: "text-amber-600" },
-  night:  { bg: "bg-blue-50",   border: "border-l-blue-500",   text: "text-blue-900",   sub: "text-blue-500" },
+  day: {
+    bg: "bg-amber-50",
+    border: "border-l-amber-400",
+    text: "text-amber-900",
+    sub: "text-amber-600",
+  },
+  night: {
+    bg: "bg-blue-50",
+    border: "border-l-blue-500",
+    text: "text-blue-900",
+    sub: "text-blue-500",
+  },
 };
 
 function ShiftBadge({ shift }) {
@@ -50,14 +100,19 @@ function EventCard({ event, onClick }) {
       ].join(" ")}
     >
       <div className="flex items-center gap-1.5 mb-0.5">
-        <span className={["text-[11px] font-bold truncate leading-tight", c.text].join(" ")}>
+        <span
+          className={[
+            "text-[11px] font-bold truncate leading-tight",
+            c.text,
+          ].join(" ")}
+        >
           {event.title}
         </span>
       </div>
       <div className="flex items-center gap-2">
-        {event.start ? (
+        {event.startTime ? (
           <span className={["text-[10px]", c.sub].join(" ")}>
-            ⏱ {event.start} - {event.end}
+            ⏱ {event.startTime} - {event.endTime}
           </span>
         ) : null}
         {event.shift ? <ShiftBadge shift={event.shift} /> : null}
@@ -96,10 +151,12 @@ export default function MonthGrid({
       if (allEventsInWeek.length === 0) return "";
       // 가장 이른 시작 시간
       const sorted = allEventsInWeek
-        .filter((e) => e.start)
-        .sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+        .filter((e) => e.startTime)
+        .sort(
+          (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+        );
       if (sorted.length === 0) return "";
-      return formatTime12(sorted[0].start);
+      return formatTime12(sorted[0].startTime);
     });
   }, [weeks, eventsByDate]);
 

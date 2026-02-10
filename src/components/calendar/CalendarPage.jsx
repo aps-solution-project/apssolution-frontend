@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   Clock,
   Sun,
   Moon,
+  Loader2,
 } from "lucide-react";
 
 import MonthGrid from "./MonthGrid";
@@ -33,12 +34,14 @@ import {
   getWeekRangeKeys,
   getDayRangeKeys,
 } from "@/lib/date-range";
+import { filterEventsInRange } from "@/lib/events-store";
+
 import {
-  loadEvents,
-  saveEvents,
-  upsertEvent,
-  filterEventsInRange,
-} from "@/lib/events-store";
+  getMonthlyCalendars,
+  saveCalendar,
+  deleteCalendar,
+} from "@/api/calendar-api";
+import { useToken } from "@/stores/account-store";
 
 /* ── Real-time clock hook ── */
 function useRealTimeClock() {
@@ -50,6 +53,11 @@ function useRealTimeClock() {
   return now;
 }
 
+/* ── 토큰 헬퍼 ── */
+function getToken() {
+  return localStorage.getItem("token") || "";
+}
+
 export default function CalendarPage() {
   const [view, setView] = useState("month");
   const [cursorDate, setCursorDate] = useState(new Date());
@@ -58,19 +66,42 @@ export default function CalendarPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const now = useRealTimeClock();
+  const { token } = useToken();
 
-  // 초기 로드
-  useEffect(() => {
-    const list = loadEvents();
-    setEvents(list);
-  }, []);
+  // ── 서버에서 일정 불러오기 ──
+  // const fetchEvents = useCallback(
+  //   async (date) => {
+  //     if (!token) return;
+  //     setLoading(true);
+  //     try {
+  //       const month = date.getMonth() + 1;
+  //       console.log("!!!" + token);
+  //       const data = await getMonthlyCalendars(token, month);
+  //       setEvents(data.monthlySchedules || []);
+  //     } catch (err) {
+  //       console.error("일정 조회 실패:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   },
+  //   [token],
+  // );
 
-  // 저장
   useEffect(() => {
-    saveEvents(events);
-  }, [events]);
+    if (!cursorDate || !token) return;
+    const month = cursorDate.getMonth + 1;
+    getMonthlyCalendars(token, month).then((obj) => {
+      setEvents(obj.monthlySchedules | []);
+    });
+  }, [token, cursorDate]);
+
+  // 초기 로드 + 월 변경 시 재조회
+  // useEffect(() => {
+  //   fetchEvents(cursorDate);
+  // }, [cursorDate.getFullYear(), cursorDate.getMonth(), fetchEvents]);
 
   // 현재 view 범위 계산
   const range = useMemo(() => {
@@ -119,10 +150,43 @@ export default function CalendarPage() {
     setSelectedEvent(first);
   };
 
-  const onAdd = (ev) => {
-    setEvents((prev) => upsertEvent(prev, ev));
-    setSelectedDateKey(ev.date);
-    setSelectedEvent(ev);
+  // ── 일정 추가/수정 (API) ──
+  const onAdd = async (ev) => {
+    try {
+      saveCalendar(ev, token).then((obj) => {
+        window.alert("!!!");
+      });
+    } catch (err) {
+      console.error("일정 저장 실패:", err);
+      alert("일정 저장에 실패했습니다.");
+    }
+  };
+
+  // ── 일정 삭제 (API) ──
+  const onDelete = async (eventId) => {
+    if (!eventId) return;
+
+    try {
+      deleteCalendar(eventId, token).then((flag) => {
+        if (flag) window.alert("정상처리되었습니다");
+        else window.alert("오류");
+      });
+    } catch (err) {
+      console.error("일정 삭제 실패:", err);
+      alert("일정 삭제에 실패했습니다.");
+    }
+  };
+
+  // ── 일정 수정 (API) ──
+  const onUpdate = async (updatedEvent) => {
+    try {
+      const saved = await saveCalendar(updatedEvent, token);
+      setEvents((prev) => prev.map((e) => (e.id === saved.id ? saved : e)));
+      setSelectedEvent(saved);
+    } catch (err) {
+      console.error("일정 수정 실패:", err);
+      alert("일정 수정에 실패했습니다.");
+    }
   };
 
   const onToggleTodo = (todoId) => {
@@ -134,7 +198,9 @@ export default function CalendarPage() {
           t.id === todoId ? { ...t, done: !t.done } : t,
         ),
       };
-      setEvents((list) => upsertEvent(list, nextEvent));
+      setEvents((list) =>
+        list.map((e) => (e.id === nextEvent.id ? nextEvent : e)),
+      );
       return nextEvent;
     });
   };
@@ -157,7 +223,6 @@ export default function CalendarPage() {
     setSelectedDateKey(keyOf(new Date()));
   };
 
-  // Real-time clock display
   const clockStr = now.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -171,7 +236,6 @@ export default function CalendarPage() {
     day: "numeric",
   });
 
-  // 현재 주간/야간 판별
   const currentHour = now.getHours();
   const isNightNow = currentHour >= 21 || currentHour < 7;
 
@@ -205,11 +269,13 @@ export default function CalendarPage() {
                 <Moon className="h-3 w-3 mr-1" />
                 {nightShiftCount} Night
               </Badge>
+              {loading && (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* 실시간 시계 */}
             <div
               className={[
                 "flex items-center gap-2 px-4 py-2 rounded-xl border shadow-sm",
@@ -233,7 +299,6 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            {/* 검색 */}
             <div className="relative w-[260px] hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -255,7 +320,6 @@ export default function CalendarPage() {
               }
             />
 
-            {/* 유저 아바타 */}
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm border-[3px] border-white shadow-md shadow-blue-200/40">
               A
             </div>
@@ -269,7 +333,6 @@ export default function CalendarPage() {
               Schedule Task
             </div>
 
-            {/* 네비게이션 */}
             <div className="flex items-center gap-1.5">
               <Button
                 variant="ghost"
@@ -304,7 +367,6 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* View toggle */}
           <div className="flex items-center gap-2">
             <Tabs value={view} onValueChange={setView}>
               <TabsList className="rounded-xl p-1 bg-white border border-slate-200 shadow-sm h-9">
@@ -329,7 +391,6 @@ export default function CalendarPage() {
               </TabsList>
             </Tabs>
 
-            {/* shift legend */}
             <div className="flex items-center gap-2 ml-3">
               <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
                 <span className="w-2.5 h-2.5 rounded-sm bg-amber-200 border border-amber-300" />
@@ -345,7 +406,6 @@ export default function CalendarPage() {
 
         {/* ═══ MAIN AREA ═══ */}
         <div className="flex-1 min-h-0 grid grid-cols-12 gap-5">
-          {/* CALENDAR */}
           <div className="col-span-8 min-h-0">
             <div className="h-full min-h-0">
               {view === "month" && (
@@ -377,7 +437,6 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* RIGHT PANEL */}
           <div className="col-span-4 min-h-0">
             <div className="h-full min-h-0 overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
               <div className="h-full overflow-auto p-4">
@@ -385,6 +444,8 @@ export default function CalendarPage() {
                   event={selectedEvent}
                   onClose={() => setSelectedEvent(null)}
                   onToggleTodo={onToggleTodo}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
                 />
               </div>
             </div>
