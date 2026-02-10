@@ -12,8 +12,8 @@ import {
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getScenarioResult } from "@/api/scenario-api";
 import { getActiveAccounts } from "@/api/auth-api";
+import { getScenarioResult } from "@/api/scenario-api";
 import SimulationGantt from "@/components/gantt/SimulationGantt";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
 import { useToken } from "@/stores/account-store";
@@ -100,11 +100,9 @@ export default function SimulationPage() {
           const arrField = Object.values(res).find((v) => Array.isArray(v));
           if (arrField) list = arrField;
         }
-        console.log("[BakeFlow] Active accounts:", list);
         setWorkers(list);
       })
       .catch((err) => {
-        console.error("[BakeFlow] getActiveAccounts failed:", err);
         setWorkers([]);
       });
   }, [token]);

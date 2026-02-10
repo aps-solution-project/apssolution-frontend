@@ -39,6 +39,7 @@ export default function GanttBar({
 
   // worker 목록 정규화: id/name 필드명이 다를 수 있으므로 여러 가지 대응
   const normalizedWorkers = workers
+    .filter((w) => w.role === "WORKER")
     .map((w) => ({
       id: String(w?.id ?? w?.accountId ?? w?.workerId ?? ""),
       name: w?.name ?? w?.accountName ?? w?.workerName ?? "",
@@ -263,6 +264,13 @@ export default function GanttBar({
                     <SelectContent>
                       {tools
                         .filter((t) => t?.id != null && String(t.id) !== "")
+                        .filter((t) => {
+                          if (bar.raw.categoryId == null) return true;
+                          return (
+                            String(t.category?.id ?? "") ===
+                            String(bar.raw.categoryId ?? "")
+                          );
+                        })
                         .map((t) => (
                           <SelectItem key={String(t.id)} value={String(t.id)}>
                             {t.name || String(t.id)}
