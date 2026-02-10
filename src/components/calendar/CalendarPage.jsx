@@ -1,45 +1,43 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Search,
-  Plus,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  Sun,
-  Moon,
   Loader2,
+  Moon,
+  Plus,
+  Search,
+  Sun,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-import MonthGrid from "./MonthGrid";
-import WeekGrid from "./WeekGrid";
-import DayView from "./DayView";
-import RightPanel from "./RightPanel";
 import AddEventDialog from "./AddEventDialog";
+import DayView from "./DayView";
+import MonthGrid from "./MonthGrid";
+import RightPanel from "./RightPanel";
+import WeekGrid from "./WeekGrid";
 
 import {
   addDays,
   addMonths,
+  formatDayTitle,
   formatMonthTitle,
   formatWeekRange,
-  formatDayTitle,
   keyOf,
-  startOfWeek,
 } from "@/lib/date";
 import {
+  getDayRangeKeys,
   getMonthRangeKeys,
   getWeekRangeKeys,
-  getDayRangeKeys,
 } from "@/lib/date-range";
 import { filterEventsInRange } from "@/lib/events-store";
 
 import {
+  deleteCalendar,
   getMonthlyCalendars,
   saveCalendar,
-  deleteCalendar,
 } from "@/api/calendar-api";
 import { useToken } from "@/stores/account-store";
 
@@ -71,30 +69,11 @@ export default function CalendarPage() {
   const now = useRealTimeClock();
   const { token } = useToken();
 
-  // ── 서버에서 일정 불러오기 ──
-  // const fetchEvents = useCallback(
-  //   async (date) => {
-  //     if (!token) return;
-  //     setLoading(true);
-  //     try {
-  //       const month = date.getMonth() + 1;
-  //       console.log("!!!" + token);
-  //       const data = await getMonthlyCalendars(token, month);
-  //       setEvents(data.monthlySchedules || []);
-  //     } catch (err) {
-  //       console.error("일정 조회 실패:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   },
-  //   [token],
-  // );
-
   useEffect(() => {
     if (!cursorDate || !token) return;
-    const month = cursorDate.getMonth + 1;
+    const month = cursorDate.getMonth() + 1;
     getMonthlyCalendars(token, month).then((obj) => {
-      setEvents(obj.monthlySchedules | []);
+      setEvents(obj.monthlySchedules || []);
     });
   }, [token, cursorDate]);
 
@@ -154,7 +133,10 @@ export default function CalendarPage() {
   const onAdd = async (ev) => {
     try {
       saveCalendar(ev, token).then((obj) => {
-        window.alert("!!!");
+        const month = cursorDate.getMonth() + 1;
+        getMonthlyCalendars(token, month).then((obj) => {
+          setEvents(obj.monthlySchedules || []);
+        });
       });
     } catch (err) {
       console.error("일정 저장 실패:", err);
@@ -168,8 +150,13 @@ export default function CalendarPage() {
 
     try {
       deleteCalendar(eventId, token).then((flag) => {
-        if (flag) window.alert("정상처리되었습니다");
-        else window.alert("오류");
+        if (flag) {
+          window.alert("정상처리되었습니다");
+          const month = cursorDate.getMonth() + 1;
+          getMonthlyCalendars(token, month).then((obj) => {
+            setEvents(obj.monthlySchedules || []);
+          });
+        } else window.alert("오류");
       });
     } catch (err) {
       console.error("일정 삭제 실패:", err);
