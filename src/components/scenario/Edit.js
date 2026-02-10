@@ -1,26 +1,32 @@
 import { getProducts } from "@/api/product-api";
 import { editScenario } from "@/api/scenario-api";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToken } from "@/stores/account-store";
 import {
-  Plus,
-  Trash2,
-  X,
-  Save,
-  Users,
   Calendar,
   Clock,
   Package,
+  Plus,
+  Save,
+  Trash2,
+  Users,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
-export default function EditScenarioForm({ scenario, onCancel, onRefreshDetail }) {
+export default function EditScenarioForm({
+  scenario,
+  onCancel,
+  onRefreshDetail,
+}) {
   const { token } = useToken();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     if (!token) return;
-    getProducts(token).then((obj) => setProducts(obj.products || []));
+    getProducts(token).then((obj) =>
+      setProducts(obj.products.filter((p) => p.active) || []),
+    );
   }, [token]);
 
   const [form, setForm] = useState({
