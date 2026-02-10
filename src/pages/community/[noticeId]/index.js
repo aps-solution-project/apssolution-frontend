@@ -47,8 +47,8 @@ export default function CommunityDetailPage() {
 
   return (
     // 1. 전체 배경 흰색 통일 및 부모 여백 상쇄 (-m-8)
-    <div className="min-h-full bg-white -m-8 p-8 pb-32">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto pb-32">
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
         {/* 상단 버튼 영역: 목록(좌) / 수정·삭제(우) 균형 배치 */}
         <div className="flex justify-between items-center border-b pb-4 border-slate-100">
           <Button

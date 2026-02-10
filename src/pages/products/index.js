@@ -1,11 +1,8 @@
-import { useEffect, useState } from "react";
 import {
-  getProducts,
   bulkUpsertProducts,
+  getProducts,
   upLoadFiles,
 } from "@/api/product-api";
-import { useToken } from "@/stores/account-store";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,18 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
 import {
-  Plus,
-  Trash2,
-  Save,
-  RefreshCw,
-  FileInput,
   CheckCircle2,
+  FileInput,
+  Plus,
+  RefreshCw,
+  Save,
+  Trash2,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function ProductManagementPage() {
   useAuthGuard();
+  const router = useRouter();
   const token = useToken((state) => state.token);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,6 +67,35 @@ export default function ProductManagementPage() {
       };
       return next;
     });
+  };
+
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const data = await upLoadFiles(file, token);
+
+      const newItems = (data.products || []).map((item) => ({
+        id: item.id,
+
+        // ⭐ 프론트 표준 구조로 변환
+        name: item.name || "",
+        description: item.description || "",
+        active: item.active || false,
+        isSaved: false,
+      }));
+
+      setProducts((prev) => [...prev, ...newItems]);
+
+      alert(
+        `${newItems.length}건의 데이터를 불러왔습니다. '전체 저장'을 눌러 확정하세요.`,
+      );
+
+      e.target.value = "";
+    } catch (err) {
+      alert("엑셀 파싱 실패: " + err.message);
+    }
   };
 
   const handleAddRow = () => {
@@ -110,7 +141,7 @@ export default function ProductManagementPage() {
 
       await bulkUpsertProducts(payload, token);
       alert("성공적으로 저장되었습니다.");
-      loadData();
+      router.push("/resources/products");
     } catch (e) {
       alert(e.message);
     } finally {
@@ -123,9 +154,7 @@ export default function ProductManagementPage() {
       {/* 헤더 영역 생략 (기존과 동일) */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-stone-700">
-            품목 관리
-          </h1>
+          <h1 className="text-2xl font-bold text-stone-700">품목 관리</h1>
           <p className="text-sm text-stone-400">
             품목 정보를 일괄 수정하거나 추가할 수 있습니다.
           </p>
@@ -135,13 +164,30 @@ export default function ProductManagementPage() {
             <RefreshCw className="size-4 mr-2" />
             새로고침
           </Button>
+          {/* 엑셀 추가 버튼 */}
+          <Button
+            asChild
+            className="bg-indigo-900 hover:bg-indigo-500 text-white cursor-pointer"
+          >
+            <label>
+              <Input
+                type="file"
+                accept=".xls,.xlsx"
+                className="hidden"
+                onChange={handleExcelUpload}
+              />
+              <FileInput className="ml-2 h-4 w-4" />
+              엑셀 추가
+            </label>
+          </Button>
+
           <Button
             onClick={handleSaveAll}
             disabled={loading}
             className="bg-emerald-600 hover:bg-emerald-500"
           >
-            일괄 저장
-            <Save className="ml-2 size-4" />
+            <Save className="size-4" />
+            저장
           </Button>
         </div>
       </div>

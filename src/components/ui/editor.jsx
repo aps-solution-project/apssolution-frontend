@@ -227,13 +227,17 @@ const ColorPicker = ({
   setShow,
   closeOther,
 }) => (
-  <div className="relative">
+  <div className="relative flex items-center">
     <button
+      type="button"
       onClick={() => {
         setShow(!show);
         closeOther();
       }}
-      className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+      className={cn(
+        "flex items-center gap-1 h-8 px-2 rounded-md hover:bg-gray-100 transition-colors",
+        show && "bg-gray-100",
+      )}
     >
       {icon}
       <ChevronDown size={12} />

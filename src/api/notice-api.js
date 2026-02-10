@@ -16,8 +16,10 @@ async function createNotice(token, formData) {
   return resp.json();
 }
 
-async function getNotices(token) {
-  const resp = await fetch(`${URL}/api/notices`, {
+async function getNotices(token, page = 0, size = 10) {
+  const safePage = Math.max(0, page);
+
+  const resp = await fetch(`${URL}/api/notices?page=${safePage}&size=${size}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

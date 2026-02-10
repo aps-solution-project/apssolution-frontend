@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { FileInput, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
+import { useRouter } from "next/router";
 
 /**
  * Task Management Page
@@ -23,6 +24,7 @@ import { FileInput, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
  */
 export default function TaskManagementPage() {
   useAuthGuard();
+  const router = useRouter();
   const token = useToken((state) => state.token);
   const [tasks, setTasks] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -149,26 +151,14 @@ export default function TaskManagementPage() {
           requiredWorkers: Number(t.requiredWorkers),
         })),
       };
+      
 
-      const res = await upsertTasks(
-        token,
-        tasks.map((t) => ({
-          taskId: t.id,
-          productId: t.productId,
-          categoryId: t.toolCategoryId,
-          seq: Number(t.seq),
-          name: t.name,
-          description: t.description,
-          duration: Number(t.duration),
-          requiredWorkers: Number(t.requiredWorkers),
-        })),
-      );
+      const res = await upsertTasks(token, payload.tasks);
 
       alert(
         `저장 완료\n생성: ${res.created}\n수정: ${res.updated}\n삭제: ${res.deleted}`,
       );
-
-      loadServerData();
+      router.push("/resources/tasks");
     } catch (e) {
       alert("저장 실패: " + e.message);
     }
@@ -204,8 +194,8 @@ export default function TaskManagementPage() {
                   className="hidden"
                   onChange={handleExcelUpload}
                 />
-                엑셀 추가
                 <FileInput className="ml-2 h-4 w-4" />
+                엑셀 추가
               </label>
             </Button>
 
@@ -213,8 +203,8 @@ export default function TaskManagementPage() {
               onClick={handleSaveAll}
               className="bg-emerald-600 hover:bg-emerald-500"
             >
+              <Save className="size-4" />
               저장
-              <Save className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -236,14 +226,14 @@ export default function TaskManagementPage() {
                 <TableHead className="w-[13%] text-center text-stone-600">
                   도구
                 </TableHead>
-                <TableHead className="w-[4%] text-center text-stone-600">
+                <TableHead className="w-[5%] text-center text-stone-600">
                   작업레벨
                 </TableHead>
                 <TableHead className="w-[11%] text-center text-stone-600">
                   작업명
                 </TableHead>
                 <TableHead className="text-center">설명</TableHead>
-                <TableHead className="w-[4%] text-center text-stone-600">
+                <TableHead className="w-[5%] text-center text-stone-600">
                   시간(분)
                 </TableHead>
                 <TableHead className="w-[4%] text-center text-stone-600">
