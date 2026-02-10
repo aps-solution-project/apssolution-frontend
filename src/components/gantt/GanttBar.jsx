@@ -261,14 +261,13 @@ export default function GanttBar({
                       <SelectValue placeholder="도구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* {tools
+                      {tools
                         .filter((t) => t?.id != null && String(t.id) !== "")
                         .map((t) => (
                           <SelectItem key={String(t.id)} value={String(t.id)}>
                             {t.name || String(t.id)}
                           </SelectItem>
-                        ))} */}
-                      {tools.filter((t) => t.category.id)}
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
