@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,8 +17,12 @@ import {
   Plus,
   Sun,
   Moon,
+  Trash2,
+  Pencil,
+  FileText,
 } from "lucide-react";
 import { formatDateLabel } from "@/lib/date";
+import AddEventDialog from "./AddEventDialog";
 
 /* ── avatar colors ── */
 const avatarColors = [
@@ -70,7 +75,15 @@ const colorBadge = {
   night: "bg-blue-100 text-blue-700 border-blue-300",
 };
 
-export default function RightPanel({ event, onClose, onToggleTodo }) {
+export default function RightPanel({
+  event,
+  onClose,
+  onToggleTodo,
+  onDelete,
+  onUpdate,
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   if (!event) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
@@ -85,6 +98,15 @@ export default function RightPanel({ event, onClose, onToggleTodo }) {
   const totalTodos = (event.todos || []).length;
   const progress = totalTodos > 0 ? (doneCount / totalTodos) * 100 : 0;
   const badgeCls = colorBadge[event.color] || colorBadge.blue;
+
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    onDelete?.(event.id);
+    setConfirmDelete(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -130,11 +152,11 @@ export default function RightPanel({ event, onClose, onToggleTodo }) {
               </div>
 
               <div className="space-y-2 text-sm text-slate-600">
-                {event.start && event.end ? (
+                {event.startTime && event.endTime ? (
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-blue-500 shrink-0" />
                     <span className="font-semibold">
-                      {event.start} - {event.end}
+                      {event.startTime} - {event.endTime}
                     </span>
                     {event.reminder ? (
                       <Badge
@@ -159,6 +181,13 @@ export default function RightPanel({ event, onClose, onToggleTodo }) {
                   </div>
                 ) : null}
 
+                {event.description ? (
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+                    <span className="truncate">{event.description}</span>
+                  </div>
+                ) : null}
+
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-blue-500 shrink-0" />
                   <span>Reminder</span>
@@ -179,14 +208,31 @@ export default function RightPanel({ event, onClose, onToggleTodo }) {
         <CardContent className="p-4 space-y-3">
           <Separator className="bg-slate-100" />
           <div className="grid grid-cols-2 gap-2">
-            <Button className="h-10 rounded-xl w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-200 font-bold">
-              Reschedule
-            </Button>
+            {/* 수정 버튼 → AddEventDialog (수정 모드) */}
+            <AddEventDialog
+              defaultDateKey={event.date}
+              editEvent={event}
+              onAdd={onUpdate}
+              trigger={
+                <Button className="h-10 rounded-xl w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-200 font-bold">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              }
+            />
+
+            {/* 삭제 버튼 */}
             <Button
-              variant="secondary"
-              className="h-10 rounded-xl w-full border-slate-200 font-bold"
+              variant={confirmDelete ? "destructive" : "secondary"}
+              className={[
+                "h-10 rounded-xl w-full font-bold",
+                confirmDelete ? "" : "border-slate-200",
+              ].join(" ")}
+              onClick={handleDelete}
+              onBlur={() => setConfirmDelete(false)}
             >
-              Finish
+              <Trash2 className="h-4 w-4 mr-2" />
+              {confirmDelete ? "Confirm Delete" : "Delete"}
             </Button>
           </div>
         </CardContent>
