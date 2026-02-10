@@ -17,7 +17,7 @@ export default function Timeline({
   headerHeight = 44,
   workers = [],
   tools = [],
-  onBarChange,
+  onBarSave,
 }) {
   const localScaleRef = useRef(null);
   const localBodyRef = useRef(null);
@@ -169,7 +169,7 @@ export default function Timeline({
           {visibleRows.map((r, i) => {
             const top = (start + i) * rowHeight;
 
-            if (r.type === "workerGroup") {
+            if (r.type === "workerGroup" || r.type === "group") {
               return (
                 <div
                   key={`bg:${r.key}`}
@@ -178,7 +178,7 @@ export default function Timeline({
                     top,
                     height: rowHeight,
                     background:
-                      "linear-gradient(to right, rgba(15,23,42,0.08), rgba(15,23,42,0))",
+                      "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
                   }}
                 />
               );
@@ -199,21 +199,6 @@ export default function Timeline({
               );
             }
 
-            if (r.type === "group") {
-              return (
-                <div
-                  key={`bg:${r.key}`}
-                  className="absolute left-0 right-0 pointer-events-none"
-                  style={{
-                    top,
-                    height: rowHeight,
-                    background:
-                      "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
-                  }}
-                />
-              );
-            }
-
             return null;
           })}
 
@@ -228,7 +213,7 @@ export default function Timeline({
               dayOffset={dayOffset}
               workers={workers}
               tools={tools}
-              onBarChange={onBarChange}
+              onBarSave={onBarSave}
             />
           ))}
         </div>

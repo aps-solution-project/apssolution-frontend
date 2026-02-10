@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 export default function GanttBar({
   row,
@@ -22,11 +23,12 @@ export default function GanttBar({
   dayOffset = 0,
   workers = [],
   tools = [],
-  onBarChange,
+  onBarSave,
 }) {
   const [openBarId, setOpenBarId] = useState(null);
   const [draftWorkerId, setDraftWorkerId] = useState("");
   const [draftToolId, setDraftToolId] = useState("");
+  const [saving, setSaving] = useState(false);
 
   if (!row || row.type !== "task" || !Array.isArray(row.bars)) {
     return null;
@@ -35,31 +37,49 @@ export default function GanttBar({
   const barHeight = 28;
   const top = row.row * rowHeight + (rowHeight - barHeight) / 2;
 
+  // worker 목록 정규화: id/name 필드명이 다를 수 있으므로 여러 가지 대응
+  const normalizedWorkers = workers
+    .map((w) => ({
+      id: String(w?.id ?? w?.accountId ?? w?.workerId ?? ""),
+      name: w?.name ?? w?.accountName ?? w?.workerName ?? "",
+    }))
+    .filter((w) => w.id !== "");
+
   const handleOpenPopover = (bar) => {
     setOpenBarId(bar.id);
-    setDraftWorkerId("");
-    setDraftToolId(bar.toolId ?? row.toolId ?? "");
+    // 현재 값으로 초기화 (raw 데이터에서 가져옴)
+    setDraftWorkerId(bar.raw?.worker?.id ? String(bar.raw.worker.id) : "");
+    setDraftToolId(bar.raw?.toolId ? String(bar.raw.toolId) : "");
   };
 
-  const handleSave = (bar) => {
-    if (!onBarChange) {
+  const handleSave = async (bar) => {
+    if (!onBarSave) {
       setOpenBarId(null);
       return;
     }
 
-    const worker = workers.find((w) => String(w.id) === draftWorkerId);
-    const workerName = worker?.name || undefined;
-    const toolId = draftToolId || undefined;
+    // 항상 두 필드 모두 전송 (서버가 null 허용 안 함)
+    const payload = {};
+    if (draftWorkerId) payload.workerId = draftWorkerId;
+    if (draftToolId) payload.toolId = draftToolId;
 
-    onBarChange(bar.id, {
-      workerId: draftWorkerId || undefined,
-      workerName: workerName || bar.workerName || row.workerName,
-      toolId: toolId || (bar.toolId ?? row.toolId),
-    });
+    // 아무것도 없으면 닫기
+    if (!payload.workerId && !payload.toolId) {
+      setOpenBarId(null);
+      return;
+    }
 
-    setOpenBarId(null);
-    setDraftWorkerId("");
-    setDraftToolId("");
+    setSaving(true);
+    try {
+      await onBarSave(bar.id, payload);
+      setOpenBarId(null);
+    } catch (err) {
+      alert("저장 실패: " + (err?.message || "알 수 없는 오류"));
+    } finally {
+      setSaving(false);
+      setDraftWorkerId("");
+      setDraftToolId("");
+    }
   };
 
   return (
@@ -101,6 +121,9 @@ export default function GanttBar({
 
         const showText = width >= 90;
 
+        const displayWorkerName = bar.workerName || row.workerName || "미배정";
+        const displayToolId = bar.toolId ?? row.toolId ?? "미지정";
+
         const barContent = (
           <div
             className="h-full w-full flex items-center overflow-hidden border"
@@ -139,7 +162,7 @@ export default function GanttBar({
                 <span
                   className={`text-[10px] font-medium opacity-55 truncate ${text}`}
                 >
-                  {bar.workerName || row.workerName}
+                  {displayWorkerName}
                 </span>
               ) : (
                 <span className={`text-[11px] font-bold truncate ${text}`}>
@@ -165,14 +188,14 @@ export default function GanttBar({
             open={openBarId === bar.id}
             onOpenChange={(v) => {
               if (v) handleOpenPopover(bar);
-              else setOpenBarId(null);
+              else if (!saving) setOpenBarId(null);
             }}
           >
             <PopoverTrigger asChild>
               <div
                 className="absolute cursor-pointer"
                 style={{ left, top, width, height: barHeight }}
-                title={`${row.productName}\n${row.taskName}\n${bar.workerName || row.workerName} · ${bar.toolId ?? row.toolId}`}
+                title={`${row.productName || ""}\n${row.taskName || ""}\n${displayWorkerName} · ${displayToolId}`}
                 onPointerDown={(e) => e.stopPropagation()}
               >
                 {barContent}
@@ -190,7 +213,7 @@ export default function GanttBar({
                 작업 정보 변경
               </div>
               <div className="text-[11px] text-slate-500 mt-0.5">
-                {row.productName} · {row.taskName}
+                {row.productName || ""} · {row.taskName || ""}
               </div>
 
               <div className="mt-3 space-y-3">
@@ -199,24 +222,30 @@ export default function GanttBar({
                   <div className="text-[11px] font-medium text-slate-600">
                     작업자
                     <span className="ml-1 text-slate-400 font-normal">
-                      (현재: {bar.workerName || row.workerName})
+                      현재: {displayWorkerName}
                     </span>
                   </div>
-                  <Select
-                    value={draftWorkerId}
-                    onValueChange={setDraftWorkerId}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="작업자 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {workers.map((w) => (
-                        <SelectItem key={String(w.id)} value={String(w.id)}>
-                          {w.name} ({String(w.id)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {normalizedWorkers.length > 0 ? (
+                    <Select
+                      value={draftWorkerId}
+                      onValueChange={setDraftWorkerId}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="작업자 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {normalizedWorkers.map((w) => (
+                          <SelectItem key={w.id} value={w.id}>
+                            {w.name || w.id}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-[11px] text-red-500 py-2">
+                      재직 사원 목록을 불러올 수 없습니다
+                    </div>
+                  )}
                 </div>
 
                 {/* 도구 Select */}
@@ -224,7 +253,7 @@ export default function GanttBar({
                   <div className="text-[11px] font-medium text-slate-600">
                     도구
                     <span className="ml-1 text-slate-400 font-normal">
-                      (현재: {bar.toolId ?? row.toolId ?? "미지정"})
+                      현재: {displayToolId}
                     </span>
                   </div>
                   <Select value={draftToolId} onValueChange={setDraftToolId}>
@@ -232,11 +261,14 @@ export default function GanttBar({
                       <SelectValue placeholder="도구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tools.map((t) => (
-                        <SelectItem key={String(t.id)} value={String(t.id)}>
-                          {t.name || String(t.id)}
-                        </SelectItem>
-                      ))}
+                      {/* {tools
+                        .filter((t) => t?.id != null && String(t.id) !== "")
+                        .map((t) => (
+                          <SelectItem key={String(t.id)} value={String(t.id)}>
+                            {t.name || String(t.id)}
+                          </SelectItem>
+                        ))} */}
+                      {tools.filter((t) => t.category.id)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -245,12 +277,24 @@ export default function GanttBar({
                   <Button
                     variant="ghost"
                     size="sm"
+                    disabled={saving}
                     onClick={() => setOpenBarId(null)}
                   >
                     취소
                   </Button>
-                  <Button size="sm" onClick={() => handleSave(bar)}>
-                    저장
+                  <Button
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => handleSave(bar)}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        저장 중
+                      </>
+                    ) : (
+                      "저장"
+                    )}
                   </Button>
                 </div>
               </div>

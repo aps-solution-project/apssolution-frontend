@@ -3,6 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
+import { editScenarioSchedule } from "@/api/scenario-api";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
@@ -12,6 +13,7 @@ export default function SimulationGanttForWorker({
   products,
   scenarioStart,
   workers = [],
+  token,
 }) {
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -22,14 +24,28 @@ export default function SimulationGanttForWorker({
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
 
-  // barId → { workerId, workerName, toolId }
+  // barId → { workerName, toolId }
   const [barOverrides, setBarOverrides] = useState({});
 
-  const handleBarChange = (barId, { workerId, workerName, toolId }) => {
-    setBarOverrides((prev) => ({
-      ...prev,
-      [barId]: { ...prev[barId], workerId, workerName, toolId },
-    }));
+  const handleBarSave = async (scheduleId, payload) => {
+    const body = {};
+    if (payload.workerId) body.workerId = payload.workerId;
+    if (payload.toolId) body.toolId = payload.toolId;
+
+    const result = await editScenarioSchedule(token, scheduleId, body);
+
+    const sc = result?.scenarioSchedule;
+    if (sc) {
+      setBarOverrides((prev) => ({
+        ...prev,
+        [scheduleId]: {
+          workerName: sc.worker?.name ?? prev[scheduleId]?.workerName,
+          toolId: sc.tool?.id ?? prev[scheduleId]?.toolId,
+        },
+      }));
+    }
+
+    return result;
   };
 
   const startResize = () => (resizing.current = true);
@@ -145,6 +161,7 @@ export default function SimulationGanttForWorker({
           duration,
           workerName,
           toolId: ov?.toolId || s?.toolId || "미지정",
+          raw: s,
         });
       });
     });
@@ -177,9 +194,7 @@ export default function SimulationGanttForWorker({
 
         let lastEnd = -Infinity;
         taskRow.bars.forEach((bar) => {
-          if (bar.start < lastEnd) {
-            bar.start = lastEnd;
-          }
+          if (bar.start < lastEnd) bar.start = lastEnd;
           lastEnd = bar.start + bar.duration;
         });
 
@@ -191,7 +206,6 @@ export default function SimulationGanttForWorker({
     return allRows;
   }, [products, openWorkers, scenarioStart, barOverrides]);
 
-  // ★ bars 순회하여 totalMinutes 계산 (기존 버그 수정)
   const totalMinutes = useMemo(() => {
     let maxEnd = 0;
     for (const r of rows) {
@@ -206,21 +220,14 @@ export default function SimulationGanttForWorker({
 
   const totalDays = Math.ceil(totalMinutes / MINUTES_PER_DAY);
 
-  const getDayDate = (dayIndex) => {
-    if (!scenarioStart) return null;
-    const date = new Date(scenarioStart);
-    date.setDate(date.getDate() + dayIndex);
-    return date;
-  };
-
   const formatDayLabel = (dayIndex) => {
-    const date = getDayDate(dayIndex);
-    if (!date) return `Day ${dayIndex + 1}`;
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[date.getDay()];
-    return `${month}/${day} (${weekday})`;
+    if (!scenarioStart) return `Day ${dayIndex + 1}`;
+    const d = new Date(scenarioStart);
+    d.setDate(d.getDate() + dayIndex);
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const w = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+    return `${mm}/${dd} (${w})`;
   };
 
   const handlePrevDay = () => {
@@ -258,7 +265,6 @@ export default function SimulationGanttForWorker({
           </div>
         </div>
 
-        {/* ★ 품목별과 동일한 day navigation 표시 */}
         {totalDays > 1 && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
             <Calendar className="h-3.5 w-3.5 text-slate-500" />
@@ -307,12 +313,11 @@ export default function SimulationGanttForWorker({
               headerHeight={HEADER_HEIGHT}
               workers={workers}
               tools={tools}
-              onBarChange={handleBarChange}
+              onBarSave={handleBarSave}
             />
           </div>
         </div>
 
-        {/* Day Navigation Buttons */}
         <button
           onClick={handlePrevDay}
           disabled={totalDays === 1 || currentDayIndex === 0}

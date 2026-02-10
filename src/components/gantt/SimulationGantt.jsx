@@ -3,6 +3,8 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import LeftPanel from "./LeftPanel";
 import Timeline from "./Timeline";
+import { editScenarioSchedule } from "@/api/scenario-api";
+import { getAllTools } from "@/api/tool-api";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
@@ -12,7 +14,10 @@ export default function SimulationGantt({
   products,
   scenarioStart,
   workers = [],
+  token,
 }) {
+  const [tools, setTools] = useState([]);
+
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
@@ -22,14 +27,34 @@ export default function SimulationGantt({
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
 
-  // barId → { workerId, workerName, toolId }
+  // barId → { workerName, toolId } (로컬 오버라이드 — API 응답으로 업데이트)
   const [barOverrides, setBarOverrides] = useState({});
 
-  const handleBarChange = (barId, { workerId, workerName, toolId }) => {
-    setBarOverrides((prev) => ({
-      ...prev,
-      [barId]: { ...prev[barId], workerId, workerName, toolId },
-    }));
+  /**
+   * 간트바 저장: PATCH API 호출 후 응답으로 로컬 상태 업데이트
+   * @param {number|string} scheduleId  scenarioSchedule.id
+   * @param {{ workerId?: string, toolId?: string }} payload
+   */
+  const handleBarSave = async (scheduleId, payload) => {
+    const body = {};
+    if (payload.workerId) body.workerId = payload.workerId;
+    if (payload.toolId) body.toolId = payload.toolId;
+
+    const result = await editScenarioSchedule(token, scheduleId, body);
+
+    // 응답: { scenarioSchedule: { worker: { id, name, ... }, tool: { id, name, ... }, ... } }
+    const sc = result?.scenarioSchedule;
+    if (sc) {
+      setBarOverrides((prev) => ({
+        ...prev,
+        [scheduleId]: {
+          workerName: sc.worker?.name ?? prev[scheduleId]?.workerName,
+          toolId: sc.tool?.id ?? prev[scheduleId]?.toolId,
+        },
+      }));
+    }
+
+    return result;
   };
 
   const startResize = () => (resizing.current = true);
@@ -69,15 +94,22 @@ export default function SimulationGantt({
     setOpenProducts((p) => ({ ...p, [id]: !p[id] }));
 
   // 도구 목록 추출
-  const tools = useMemo(() => {
-    const s = new Set();
-    for (const p of Array.isArray(products) ? products : [])
-      for (const sc of p.scenarioSchedules || [])
-        if (sc.toolId) s.add(sc.toolId);
-    return Array.from(s)
-      .sort()
-      .map((id) => ({ id, name: id }));
-  }, [products]);
+  // const tools = useMemo(() => {
+  //   const s = new Set();
+  //   for (const p of Array.isArray(products) ? products : [])
+  //     for (const sc of p.scenarioSchedules || [])
+  //       if (sc.toolId) s.add(sc.toolId);
+  //   return Array.from(s)
+  //     .sort()
+  //     .map((id) => ({ id, name: id }));
+  // }, [products]);
+
+  useEffect(() => {
+    if (!token) return;
+    getAllTools(token).then((obj) => {
+      setTools(() => obj.tools);
+    });
+  }, [token]);
 
   // rows 생성
   const rows = useMemo(() => {
@@ -163,16 +195,10 @@ export default function SimulationGantt({
 
   const totalDays = Math.ceil(totalMinutes / MINUTES_PER_DAY);
 
-  const getDayDate = (dayIndex) => {
-    if (!scenarioStart) return null;
+  const formatDayLabel = (dayIndex) => {
+    if (!scenarioStart) return `Day ${dayIndex + 1}`;
     const d = new Date(scenarioStart);
     d.setDate(d.getDate() + dayIndex);
-    return d;
-  };
-
-  const formatDayLabel = (dayIndex) => {
-    const d = getDayDate(dayIndex);
-    if (!d) return `Day ${dayIndex + 1}`;
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     const w = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
@@ -261,7 +287,7 @@ export default function SimulationGantt({
               headerHeight={HEADER_HEIGHT}
               workers={workers}
               tools={tools}
-              onBarChange={handleBarChange}
+              onBarSave={handleBarSave}
             />
           </div>
         </div>

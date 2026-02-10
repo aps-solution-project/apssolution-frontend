@@ -12,21 +12,17 @@ function Collapse({ open, duration = 260, children }) {
 
     if (open) {
       setRender(true);
-
       setHeight(0);
       requestAnimationFrame(() => {
         const h = el.scrollHeight;
         setHeight(h);
       });
-
       const t = setTimeout(() => setHeight("auto"), duration);
       return () => clearTimeout(t);
     } else {
       const h = el.scrollHeight;
       setHeight(h);
-
       requestAnimationFrame(() => setHeight(0));
-
       const t = setTimeout(() => setRender(false), duration);
       return () => clearTimeout(t);
     }
@@ -34,21 +30,22 @@ function Collapse({ open, duration = 260, children }) {
 
   if (!render && !open) return null;
 
-  const wrapperStyle = {
-    height: height === "auto" ? "auto" : `${height}px`,
-    overflow: "hidden",
-    transition: `height ${duration}ms ease`,
-  };
-
-  const innerStyle = {
-    opacity: open ? 1 : 0,
-    transform: open ? "translateY(0px)" : "translateY(-2px)",
-    transition: `opacity ${duration}ms ease, transform ${duration}ms ease`,
-  };
-
   return (
-    <div style={wrapperStyle}>
-      <div ref={innerRef} style={innerStyle}>
+    <div
+      style={{
+        height: height === "auto" ? "auto" : `${height}px`,
+        overflow: "hidden",
+        transition: `height ${duration}ms ease`,
+      }}
+    >
+      <div
+        ref={innerRef}
+        style={{
+          opacity: open ? 1 : 0,
+          transform: open ? "translateY(0px)" : "translateY(-2px)",
+          transition: `opacity ${duration}ms ease, transform ${duration}ms ease`,
+        }}
+      >
         {children}
       </div>
     </div>
@@ -69,7 +66,6 @@ export default function LeftPanelForWorker({
   const containerRef = useRef(null);
   const innerRef = scrollRef || containerRef;
 
-  // 작업자별로 그룹화된 데이터 생성
   const groups = useMemo(() => {
     if (Array.isArray(rows) && rows.length) {
       const out = [];
@@ -108,25 +104,11 @@ export default function LeftPanelForWorker({
   }, [rows, open]);
 
   const renderedRowCount = useMemo(() => {
-    return groups.reduce(
-      (acc, g) => acc + 1 + (g.open ? g.tasks.length : 0),
-      0,
-    );
+    return groups.reduce((acc, g) => acc + 1 + g.tasks.length, 0);
   }, [groups]);
 
-  const handleScroll = (e) => {
-    if (onScroll) onScroll(e);
-  };
-
   return (
-    <div
-      className="h-full"
-      style={{
-        width,
-        minWidth: width,
-        maxWidth: width,
-      }}
-    >
+    <div className="h-full" style={{ width, minWidth: width, maxWidth: width }}>
       <div
         className="sticky top-0 z-20 flex items-center justify-between px-3 border-b border-slate-200 bg-white"
         style={{ height: headerHeight }}
@@ -141,7 +123,7 @@ export default function LeftPanelForWorker({
 
       <div
         ref={innerRef}
-        onScroll={handleScroll}
+        onScroll={onScroll}
         className="overflow-y-auto overflow-x-hidden"
         style={{ height: `calc(100% - ${headerHeight}px)` }}
       >
@@ -203,11 +185,8 @@ export default function LeftPanelForWorker({
 
                           <div className="h-full flex items-center">
                             <div className="pl-6 pr-3 min-w-0 w-full">
-                              <div className="text-sm font-medium text-slate-800 truncate leading-5">
+                              <div className="text-[13px] font-medium text-slate-800 truncate">
                                 {r.taskName}
-                              </div>
-                              <div className="mt-0.5 text-[11px] text-slate-400 truncate leading-4">
-                                미지정
                               </div>
                             </div>
                           </div>

@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -80,16 +78,35 @@ export default function SimulationPage() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!token || !scenarioId) return;
     getScenarioResult(token, scenarioId).then((obj) => setData(obj));
+  };
+
+  useEffect(() => {
+    fetchData();
   }, [scenarioId, token]);
 
   useEffect(() => {
     if (!token) return;
     getActiveAccounts(token)
-      .then((list) => setWorkers(Array.isArray(list) ? list : []))
-      .catch(() => setWorkers([]));
+      .then((res) => {
+        // 응답이 배열이면 그대로, 아니면 내부 배열 필드 탐색
+        let list = [];
+        if (Array.isArray(res)) {
+          list = res;
+        } else if (res && typeof res === "object") {
+          // { data: [...] }, { accounts: [...] }, { content: [...] } 등 대응
+          const arrField = Object.values(res).find((v) => Array.isArray(v));
+          if (arrField) list = arrField;
+        }
+        console.log("[BakeFlow] Active accounts:", list);
+        setWorkers(list);
+      })
+      .catch((err) => {
+        console.error("[BakeFlow] getActiveAccounts failed:", err);
+        setWorkers([]);
+      });
   }, [token]);
 
   if (!data.scenario) {
@@ -122,7 +139,10 @@ export default function SimulationPage() {
             </div>
 
             <div className="flex items-center gap-3 mb-5">
-              <Button className="h-11 px-8 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold">
+              <Button
+                onClick={fetchData}
+                className="h-11 px-8 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-bold"
+              >
                 <RefreshCwIcon size={16} />
                 새로고침
               </Button>
@@ -262,12 +282,14 @@ export default function SimulationPage() {
               products={products}
               scenarioStart={scenario.startAt}
               workers={workers}
+              token={token}
             />
           ) : (
             <SimulationGanttForWorker
               products={products}
               scenarioStart={scenario.startAt}
               workers={workers}
+              token={token}
             />
           )}
         </Card>
