@@ -3,12 +3,18 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
+import { editScenarioSchedule } from "@/api/scenario-api";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
-const MINUTES_PER_DAY = 24 * 60; // 1440 minutes
+const MINUTES_PER_DAY = 24 * 60;
 
-export default function SimulationGanttForWorker({ products, scenarioStart }) {
+export default function SimulationGanttForWorker({
+  products,
+  scenarioStart,
+  workers = [],
+  token,
+}) {
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
@@ -18,6 +24,30 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
 
+  // barId → { workerName, toolId }
+  const [barOverrides, setBarOverrides] = useState({});
+
+  const handleBarSave = async (scheduleId, payload) => {
+    const body = {};
+    if (payload.workerId) body.workerId = payload.workerId;
+    if (payload.toolId) body.toolId = payload.toolId;
+
+    const result = await editScenarioSchedule(token, scheduleId, body);
+
+    const sc = result?.scenarioSchedule;
+    if (sc) {
+      setBarOverrides((prev) => ({
+        ...prev,
+        [scheduleId]: {
+          workerName: sc.worker?.name ?? prev[scheduleId]?.workerName,
+          toolId: sc.tool?.id ?? prev[scheduleId]?.toolId,
+        },
+      }));
+    }
+
+    return result;
+  };
+
   const startResize = () => (resizing.current = true);
   const stopResize = () => (resizing.current = false);
 
@@ -26,7 +56,6 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
       if (!resizing.current) return;
       setPanelWidth((w) => Math.max(220, Math.min(520, w + e.movementX)));
     };
-
     window.addEventListener("mousemove", resize);
     window.addEventListener("mouseup", stopResize);
     return () => {
@@ -35,46 +64,44 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
     };
   }, []);
 
-  // 작업자별 open/close 상태 관리
+  // 도구 목록 추출
+  const tools = useMemo(() => {
+    const s = new Set();
+    for (const p of Array.isArray(products) ? products : [])
+      for (const sc of p.scenarioSchedules || [])
+        if (sc.toolId) s.add(sc.toolId);
+    return Array.from(s)
+      .sort()
+      .map((id) => ({ id, name: id }));
+  }, [products]);
+
   const [openWorkers, setOpenWorkers] = useState(() => {
     const list = Array.isArray(products) ? products : [];
-    const workers = new Set();
-
+    const ws = new Set();
     list.forEach((p) => {
-      const schedules = Array.isArray(p.scenarioSchedules)
-        ? p.scenarioSchedules
-        : [];
-      schedules.forEach((s) => {
-        const workerId = s?.worker?.id || "unassigned";
-        workers.add(workerId);
+      (p.scenarioSchedules || []).forEach((s) => {
+        ws.add(s?.worker?.id || "unassigned");
       });
     });
-
-    return Object.fromEntries(Array.from(workers).map((w) => [w, true]));
+    return Object.fromEntries(Array.from(ws).map((w) => [w, true]));
   });
 
   useEffect(() => {
     const list = Array.isArray(products) ? products : [];
-    const workers = new Set();
-
+    const ws = new Set();
     list.forEach((p) => {
-      const schedules = Array.isArray(p.scenarioSchedules)
-        ? p.scenarioSchedules
-        : [];
-      schedules.forEach((s) => {
-        const workerId = s?.worker?.id || "unassigned";
-        workers.add(workerId);
+      (p.scenarioSchedules || []).forEach((s) => {
+        ws.add(s?.worker?.id || "unassigned");
       });
     });
 
     setOpenWorkers((prev) => {
       const next = { ...prev };
-      workers.forEach((w) => {
+      ws.forEach((w) => {
         if (next[w] === undefined) next[w] = true;
       });
-
       for (const k of Object.keys(next)) {
-        if (!workers.has(k)) delete next[k];
+        if (!ws.has(k)) delete next[k];
       }
       return next;
     });
@@ -83,12 +110,10 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
   const toggleWorker = (workerId) =>
     setOpenWorkers((p) => ({ ...p, [workerId]: !p[workerId] }));
 
-  // 작업자 기준으로 rows 생성 (작업자 > 작업)
   const rows = useMemo(() => {
     const list = Array.isArray(products) ? products : [];
     let r = 0;
 
-    // workerId -> { workerId, workerName, taskMap }
     const workerMap = new Map();
 
     list.forEach((p) => {
@@ -98,7 +123,8 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
 
       schedules.forEach((s, idx) => {
         const workerId = s?.worker?.id || "unassigned";
-        const workerName = s?.worker?.name || "미배정";
+        const ov = barOverrides[s?.id];
+        const workerName = ov?.workerName || s?.worker?.name || "미배정";
         const taskName = s?.scheduleTask?.name || "작업";
 
         if (!workerMap.has(workerId)) {
@@ -119,6 +145,7 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
             workerId,
             workerName,
             taskName,
+            productName: p.name || p.id,
             bars: [],
           });
         }
@@ -132,12 +159,14 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
           id: s?.id ?? `${workerId}-${idx}`,
           start: minutesFromStart(s?.startAt, scenarioStart),
           duration,
+          workerName,
+          toolId: ov?.toolId || s?.toolId || "미지정",
+          raw: s,
         });
       });
     });
 
-    // worker 정렬
-    const workers = Array.from(workerMap.values()).sort((a, b) => {
+    const sortedWorkers = Array.from(workerMap.values()).sort((a, b) => {
       if (a.workerId === "unassigned") return 1;
       if (b.workerId === "unassigned") return -1;
       return a.workerName.localeCompare(b.workerName);
@@ -145,7 +174,7 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
 
     const allRows = [];
 
-    workers.forEach((worker) => {
+    sortedWorkers.forEach((worker) => {
       const { workerId, workerName, taskMap } = worker;
 
       allRows.push({
@@ -161,14 +190,11 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
       if (!openWorkers[workerId]) return;
 
       Array.from(taskMap.values()).forEach((taskRow) => {
-        // 🔥 겹침 방지 핵심 로직
         taskRow.bars.sort((a, b) => a.start - b.start);
 
         let lastEnd = -Infinity;
         taskRow.bars.forEach((bar) => {
-          if (bar.start < lastEnd) {
-            bar.start = lastEnd; // 뒤로 밀기
-          }
+          if (bar.start < lastEnd) bar.start = lastEnd;
           lastEnd = bar.start + bar.duration;
         });
 
@@ -178,58 +204,44 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
     });
 
     return allRows;
-  }, [products, openWorkers, scenarioStart]);
+  }, [products, openWorkers, scenarioStart, barOverrides]);
 
   const totalMinutes = useMemo(() => {
     let maxEnd = 0;
     for (const r of rows) {
-      if (r.type !== "task") continue;
-      const end = (r.start || 0) + (r.duration || 0);
-      if (end > maxEnd) maxEnd = end;
+      if (r.type !== "task" || !Array.isArray(r.bars)) continue;
+      for (const b of r.bars) {
+        const end = (b.start || 0) + (b.duration || 0);
+        if (end > maxEnd) maxEnd = end;
+      }
     }
     return Math.max(0, maxEnd + 60);
   }, [rows]);
 
-  // Calculate number of days needed
   const totalDays = Math.ceil(totalMinutes / MINUTES_PER_DAY);
 
-  // Calculate date for each day
-  const getDayDate = (dayIndex) => {
-    if (!scenarioStart) return null;
-    const date = new Date(scenarioStart);
-    date.setDate(date.getDate() + dayIndex);
-    return date;
-  };
-
   const formatDayLabel = (dayIndex) => {
-    const date = getDayDate(dayIndex);
-    if (!date) return `Day ${dayIndex + 1}`;
-
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[date.getDay()];
-
-    return `${month}/${day} (${weekday})`;
+    if (!scenarioStart) return `Day ${dayIndex + 1}`;
+    const d = new Date(scenarioStart);
+    d.setDate(d.getDate() + dayIndex);
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const w = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+    return `${mm}/${dd} (${w})`;
   };
 
   const handlePrevDay = () => {
-    if (currentDayIndex > 0) {
-      setCurrentDayIndex(currentDayIndex - 1);
-    }
+    if (currentDayIndex > 0) setCurrentDayIndex(currentDayIndex - 1);
   };
-
   const handleNextDay = () => {
-    if (currentDayIndex < totalDays - 1) {
+    if (currentDayIndex < totalDays - 1)
       setCurrentDayIndex(currentDayIndex + 1);
-    }
   };
 
   return (
     <div className="w-full h-[calc(100vh-140px)] border-slate-200 bg-white overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-slate-200 bg-white h-14">
         <div className="flex items-center gap-4 flex-1">
-          {/* Zoom Slider */}
           <div className="flex items-center gap-3 min-w-[380px]">
             <span className="text-xs font-medium text-slate-600 whitespace-nowrap">
               타임라인 조절
@@ -240,9 +252,8 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
               min={4}
               max={12}
               step={0.5}
-              className={["w-[300px]"].join(" ")}
+              className="w-[300px]"
             />
-
             <span className="text-xs text-slate-500 whitespace-nowrap w-16">
               {minuteWidth.toFixed(1)}x
             </span>
@@ -254,7 +265,6 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
           </div>
         </div>
 
-        {/* Day Navigation */}
         {totalDays > 1 && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
             <Calendar className="h-3.5 w-3.5 text-slate-500" />
@@ -301,11 +311,13 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
               dayOffset={currentDayIndex * MINUTES_PER_DAY}
               rowHeight={ROW_HEIGHT}
               headerHeight={HEADER_HEIGHT}
+              workers={workers}
+              tools={tools}
+              onBarSave={handleBarSave}
             />
           </div>
         </div>
 
-        {/* Day Navigation Buttons */}
         <button
           onClick={handlePrevDay}
           disabled={totalDays === 1 || currentDayIndex === 0}

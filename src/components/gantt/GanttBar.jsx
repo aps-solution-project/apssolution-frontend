@@ -1,3 +1,19 @@
+import { useState } from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+
 export default function GanttBar({
   row,
   minuteWidth,
@@ -5,13 +21,66 @@ export default function GanttBar({
   scenarioStart,
   totalMinutes,
   dayOffset = 0,
+  workers = [],
+  tools = [],
+  onBarSave,
 }) {
+  const [openBarId, setOpenBarId] = useState(null);
+  const [draftWorkerId, setDraftWorkerId] = useState("");
+  const [draftToolId, setDraftToolId] = useState("");
+  const [saving, setSaving] = useState(false);
+
   if (!row || row.type !== "task" || !Array.isArray(row.bars)) {
     return null;
   }
 
   const barHeight = 28;
   const top = row.row * rowHeight + (rowHeight - barHeight) / 2;
+
+  // worker 목록 정규화: id/name 필드명이 다를 수 있으므로 여러 가지 대응
+  const normalizedWorkers = workers
+    .map((w) => ({
+      id: String(w?.id ?? w?.accountId ?? w?.workerId ?? ""),
+      name: w?.name ?? w?.accountName ?? w?.workerName ?? "",
+    }))
+    .filter((w) => w.id !== "");
+
+  const handleOpenPopover = (bar) => {
+    setOpenBarId(bar.id);
+    // 현재 값으로 초기화 (raw 데이터에서 가져옴)
+    setDraftWorkerId(bar.raw?.worker?.id ? String(bar.raw.worker.id) : "");
+    setDraftToolId(bar.raw?.toolId ? String(bar.raw.toolId) : "");
+  };
+
+  const handleSave = async (bar) => {
+    if (!onBarSave) {
+      setOpenBarId(null);
+      return;
+    }
+
+    // 항상 두 필드 모두 전송 (서버가 null 허용 안 함)
+    const payload = {};
+    if (draftWorkerId) payload.workerId = draftWorkerId;
+    if (draftToolId) payload.toolId = draftToolId;
+
+    // 아무것도 없으면 닫기
+    if (!payload.workerId && !payload.toolId) {
+      setOpenBarId(null);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onBarSave(bar.id, payload);
+      setOpenBarId(null);
+    } catch (err) {
+      alert("저장 실패: " + (err?.message || "알 수 없는 오류"));
+    } finally {
+      setSaving(false);
+      setDraftWorkerId("");
+      setDraftToolId("");
+    }
+  };
 
   return (
     <>
@@ -23,7 +92,6 @@ export default function GanttBar({
         const dayStart = dayOffset;
         const dayEnd = dayOffset + totalMinutes;
 
-        // 현재 day 범위에 안 걸리면 렌더링 안 함
         if (taskEnd <= dayStart || taskStart >= dayEnd) {
           return null;
         }
@@ -53,71 +121,185 @@ export default function GanttBar({
 
         const showText = width >= 90;
 
-        return (
+        const displayWorkerName = bar.workerName || row.workerName || "미배정";
+        const displayToolId = bar.toolId ?? row.toolId ?? "미지정";
+
+        const barContent = (
           <div
-            key={bar.id}
-            className="absolute cursor-default"
-            style={{ left, top, width, height: barHeight }}
-            title={`${row.productName}\n${row.taskName}\n${row.workerName} · ${
-              bar.toolId ?? row.toolId
-            }`}
+            className="h-full w-full flex items-center overflow-hidden border"
+            style={{
+              backgroundColor: bg,
+              borderColor: border,
+              borderWidth: 1,
+              borderRadius: continuesFromPrev
+                ? continuesToNext
+                  ? 0
+                  : "0 6px 6px 0"
+                : continuesToNext
+                  ? "6px 0 0 6px"
+                  : 6,
+              borderLeftWidth: continuesFromPrev ? 0 : 1,
+              borderRightWidth: continuesToNext ? 0 : 1,
+            }}
           >
             <div
-              className="h-full w-full flex items-center overflow-hidden border"
               style={{
-                backgroundColor: bg,
-                borderColor: border,
-                borderWidth: 1,
-                borderRadius: continuesFromPrev
-                  ? continuesToNext
-                    ? 0
-                    : "0 6px 6px 0"
-                  : continuesToNext
-                    ? "6px 0 0 6px"
-                    : 6,
-                borderLeftWidth: continuesFromPrev ? 0 : 1,
-                borderRightWidth: continuesToNext ? 0 : 1,
+                width: continuesFromPrev ? 0 : 8,
+                height: "100%",
+                backgroundColor: border,
+                flexShrink: 0,
               }}
-            >
-              <div
-                style={{
-                  width: continuesFromPrev ? 0 : 8,
-                  height: "100%",
-                  backgroundColor: border,
-                  flexShrink: 0,
-                }}
-              />
+            />
 
-              <div className="flex items-center gap-2 px-2 min-w-0">
+            <div className="flex items-center gap-2 px-2 min-w-0">
+              <span
+                className={`text-[10px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
+              >
+                {startLabel}
+              </span>
+
+              {showText ? (
                 <span
-                  className={`text-[10px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
+                  className={`text-[10px] font-medium opacity-55 truncate ${text}`}
                 >
-                  {startLabel}
+                  {displayWorkerName}
                 </span>
-
-                {showText ? (
-                  <span
-                    className={`text-[10px] font-medium opacity-55 truncate ${text}`}
-                  >
-                    {row.workerName}
-                  </span>
-                ) : (
-                  <span className={`text-[11px] font-bold truncate ${text}`}>
-                    {row.taskName?.charAt(0)}
-                  </span>
-                )}
-              </div>
-
-              {continuesToNext && (
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-1"
-                  style={{
-                    background: `linear-gradient(to right, transparent, ${border})`,
-                  }}
-                />
+              ) : (
+                <span className={`text-[11px] font-bold truncate ${text}`}>
+                  {row.taskName?.charAt(0)}
+                </span>
               )}
             </div>
+
+            {continuesToNext && (
+              <div
+                className="absolute right-0 top-0 bottom-0 w-1"
+                style={{
+                  background: `linear-gradient(to right, transparent, ${border})`,
+                }}
+              />
+            )}
           </div>
+        );
+
+        return (
+          <Popover
+            key={bar.id}
+            open={openBarId === bar.id}
+            onOpenChange={(v) => {
+              if (v) handleOpenPopover(bar);
+              else if (!saving) setOpenBarId(null);
+            }}
+          >
+            <PopoverTrigger asChild>
+              <div
+                className="absolute cursor-pointer"
+                style={{ left, top, width, height: barHeight }}
+                title={`${row.productName || ""}\n${row.taskName || ""}\n${displayWorkerName} · ${displayToolId}`}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                {barContent}
+              </div>
+            </PopoverTrigger>
+
+            <PopoverContent
+              align="start"
+              side="bottom"
+              className="w-72 p-3"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="text-sm font-semibold text-slate-800">
+                작업 정보 변경
+              </div>
+              <div className="text-[11px] text-slate-500 mt-0.5">
+                {row.productName || ""} · {row.taskName || ""}
+              </div>
+
+              <div className="mt-3 space-y-3">
+                {/* 작업자 Select */}
+                <div className="space-y-1">
+                  <div className="text-[11px] font-medium text-slate-600">
+                    작업자
+                    <span className="ml-1 text-slate-400 font-normal">
+                      현재: {displayWorkerName}
+                    </span>
+                  </div>
+                  {normalizedWorkers.length > 0 ? (
+                    <Select
+                      value={draftWorkerId}
+                      onValueChange={setDraftWorkerId}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="작업자 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {normalizedWorkers.map((w) => (
+                          <SelectItem key={w.id} value={w.id}>
+                            {w.name || w.id}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-[11px] text-red-500 py-2">
+                      재직 사원 목록을 불러올 수 없습니다
+                    </div>
+                  )}
+                </div>
+
+                {/* 도구 Select */}
+                <div className="space-y-1">
+                  <div className="text-[11px] font-medium text-slate-600">
+                    도구
+                    <span className="ml-1 text-slate-400 font-normal">
+                      현재: {displayToolId}
+                    </span>
+                  </div>
+                  <Select value={draftToolId} onValueChange={setDraftToolId}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="도구 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {/* {tools
+                        .filter((t) => t?.id != null && String(t.id) !== "")
+                        .map((t) => (
+                          <SelectItem key={String(t.id)} value={String(t.id)}>
+                            {t.name || String(t.id)}
+                          </SelectItem>
+                        ))} */}
+                      {tools.filter((t) => t.category.id)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => setOpenBarId(null)}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => handleSave(bar)}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        저장 중
+                      </>
+                    ) : (
+                      "저장"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         );
       })}
     </>
@@ -143,7 +325,6 @@ function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
-// 색상 정의
 const BASE = {
   NEUTRAL: { bg: "#ECFDF5", border: "#10B981", text: "text-emerald-900" },
   MIX: { bg: "#FFF1F2", border: "#FB7185", text: "text-yellow-900" },

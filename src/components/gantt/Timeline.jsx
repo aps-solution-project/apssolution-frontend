@@ -15,6 +15,9 @@ export default function Timeline({
   dayOffset = 0,
   rowHeight = 44,
   headerHeight = 44,
+  workers = [],
+  tools = [],
+  onBarSave,
 }) {
   const localScaleRef = useRef(null);
   const localBodyRef = useRef(null);
@@ -166,8 +169,7 @@ export default function Timeline({
           {visibleRows.map((r, i) => {
             const top = (start + i) * rowHeight;
 
-            // workerGroup 배경
-            if (r.type === "workerGroup") {
+            if (r.type === "workerGroup" || r.type === "group") {
               return (
                 <div
                   key={`bg:${r.key}`}
@@ -176,13 +178,12 @@ export default function Timeline({
                     top,
                     height: rowHeight,
                     background:
-                      "linear-gradient(to right, rgba(15,23,42,0.08), rgba(15,23,42,0))",
+                      "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
                   }}
                 />
               );
             }
 
-            // productGroup 배경
             if (r.type === "productGroup") {
               return (
                 <div
@@ -193,22 +194,6 @@ export default function Timeline({
                     height: rowHeight,
                     background:
                       "linear-gradient(to right, rgba(59,130,246,0.05), rgba(59,130,246,0))",
-                  }}
-                />
-              );
-            }
-
-            // group 배경 (품목별 뷰용)
-            if (r.type === "group") {
-              return (
-                <div
-                  key={`bg:${r.key}`}
-                  className="absolute left-0 right-0 pointer-events-none"
-                  style={{
-                    top,
-                    height: rowHeight,
-                    background:
-                      "linear-gradient(to right, rgba(15,23,42,0.06), rgba(15,23,42,0))",
                   }}
                 />
               );
@@ -226,6 +211,9 @@ export default function Timeline({
               scenarioStart={scenarioStart}
               totalMinutes={totalMinutes}
               dayOffset={dayOffset}
+              workers={workers}
+              tools={tools}
+              onBarSave={onBarSave}
             />
           ))}
         </div>
