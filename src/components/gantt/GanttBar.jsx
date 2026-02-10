@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function GanttBar({
   row,
@@ -261,14 +261,13 @@ export default function GanttBar({
                       <SelectValue placeholder="도구 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* {tools
+                      {tools
                         .filter((t) => t?.id != null && String(t.id) !== "")
                         .map((t) => (
                           <SelectItem key={String(t.id)} value={String(t.id)}>
                             {t.name || String(t.id)}
                           </SelectItem>
-                        ))} */}
-                      {tools.filter((t) => t.category.id)}
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
