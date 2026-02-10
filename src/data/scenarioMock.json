@@ -22,7 +22,7 @@
             "description": "케이크 도넛 전용 배합 원료 계량",
             "duration": 8
           },
-          "worker": {},
+          "worker": { "id": "worker", "name": "일꾼" },
           "toolId": "T-TBL-STS-001",
           "startAt": "2026-02-04T19:00:00",
           "endAt": "2026-02-04T19:08:00"
@@ -36,7 +36,7 @@
             "description": "공기 혼입을 고려한 크림화 믹싱",
             "duration": 12
           },
-          "worker": {},
+          "worker": { "id": "worker", "name": "일꾼" },
           "toolId": "T-MIX-SPR-001",
           "startAt": "2026-02-04T19:08:00",
           "endAt": "2026-02-04T19:20:00"
@@ -50,7 +50,7 @@
             "description": "기포 안정화를 위한 휴지",
             "duration": 10
           },
-          "worker": {},
+          "worker": { "id": "worker", "name": "일꾼" },
           "toolId": "T-TNK-BAT-001",
           "startAt": "2026-02-04T19:20:00",
           "endAt": "2026-02-04T19:30:00"
@@ -78,7 +78,7 @@
             "description": "짧은 시간 고온 튀김으로 조직 형성",
             "duration": 3
           },
-          "worker": {},
+          "worker": { "id": "worker", "name": "일꾼" },
           "toolId": "T-FRY-OIL-001",
           "startAt": "2026-02-04T19:36:00",
           "endAt": "2026-02-04T19:39:00"
@@ -92,7 +92,7 @@
             "description": "잔여 기름 제거",
             "duration": 4
           },
-          "worker": {},
+          "worker": { "id": "worker", "name": "일꾼" },
           "toolId": "T-RCK-MOV-001",
           "startAt": "2026-02-04T19:39:00",
           "endAt": "2026-02-04T19:43:00"
@@ -106,7 +106,7 @@
             "description": "형태 안정화를 위한 냉각",
             "duration": 15
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-RCK-MOV-001",
           "startAt": "2026-02-04T19:43:00",
           "endAt": "2026-02-04T19:58:00"
@@ -120,7 +120,7 @@
             "description": "설탕 글레이즈 도포",
             "duration": 5
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-TBL-STS-001",
           "startAt": "2026-02-04T19:58:00",
           "endAt": "2026-02-04T20:03:00"
@@ -134,7 +134,7 @@
             "description": "초콜릿, 견과류 등 토핑 부착",
             "duration": 5
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-TBL-STS-001",
           "startAt": "2026-02-04T20:03:00",
           "endAt": "2026-02-04T20:08:00"
@@ -148,7 +148,7 @@
             "description": "코팅 고정을 위한 냉각",
             "duration": 20
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-RCK-MOV-001",
           "startAt": "2026-02-04T20:08:00",
           "endAt": "2026-02-04T20:28:00"
@@ -169,7 +169,7 @@
             "description": "블루베리 머핀 배합용 원료 정밀 계량",
             "duration": 10
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-TBL-STS-002",
           "startAt": "2026-02-04T19:00:00",
           "endAt": "2026-02-04T19:10:00"
@@ -183,7 +183,7 @@
             "description": "버터 크림화 후 부드러운 배터 믹싱",
             "duration": 15
           },
-          "worker": {},
+          "worker": { "id": "P26800641", "name": "배홍동" },
           "toolId": "T-MIX-SPR-002",
           "startAt": "2026-02-04T19:10:00",
           "endAt": "2026-02-04T19:25:00"

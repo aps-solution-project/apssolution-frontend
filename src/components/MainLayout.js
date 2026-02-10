@@ -2,8 +2,13 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { UserNav } from "./UserNav";
+import { useRouter } from "next/router";
 
 export default function MainLayout({ children }) {
+  const router = useRouter();
+
+  const isCalendar = router.pathname === "/schedule";
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden">
@@ -28,7 +33,14 @@ export default function MainLayout({ children }) {
             </div>
           </header>
 
-          <div className="flex-1 min-h-0 overflow-hidden p-8">{children}</div>
+          <div
+            className={[
+              "flex-1 min-h-0 min-w-0 overflow-hidden",
+              isCalendar ? "p-0" : "p-8",
+            ].join(" ")}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>
