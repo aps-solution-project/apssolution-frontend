@@ -3,22 +3,12 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { UserNav } from "./UserNav";
-import { usePathname } from "next/navigation";
-import GlobalSearch from "./GlobalSearch";
+import { useRouter } from "next/router";
 
 export default function MainLayout({ children }) {
-  const { account } = useAccount();
-  const userRole = account?.role;
-  const isWorker = userRole === "WORKER";
-  const pathname = usePathname();
+  const router = useRouter();
 
-  // 로그인 페이지 여부 확인
-  const isLoginPage = pathname === "/login";
-
-  // 1. 로그인 페이지일 경우: 아무런 레이아웃 없이 내용만 렌더링
-  if (isLoginPage) {
-    return <main className="w-full h-screen">{children}</main>;
-  }
+  const isCalendar = router.pathname === "/schedule";
 
   return (
     <SidebarProvider>
@@ -46,7 +36,12 @@ export default function MainLayout({ children }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar scroll-smooth">
+          <div
+            className={[
+              "flex-1 min-h-0 min-w-0 overflow-hidden",
+              isCalendar ? "p-0" : "p-8",
+            ].join(" ")}
+          >
             {children}
           </div>
         </main>
