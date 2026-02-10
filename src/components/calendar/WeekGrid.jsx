@@ -10,18 +10,22 @@ export default function WeekGrid({
   onSelectEvent,
 }) {
   const days = getWeekDays(cursorDate);
+  const todayKey = keyOf(new Date());
 
   return (
-    <Card className="rounded-2xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Week</CardTitle>
+    <Card className="rounded-2xl shadow-sm border-slate-200/80 h-full">
+      <CardHeader className="pb-3 px-5 pt-5">
+        <CardTitle className="text-base font-bold text-slate-800">
+          Week
+        </CardTitle>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-5 pb-5">
         <div className="grid grid-cols-7 gap-2">
           {days.map((d) => {
             const k = keyOf(d);
             const isSelected = k === selectedDateKey;
+            const isToday = k === todayKey;
             const items = eventsByDate[k] || [];
             const dow = d.toLocaleString("en-US", { weekday: "short" });
 
@@ -30,19 +34,27 @@ export default function WeekGrid({
                 <button
                   onClick={() => onSelectDate(k)}
                   className={[
-                    "w-full rounded-xl border p-2 text-left",
+                    "w-full rounded-xl border p-2 text-left transition-all duration-150",
                     isSelected
-                      ? "border-violet-300 ring-2 ring-violet-100"
-                      : "border-border",
-                    "bg-background",
+                      ? "border-blue-400 ring-2 ring-blue-100 bg-blue-50/50"
+                      : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/30",
                   ].join(" ")}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold">
-                      {dow} <span className="text-muted-foreground">{d.getDate()}</span>
+                    <div className="text-xs font-bold text-slate-800">
+                      {dow}{" "}
+                      <span
+                        className={[
+                          isToday
+                            ? "bg-blue-500 text-white px-1.5 py-0.5 rounded-full"
+                            : "text-slate-400",
+                        ].join(" ")}
+                      >
+                        {d.getDate()}
+                      </span>
                     </div>
                     {items.length ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-bold">
                         {items.length}
                       </span>
                     ) : null}
@@ -58,12 +70,12 @@ export default function WeekGrid({
                         />
                       ))
                     ) : (
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[11px] text-slate-300">
                         No events
                       </div>
                     )}
                     {items.length > 6 ? (
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[11px] text-slate-400 font-medium">
                         + {items.length - 6} more
                       </div>
                     ) : null}

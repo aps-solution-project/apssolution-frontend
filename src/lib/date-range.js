@@ -12,7 +12,7 @@ export function getMonthRangeKeys(cursorDate) {
 
 export function getWeekRangeKeys(cursorDate) {
   const d = new Date(cursorDate);
-  const day = d.getDay(); // 0 Sun
+  const day = d.getDay();
   const start = new Date(d);
   start.setDate(d.getDate() - day);
   const end = new Date(start);

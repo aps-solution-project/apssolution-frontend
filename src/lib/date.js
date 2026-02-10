@@ -16,7 +16,22 @@ export function formatMonthTitle(d) {
 }
 
 export function formatDayTitle(d) {
-  return d.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function formatDateLabel(key) {
+  const d = parseKey(key);
+  return d.toLocaleString("en-US", {
+    weekday: "short",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function addDays(d, delta) {
@@ -31,10 +46,9 @@ export function addMonths(d, delta) {
   return x;
 }
 
-// Sunday start
 export function startOfWeek(d) {
   const x = new Date(d);
-  const day = x.getDay(); // 0..6
+  const day = x.getDay();
   x.setHours(0, 0, 0, 0);
   x.setDate(x.getDate() - day);
   return x;
@@ -45,7 +59,6 @@ export function getWeekDays(d) {
   return Array.from({ length: 7 }, (_, i) => addDays(s, i));
 }
 
-// month matrix
 export function getMonthMatrix(year, month) {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
@@ -69,7 +82,6 @@ export function getMonthMatrix(year, month) {
 }
 
 export function timeToMinutes(t) {
-  // "HH:MM"
   if (!t) return 0;
   const [hh, mm] = t.split(":").map(Number);
   return hh * 60 + mm;
@@ -77,4 +89,30 @@ export function timeToMinutes(t) {
 
 export function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
+}
+
+export function formatWeekRange(d) {
+  const s = startOfWeek(d);
+  const e = addDays(s, 6);
+  return `${s.toLocaleString("en-US", { month: "short", day: "numeric" })} — ${e.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+}
+
+/**
+ * 근무 타입 판별
+ * - 주간(day): 07:00 ~ 20:59
+ * - 야간(night): 21:00 ~ 06:59
+ */
+export function getShiftType(startTime) {
+  if (!startTime) return null;
+  const mins = timeToMinutes(startTime);
+  if (mins >= 7 * 60 && mins < 21 * 60) return "day";
+  return "night";
+}
+
+export function formatTime12(t) {
+  if (!t) return "";
+  const [hh, mm] = t.split(":").map(Number);
+  const ampm = hh >= 12 ? "PM" : "AM";
+  const h = hh % 12 || 12;
+  return `${pad2(h)}:${pad2(mm)} ${ampm}`;
 }
