@@ -1,13 +1,15 @@
-import { useAccount } from "@/stores/account-store";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
-import { UserNav } from "./UserNav";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useAccount } from "@/stores/account-store";
 import { useRouter } from "next/router";
+import GlobalSearch from "./GlobalSearch";
+import { UserNav } from "./UserNav";
 
 export default function MainLayout({ children }) {
   const router = useRouter();
-
+  const { account } = useAccount();
+  const isWorker = account?.role === "WORKER";
   const isCalendar = router.pathname === "/schedule";
 
   return (
