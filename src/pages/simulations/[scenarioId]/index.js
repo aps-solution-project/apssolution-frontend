@@ -77,7 +77,7 @@ export default function SimulationPage() {
 
   useEffect(() => {
     if (!token || !scenarioId) return;
-    getScenarioResult(token, scenarioId).then(setData);
+    getScenarioResult(token, scenarioId).then((obj) => setData(obj));
   }, [scenarioId, token]);
 
   if (!data.scenario) {

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
 
@@ -88,8 +88,8 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
     const list = Array.isArray(products) ? products : [];
     let r = 0;
 
-    // 1. 모든 작업을 작업자별로 그룹화
-    const workerTasksMap = new Map();
+    // workerId -> { workerId, workerName, taskMap }
+    const workerMap = new Map();
 
     list.forEach((p) => {
       const schedules = Array.isArray(p.scenarioSchedules)
@@ -99,12 +99,27 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
       schedules.forEach((s, idx) => {
         const workerId = s?.worker?.id || "unassigned";
         const workerName = s?.worker?.name || "미배정";
+        const taskName = s?.scheduleTask?.name || "작업";
 
-        if (!workerTasksMap.has(workerId)) {
-          workerTasksMap.set(workerId, {
+        if (!workerMap.has(workerId)) {
+          workerMap.set(workerId, {
             workerId,
             workerName,
-            tasks: [],
+            taskMap: new Map(),
+          });
+        }
+
+        const worker = workerMap.get(workerId);
+
+        if (!worker.taskMap.has(taskName)) {
+          worker.taskMap.set(taskName, {
+            type: "task",
+            key: `task:${workerId}:${taskName}`,
+            row: -1,
+            workerId,
+            workerName,
+            taskName,
+            bars: [],
           });
         }
 
@@ -113,58 +128,53 @@ export default function SimulationGanttForWorker({ products, scenarioStart }) {
           minutesBetween(s?.startAt, s?.endAt) ||
           0;
 
-        workerTasksMap.get(workerId).tasks.push({
-          type: "task",
-          key: `task:${workerId}:${p.id}:${s?.id ?? idx}`,
-          row: -1, // will be set later
-          workerId,
-          workerName,
-          productId: p.id,
-          productName: p.name || p.id,
-          taskName: s?.scheduleTask?.name || "작업",
-          toolId: s?.toolId || "미지정",
-          startAt: s?.startAt,
-          endAt: s?.endAt,
+        worker.taskMap.get(taskName).bars.push({
+          id: s?.id ?? `${workerId}-${idx}`,
           start: minutesFromStart(s?.startAt, scenarioStart),
           duration,
-          raw: s,
         });
       });
     });
 
-    // 2. 작업자별로 정렬 (미배정을 마지막에)
-    const workerGroups = Array.from(workerTasksMap.values()).sort((a, b) => {
+    // worker 정렬
+    const workers = Array.from(workerMap.values()).sort((a, b) => {
       if (a.workerId === "unassigned") return 1;
       if (b.workerId === "unassigned") return -1;
       return a.workerName.localeCompare(b.workerName);
     });
 
-    // 3. rows 생성
     const allRows = [];
 
-    workerGroups.forEach((workerGroup) => {
-      const { workerId, workerName, tasks } = workerGroup;
+    workers.forEach((worker) => {
+      const { workerId, workerName, taskMap } = worker;
 
-      // 작업자 그룹 row
-      const groupRow = {
+      allRows.push({
         type: "group",
         key: `group:${workerId}`,
         row: r++,
         workerId,
         workerName,
-        count: tasks.length,
+        count: taskMap.size,
         open: Boolean(openWorkers[workerId]),
-      };
+      });
 
-      allRows.push(groupRow);
+      if (!openWorkers[workerId]) return;
 
-      // 열려있으면 작업들 추가
-      if (openWorkers[workerId]) {
-        tasks.forEach((task) => {
-          task.row = r++;
-          allRows.push(task);
+      Array.from(taskMap.values()).forEach((taskRow) => {
+        // 🔥 겹침 방지 핵심 로직
+        taskRow.bars.sort((a, b) => a.start - b.start);
+
+        let lastEnd = -Infinity;
+        taskRow.bars.forEach((bar) => {
+          if (bar.start < lastEnd) {
+            bar.start = lastEnd; // 뒤로 밀기
+          }
+          lastEnd = bar.start + bar.duration;
         });
-      }
+
+        taskRow.row = r++;
+        allRows.push(taskRow);
+      });
     });
 
     return allRows;
