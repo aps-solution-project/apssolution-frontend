@@ -29,7 +29,8 @@ const PAGE_SIZE = 6;
 
 /** 다른 리소스 페이지들과 동일한 컬럼 결 */
 const GRID_COLS = "grid-cols-[30%_55%_15%]";
-const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0 min-h-[50px]";
+const cellBase =
+  "px-4 py-2.5 flex items-center border-r last:border-r-0 min-h-[50px]";
 
 export default function ToolCategoryPage() {
   useAuthGuard();
@@ -145,14 +146,14 @@ export default function ToolCategoryPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-fit">
           {[
+            { name: "공정", href: "/resources/tasks", active: isProcesses },
+            { name: "품목", href: "/resources/products", active: isProducts },
+            { name: "도구", href: "/resources/tools", active: isTools },
             {
               name: "카테고리",
               href: "/resources/toolCategories",
               active: isCategories,
             },
-            { name: "도구", href: "/resources/tools", active: isTools },
-            { name: "품목", href: "/resources/products", active: isProducts },
-            { name: "공정", href: "/resources/tasks", active: isProcesses },
           ].map((tab) => (
             <Link
               key={tab.href}

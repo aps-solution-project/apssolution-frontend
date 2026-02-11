@@ -76,8 +76,14 @@ export function AppSidebar() {
     // 2. 게시판 (공통 + 권한 분기)
     const boardItems = [
       { label: "공지사항", href: "/notice/announcements", icon: NotebookPen },
-      { label: "자료실", href: "/resources/toolCategories", icon: Brain },
     ];
+    if (isManager) {
+      boardItems.push({
+        label: "자료실",
+        href: "/resources/tasks",
+        icon: Brain,
+      });
+    }
     if (isWorker) {
       boardItems.push({
         label: "사원 게시판",
@@ -100,14 +106,14 @@ export function AppSidebar() {
 
     // 4. 채팅 (공통)
     sections.push({
-      title: "채팅",
+      title: "메신저",
       items: [
         {
-          label: "채팅하기",
+          label: "채팅",
           href: "/chat/chat-create",
           icon: MessageSquareMore,
         },
-        { label: "채팅방 목록", href: "/chat/chat-list", icon: MessagesSquare },
+        { label: "채팅목록", href: "/chat/chat-list", icon: MessagesSquare },
       ],
     });
 

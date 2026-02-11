@@ -24,7 +24,8 @@ const PAGE_SIZE = 8;
 
 /**  컬럼 비율 재설계 (설명 넓힘) */
 const GRID_COLS = "grid-cols-[15%_16%_13%_11%_23%_7%_8%_7%]";
-const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0 min-h-[50px]";
+const cellBase =
+  "px-4 py-2.5 flex items-center border-r last:border-r-0 min-h-[50px]";
 
 export default function TaskPage() {
   useAuthGuard();
@@ -115,14 +116,14 @@ export default function TaskPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-fit">
           {[
+            { name: "공정", href: "/resources/tasks", active: isProcesses },
+            { name: "품목", href: "/resources/products", active: isProducts },
+            { name: "도구", href: "/resources/tools", active: isTools },
             {
               name: "카테고리",
               href: "/resources/toolCategories",
               active: isCategories,
             },
-            { name: "도구", href: "/resources/tools", active: isTools },
-            { name: "품목", href: "/resources/products", active: isProducts },
-            { name: "공정", href: "/resources/tasks", active: isProcesses },
           ].map((tab) => (
             <Link
               key={tab.href}
@@ -205,14 +206,14 @@ export default function TaskPage() {
             <div className={`${cellBase} truncate font-bold text-indigo-600`}>
               {t.toolCategoryId || "-"}
             </div>
-            <div className={`${cellBase} truncate font-bold text-slate-800`}>
+            <div className={`${cellBase} truncate text-slate-800`}>
               {t.name}
             </div>
             <div className={`${cellBase} truncate text-slate-500 text-xs`}>
               {t.description || "-"}
             </div>
             <div
-              className={`${cellBase} justify-center font-black text-slate-300`}
+              className={`${cellBase} justify-center font-black text-slate-500`}
             >
               {t.seq}
             </div>

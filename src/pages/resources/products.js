@@ -123,14 +123,14 @@ export default function ResourcesPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
           {[
+            { name: "공정", href: "/resources/tasks", active: isProcesses },
+            { name: "품목", href: "/resources/products", active: isProducts },
+            { name: "도구", href: "/resources/tools", active: isTools },
             {
               name: "카테고리",
               href: "/resources/toolCategories",
               active: isCategories,
             },
-            { name: "도구", href: "/resources/tools", active: isTools },
-            { name: "품목", href: "/resources/products", active: isProducts },
-            { name: "공정", href: "/resources/tasks", active: isProcesses },
           ].map((tab) => (
             <Link key={tab.href} href={tab.href}>
               <div
