@@ -17,6 +17,7 @@ import { getActiveAccounts } from "@/api/auth-api";
 import { getScenarioResult } from "@/api/scenario-api";
 import SimulationGantt from "@/components/gantt/SimulationGantt";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
+import { SimulationContext } from "@/components/gantt/GanttBar";
 import { useToken } from "@/stores/account-store";
 
 const PRODUCT_COLORS = [
@@ -155,6 +156,15 @@ export default function SimulationPage() {
             </div>
 
             <div className="flex items-center gap-3 mb-3 mr-10">
+              <Badge
+                className={
+                  scenario.published
+                    ? "rounded-full bg-green-600 text-white px-3 py-1 text-[13px] font-semibold hover:bg-green-600"
+                    : "rounded-full bg-slate-200 text-slate-600 px-3 py-1 text-[13px] font-semibold hover:bg-slate-200"
+                }
+              >
+                {scenario.published ? "배포됨" : "미배포"}
+              </Badge>
               <Button
                 onClick={fetchData}
                 className="h-11 px-8 rounded-md bg-slate-50 border border-slate-200 text-slate-600 font-bold hover:bg-emerald-600 hover:text-white cursor-pointer "
@@ -295,55 +305,57 @@ export default function SimulationPage() {
         </div>
 
         {/* 간트 차트 */}
-        <Card className="overflow-hidden">
-          <div className="flex items-end gap-1 px-4 pt-3 border-b border-slate-200 bg-slate-50">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleViewModeChange("product")}
-              className={[
-                "h-9 px-4 rounded-b-none border border-b-0 text-sm font-medium",
-                viewMode === "product"
-                  ? "bg-white text-slate-900 border-slate-300 -mb-px"
-                  : "bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200",
-              ].join(" ")}
-            >
-              <Package className="h-4 w-4 mr-1" />
-              품목별
-            </Button>
+        <SimulationContext.Provider value={{ published: !!scenario.published }}>
+          <Card className="overflow-hidden">
+            <div className="flex items-end gap-1 px-4 pt-3 border-b border-slate-200 bg-slate-50">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleViewModeChange("product")}
+                className={[
+                  "h-9 px-4 rounded-b-none border border-b-0 text-sm font-medium",
+                  viewMode === "product"
+                    ? "bg-white text-slate-900 border-slate-300 -mb-px"
+                    : "bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200",
+                ].join(" ")}
+              >
+                <Package className="h-4 w-4 mr-1" />
+                품목별
+              </Button>
 
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleViewModeChange("worker")}
-              className={[
-                "h-9 px-4 rounded-b-none border border-b-0 text-sm font-medium",
-                viewMode === "worker"
-                  ? "bg-white text-slate-900 border-slate-300 -mb-px"
-                  : "bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200",
-              ].join(" ")}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              작업자별
-            </Button>
-          </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleViewModeChange("worker")}
+                className={[
+                  "h-9 px-4 rounded-b-none border border-b-0 text-sm font-medium",
+                  viewMode === "worker"
+                    ? "bg-white text-slate-900 border-slate-300 -mb-px"
+                    : "bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200",
+                ].join(" ")}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                작업자별
+              </Button>
+            </div>
 
-          {viewMode === "product" ? (
-            <SimulationGantt
-              products={products}
-              scenarioStart={scenario.startAt}
-              workers={workers}
-              token={token}
-            />
-          ) : (
-            <SimulationGanttForWorker
-              products={products}
-              scenarioStart={scenario.startAt}
-              workers={workers}
-              token={token}
-            />
-          )}
-        </Card>
+            {viewMode === "product" ? (
+              <SimulationGantt
+                products={products}
+                scenarioStart={scenario.startAt}
+                workers={workers}
+                token={token}
+              />
+            ) : (
+              <SimulationGanttForWorker
+                products={products}
+                scenarioStart={scenario.startAt}
+                workers={workers}
+                token={token}
+              />
+            )}
+          </Card>
+        </SimulationContext.Provider>
       </div>
     </div>
   );
