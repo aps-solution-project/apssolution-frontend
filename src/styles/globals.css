@@ -157,3 +157,46 @@ body {
     animation: shake 0.3s ease-in-out;
   }
 }
+
+/* 기본 날짜 칸 설정 */
+.rdp-day {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  width: 40px !important;
+  margin: 2px !important;
+}
+
+/* 주간 점 (Day) */
+.day-dot::after {
+  content: "";
+  position: absolute;
+  bottom: 4px; /* 숫지 아래에서 4px 띄움 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #38bdf8; /* sky-400 */
+}
+
+/* 야간 점 (Night) */
+.night-dot::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #fbbf24; /* yellow-400 */
+}
+
+/* 오늘 날짜 표시와 점이 겹치지 않게 */
+.rdp-day_today {
+  font-weight: bold;
+  color: #6366f1; /* indigo-500 */
+}

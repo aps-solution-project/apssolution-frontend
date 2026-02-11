@@ -1,159 +1,100 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import { Bar, BarChart, Legend, XAxis, YAxis } from "recharts";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
-
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
-/* ===============================
-   블루 그라데이션
-================================ */
-function getBlueGradient(index, total) {
+// 색상 유틸리티
+const getBlueGradient = (index, total) => {
   const start = 190;
   const end = 70;
-  const value = Math.round(start - ((start - end) * index) / (total - 1));
+  const totalCount = total > 1 ? total - 1 : 1;
+  const value = Math.round(start - ((start - end) * index) / totalCount);
   return `rgb(${value}, ${value + 40}, 255)`;
-}
+};
 
-export default function ProcessBarChartPage() {
+export default function ProcessBarChart({ productName, tasks = [] }) {
   const [mode, setMode] = useState("duration");
 
-  const [tasks] = useState([
-    { seq: 1, name: "원료 계량", duration: 70 },
-    { seq: 2, name: "반죽 믹싱", duration: 60 },
-    { seq: 3, name: "오토리즈", duration: 60 },
-    { seq: 4, name: "1차 발효", duration: 180 },
-    { seq: 5, name: "분할", duration: 50 },
-    { seq: 6, name: "중간 둥글리기", duration: 60 },
-    { seq: 7, name: "중간 휴지", duration: 50 },
-    { seq: 8, name: "성형", duration: 140 },
-    { seq: 9, name: "최종 발효", duration: 120 },
-    { seq: 10, name: "스팀 굽기", duration: 120 },
-    { seq: 11, name: "냉각", duration: 80 },
-    { seq: 12, name: "보관", duration: 10 },
-  ]);
-
   const chartData = useMemo(() => {
-    if (mode === "duration") {
-      return tasks.map((t, i) => ({
-        name: `${t.seq}. ${t.name}`,
-        value: t.duration,
-        fill: getBlueGradient(i, tasks.length),
-      }));
-    }
-
     let sum = 0;
     return tasks.map((t, i) => {
       sum += t.duration;
       return {
         name: `${t.seq}. ${t.name}`,
-        value: sum,
+        value: mode === "duration" ? t.duration : sum,
         fill: getBlueGradient(i, tasks.length),
       };
     });
   }, [tasks, mode]);
 
   const chartConfig = {
-    value: {
-      label: mode === "duration" ? "소요 시간 (분)" : "누적 시간 (분)",
-    },
+    value: { label: mode === "duration" ? "소요 시간 (분)" : "누적 시간 (분)" },
   };
 
   return (
-    <Card className="max-w-4xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">바게트 클래식 공정</CardTitle>
-        <CardDescription className="text-sm">
-          {mode === "duration" ? "공정별 작업 시간" : "공정 누적 시간"}
-        </CardDescription>
-      </CardHeader>
+    <div className="flex flex-col h-full w-full bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h4 className="text-sm font-black text-slate-800">
+            {productName} 공정 시각화
+          </h4>
+          <p className="text-[11px] text-slate-400 font-medium">
+            실시간 데이터 기반 분석
+          </p>
+        </div>
 
-      <CardContent className="space-y-4">
-        {/* Menubar */}
-        <Menubar>
-          <MenubarMenu>
-            <MenubarTrigger
-              onClick={() => setMode("duration")}
-              className={mode === "duration" ? "font-semibold" : ""}
-            >
-              소요시간
-            </MenubarTrigger>
-          </MenubarMenu>
-          <MenubarMenu>
-            <MenubarTrigger
-              onClick={() => setMode("cumulative")}
-              className={mode === "cumulative" ? "font-semibold" : ""}
-            >
-              누적시간
-            </MenubarTrigger>
-          </MenubarMenu>
-        </Menubar>
-
-        {/* Chart */}
-        <ChartContainer config={chartConfig} className="h-[380px]">
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ left: 30, right: 30, top: 10, bottom: 10 }}
-            barSize={18}
-          >
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              axisLine={false}
-              width={120}
-              tick={{ fontSize: 12 }}
-            />
-            <XAxis type="number" />
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="square"
-              payload={[
-                {
-                  value: chartConfig.value.label,
-                  type: "square",
-                  color: "rgb(96, 165, 250)", // 사각형 색 (파란색)
-                },
-              ]}
-              formatter={(value) => (
-                <span style={{ color: "#000" }}>{value}</span> // 글자색 검정
+        {/* 미니 탭 스타일 모드 전환 */}
+        <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
+          {["duration", "cumulative"].map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={cn(
+                "px-3 py-1 text-[10px] font-black rounded-md transition-all",
+                mode === m
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-400 hover:text-slate-600",
               )}
-              wrapperStyle={{ fontSize: "12px" }}
-            />
+            >
+              {m === "duration" ? "소요시간" : "누적시간"}
+            </button>
+          ))}
+        </div>
+      </div>
 
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Bar
-              dataKey="value"
-              name={chartConfig.value.label}
+      <div className="flex-1 min-h-[300px] w-full relative">
+        <ChartContainer
+          config={chartConfig}
+          className="h-full w-full absolute inset-0"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
               layout="vertical"
-              radius={6}
-            />
-          </BarChart>
+              margin={{ left: 10, right: 30, top: 0, bottom: 0 }}
+            >
+              <XAxis type="number" hide />
+              <YAxis
+                dataKey="name"
+                type="category"
+                tickLine={false}
+                axisLine={false}
+                width={100}
+                tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
+              />
+              <ChartTooltip
+                cursor={{ fill: "#f8fafc" }}
+                content={<ChartTooltipContent />}
+              />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16} />
+            </BarChart>
+          </ResponsiveContainer>
         </ChartContainer>
-      </CardContent>
-
-      <CardFooter className="text-sm text-muted-foreground">
-        {mode === "duration"
-          ? "각 공정별 실제 작업 소요 시간"
-          : "공정이 진행됨에 따른 누적 시간 증가"}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

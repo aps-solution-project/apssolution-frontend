@@ -86,7 +86,7 @@ export default function ToolPage() {
 
         <Button
           className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-5 py-6 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
-          onClick={() => router.push("/tools")}
+          onClick={() => router.push("/resources/tool/edit")}
         >
           <Pencil size={16} className="text-indigo-600" />
           <span className="font-bold">도구 수정</span>
