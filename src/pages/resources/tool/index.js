@@ -34,10 +34,10 @@ export default function ToolPage() {
   const token = useToken((state) => state.token);
   const router = useRouter();
 
-  const isProducts = router.pathname === "/resources/products";
-  const isCategories = router.pathname === "/resources/toolCategories";
-  const isTools = router.pathname === "/resources/tools";
-  const isProcesses = router.pathname === "/resources/tasks";
+  const isProducts = router.pathname === "/resources/product";
+  const isCategories = router.pathname === "/resources/tool/category";
+  const isTools = router.pathname === "/resources/tool";
+  const isProcesses = router.pathname === "/resources/task";
 
   useEffect(() => {
     if (!token) return;
