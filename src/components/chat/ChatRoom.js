@@ -119,8 +119,13 @@ export default function ChatRoom() {
   }, [stomp, chatId, token]);
 
   // 하단 스크롤
+  const scrollToBottom = (behavior = "smooth") => {
+    scrollRef.current?.scrollIntoView({ behavior });
+  };
+
+  // 메시지 배열 변경 시 실행 (기존 코드 유지)
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollToBottom();
   }, [messages]);
 
   // 채팅방 진입 시 안읽은 메세지 카운트 초기화
@@ -402,6 +407,7 @@ export default function ChatRoom() {
                               key={file.id || index}
                               onClick={() => downloadFile(file)}
                               src={`http://192.168.0.20:8080${file.fileUrl}`}
+                              onLoad={() => scrollToBottom("auto")}
                               className="rounded-lg w-full max-w-[220px] object-contain cursor-pointer hover:opacity-90 transition shadow-md border border-slate-100"
                               alt={file.fileName}
                             />

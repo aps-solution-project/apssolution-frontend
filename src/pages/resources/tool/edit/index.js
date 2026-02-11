@@ -148,7 +148,7 @@ export default function ToolManagementPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push("/resources/tools")}
+            onClick={() => router.push("/resources/tool")}
             className="border-slate-200 text-slate-500 font-bold rounded-xl transition-all"
           >
             <ArrowLeft className="size-4 mr-2" /> 목록으로

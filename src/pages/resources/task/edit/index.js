@@ -105,7 +105,7 @@ export default function TaskManagementPage() {
       }));
       await upsertTasks(token, payload);
       alert("저장되었습니다.");
-      router.push("/resources/tasks");
+      router.push("/resources/task");
     } catch (e) {
       alert("저장 실패");
     }
@@ -135,7 +135,7 @@ export default function TaskManagementPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push("/resources/tasks")}
+            onClick={() => router.push("/resources/task")}
             className="border-slate-200 text-slate-500 font-bold rounded-xl"
           >
             <ArrowLeft className="size-4 mr-2" /> 목록으로
