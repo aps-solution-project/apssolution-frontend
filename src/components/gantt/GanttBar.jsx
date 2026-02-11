@@ -22,7 +22,10 @@ import {
 import { Loader2 } from "lucide-react";
 import { createContext, useState, useContext } from "react";
 
-export const SimulationContext = createContext({ published: false });
+export const SimulationContext = createContext({
+  published: false,
+  showProductName: false,
+});
 
 export default function GanttBar({
   row,
@@ -38,7 +41,7 @@ export default function GanttBar({
   setOpenPopoverKey,
 }) {
   const [localOpenBarId, setLocalOpenBarId] = useState(null);
-  const { published } = useContext(SimulationContext);
+  const { published, showProductName } = useContext(SimulationContext);
 
   const isControlled =
     typeof openPopoverKey !== "undefined" && !!setOpenPopoverKey;
@@ -142,7 +145,12 @@ export default function GanttBar({
 
         const showText = width >= 90;
 
-        const displayWorkerName = bar.workerName || row.workerName || "미배정";
+        const displayWorkerName = showProductName
+          ? bar.raw?.originalTaskName ||
+            bar.workerName ||
+            row.workerName ||
+            "미배정"
+          : bar.workerName || row.workerName || "미배정";
         const displayToolId = bar.toolId ?? row.toolId ?? "미지정";
 
         const barContent = (

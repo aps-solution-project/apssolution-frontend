@@ -131,6 +131,19 @@ async function unpublishScenario(token, scenarioId) {
   return resp.json();
 }
 
+async function getTodaySchedules(token) {
+  const resp = await fetch(`${serverAddr}/api/scenarios/schedules/today`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error("오늘의 작업 일정 조회에 실패했습니다.");
+  }
+  return resp.json();
+}
+
 async function editScenarioSchedule(token, scenarioScheduleId, data) {
   const resp = await fetch(
     `${serverAddr}/api/scenarios/schedules/${scenarioScheduleId}`,
@@ -178,4 +191,5 @@ export {
   publishScenario,
   simulateScenario,
   unpublishScenario,
+  getTodaySchedules,
 };
