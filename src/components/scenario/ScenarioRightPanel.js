@@ -270,7 +270,7 @@ export default function ScenarioRightPannel({
           <button
             onClick={() => {
               if (isOptimal || isFeasible) {
-                router.push(`/simulations/${selectedScenario.id}`);
+                router.push(`/scenarios/${selectedScenario.id}`);
                 return;
               }
               onStart();

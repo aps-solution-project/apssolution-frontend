@@ -1,7 +1,6 @@
 const serverAddr = "http://192.168.0.20:8080";
 
 async function upsertTasks(token, tasks) {
-  console.log("Upsert Payload:", tasks);
   const resp = await fetch(`${serverAddr}/api/tasks`, {
     method: "PUT",
     headers: {

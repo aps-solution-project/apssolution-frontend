@@ -14,8 +14,6 @@ import { useAuthGuard } from "@/hooks/use-authGuard";
 
 export default function AdminProfileEditModal({ open, onOpenChange, account }) {
   useAuthGuard();
-  console.log("account:", account);
-  console.log("accountId:", account?.accountId);
 
   const token = useToken((s) => s.token);
 
