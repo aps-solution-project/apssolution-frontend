@@ -23,7 +23,7 @@ export const useStomp = create((set, get) => ({
     set((state) => ({
       hasUnread: {
         ...state.hasUnread,
-        "/chat/list": true,
+        "/chat": true,
       },
     })),
 
@@ -42,7 +42,7 @@ export const useStomp = create((set, get) => ({
       totalUnreadCount: totalUnreadCount + 1,
       hasUnread: {
         ...hasUnread,
-        "/chat/list": true,
+        "/chat": true,
       },
     });
   },
@@ -62,7 +62,7 @@ export const useStomp = create((set, get) => ({
     set({
       totalUnreadCount: count,
       hasUnread: {
-        "/chat/list": count > 0,
+        "/chat": count > 0,
       },
     }),
 

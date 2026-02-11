@@ -5,7 +5,7 @@ import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
 import { UserCircle } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ChatList() {
   const { account } = useAccount();
@@ -53,7 +53,7 @@ export default function ChatList() {
       const body = JSON.parse(frame.body);
       // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
       if (body.msg === "refresh") {
-        console.log("🔄 새 메시지 감지: 목록 새로고침");
+        console.log("🔄 새 메시지 감지: 목록 새로고침!!");
         refreshChatList();
       }
     });
