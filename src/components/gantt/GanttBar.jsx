@@ -20,7 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { createContext, useState, useContext } from "react";
+
+export const SimulationContext = createContext({ published: false });
 
 export default function GanttBar({
   row,
@@ -36,6 +38,7 @@ export default function GanttBar({
   setOpenPopoverKey,
 }) {
   const [localOpenBarId, setLocalOpenBarId] = useState(null);
+  const { published } = useContext(SimulationContext);
 
   const isControlled =
     typeof openPopoverKey !== "undefined" && !!setOpenPopoverKey;
@@ -63,6 +66,7 @@ export default function GanttBar({
     .filter((w) => w.id !== "");
 
   const handleOpenPopover = (bar) => {
+    if (published) return;
     setOpenId(bar.id);
     // 현재 값으로 초기화 (raw 데이터에서 가져옴)
     setDraftWorkerId(bar.raw?.worker?.id ? String(bar.raw.worker.id) : "");
@@ -206,6 +210,7 @@ export default function GanttBar({
             key={bar.id}
             open={openId === bar.id}
             onOpenChange={(v) => {
+              if (published) return;
               if (v) handleOpenPopover(bar);
               else if (!saving) setOpenId(null);
             }}
@@ -214,7 +219,7 @@ export default function GanttBar({
               <ContextMenu>
                 <ContextMenuTrigger asChild>
                   <div
-                    className="absolute cursor-pointer"
+                    className={`absolute ${published ? "cursor-default" : "cursor-pointer"}`}
                     style={{ left, top, width, height: barHeight }}
                     title={undefined}
                     onPointerDown={(e) => e.stopPropagation()}
