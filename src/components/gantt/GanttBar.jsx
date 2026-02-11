@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
 import {
   Select,
   SelectContent,
@@ -34,7 +42,7 @@ export default function GanttBar({
     return null;
   }
 
-  const barHeight = 28;
+  const barHeight = 32;
   const top = row.row * rowHeight + (rowHeight - barHeight) / 2;
 
   // worker 목록 정규화: id/name 필드명이 다를 수 있으므로 여러 가지 대응
@@ -154,20 +162,22 @@ export default function GanttBar({
 
             <div className="flex items-center gap-2 px-2 min-w-0">
               <span
-                className={`text-[10px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
+                className={`text-[12px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
               >
                 {startLabel}
               </span>
 
               {showText ? (
                 <span
-                  className={`text-[10px] font-medium opacity-55 truncate ${text}`}
+                  className={`text-[12px] font-medium opacity-60 truncate ${text}`}
                 >
                   {displayWorkerName}
                 </span>
               ) : (
-                <span className={`text-[11px] font-bold truncate ${text}`}>
-                  {row.taskName?.charAt(0)}
+                <span
+                  className={`text-[12px] font-medium opacity-60 truncate ${text}`}
+                >
+                  {row.workerName?.charAt(0)}
                 </span>
               )}
             </div>
@@ -193,14 +203,49 @@ export default function GanttBar({
             }}
           >
             <PopoverTrigger asChild>
-              <div
-                className="absolute cursor-pointer"
-                style={{ left, top, width, height: barHeight }}
-                title={`${row.productName || ""}\n${row.taskName || ""}\n${displayWorkerName} · ${displayToolId}`}
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                {barContent}
-              </div>
+              <ContextMenu>
+                <ContextMenuTrigger asChild>
+                  <div
+                    className="absolute cursor-pointer"
+                    style={{ left, top, width, height: barHeight }}
+                    title={undefined} // tooltip 중복 싫으면 제거
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onContextMenu={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <PopoverTrigger asChild>
+                      <div
+                        className="h-full w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenPopover(bar);
+                        }}
+                      >
+                        {barContent}
+                      </div>
+                    </PopoverTrigger>
+                  </div>
+                </ContextMenuTrigger>
+
+                <ContextMenuContent className="w-72">
+                  <ContextMenuLabel className="text-[12px] font-semibold">
+                    {row.productName || "품목 없음"}
+                  </ContextMenuLabel>
+
+                  <div className="px-2 pb-2">
+                    <div className="text-[12px] text-slate-700">
+                      {row.taskName || "공정 없음"}
+                    </div>
+                    <div className="mt-1 text-[12px] text-slate-600">
+                      {displayWorkerName}{" "}
+                      <span className="text-slate-400">|</span> {displayToolId}
+                    </div>
+                  </div>
+
+                  <ContextMenuSeparator />
+                </ContextMenuContent>
+              </ContextMenu>
             </PopoverTrigger>
 
             <PopoverContent
