@@ -25,14 +25,6 @@ export default function App({ Component, pageProps }) {
 
   const isLoginPage = router.pathname === "/login";
 
-  // 미확인 메시지 최초 불러오기
-  useEffect(() => {
-    if (!token) return;
-    getUnreadCount(token).then((count) => {
-      useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
-    });
-  }, [token]);
-
   /* ===================== 1️⃣ persist 복구 ===================== */
   useEffect(() => {
     useToken.persist.rehydrate().then(() => {
@@ -107,6 +99,14 @@ export default function App({ Component, pageProps }) {
       sub.unsubscribe();
     };
   }, [stomp, account]);
+
+  // 미확인 메시지 최초 불러오기
+  useEffect(() => {
+    if (!token) return;
+    getUnreadCount(token).then((count) => {
+      useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
+    });
+  }, [token, useStomp]);
 
   /* ===================== 5️⃣ 렌더 가드 ===================== */
   if (!router.isReady || !isHydrated) {
