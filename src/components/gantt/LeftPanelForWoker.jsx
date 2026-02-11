@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Separator } from "@/components/ui/separator";
+import { ChevronRight, ChevronDown, User, Tally1 } from "lucide-react";
 
 function Collapse({ open, duration = 260, children }) {
   const innerRef = useRef(null);
@@ -140,26 +141,68 @@ export default function LeftPanelForWorker({
                   <button
                     onClick={() => onToggle?.(g.workerId)}
                     className={[
-                      "w-full h-full flex items-center justify-between rounded-xl px-3 transition",
-                      isOpen
-                        ? "bg-sky-50 text-sky-900"
-                        : "bg-white text-slate-800 hover:bg-sky-50/50",
-                      "border border-slate-200 shadow-[0_1px_2px_rgba(2,6,23,0.05)]",
+                      "group w-full h-full flex items-center justify-between rounded-lg px-3 transition",
+                      "border border-slate-200",
+                      "shadow-[0_1px_2px_rgba(2,6,23,0.06)]",
                       "active:scale-[0.99]",
+                      "bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60",
+                      "hover:shadow-[0_10px_24px_-18px_rgba(2,6,23,0.35)]",
+                      "hover:border-slate-300",
+                      isOpen
+                        ? "ring-1 ring-sky-200 bg-gradient-to-b from-sky-50/70 to-white text-slate-900"
+                        : "text-slate-800 hover:bg-slate-50/60",
                     ].join(" ")}
                     title={g.workerName}
                   >
                     <span className="flex items-center gap-2 min-w-0">
-                      <span className="text-sky-600">{isOpen ? "▾" : "▸"}</span>
-                      <span className="truncate text-sm font-semibold">
-                        {g.workerName}
+                      {/* left icon box (제품 버튼과 동일) */}
+                      <span
+                        className={[
+                          "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                          "border border-slate-200 bg-white",
+                          "shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]",
+                          isOpen
+                            ? "text-sky-700"
+                            : "text-slate-500 group-hover:text-sky-700",
+                        ].join(" ")}
+                        aria-hidden="true"
+                      >
+                        <User className="h-4 w-4" />
+                      </span>
+
+                      <span className="flex items-center gap-2 min-w-0">
+                        {/* chevron (제품 버튼과 동일) */}
+                        <span
+                          className={[
+                            "inline-flex items-center justify-center",
+                            "text-slate-400 group-hover:text-sky-600 transition",
+                            isOpen ? "text-sky-600" : "",
+                          ].join(" ")}
+                          aria-hidden="true"
+                        >
+                          {isOpen ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </span>
+
+                        <span className="truncate text-sm text-sky-950 font-semibold tracking-[-0.01em]">
+                          {g.workerName}
+                        </span>
                       </span>
                     </span>
 
+                    {/* count pill (완전 동일) */}
                     <span
                       className={[
-                        "text-[11px] font-medium",
-                        isOpen ? "text-sky-700" : "text-slate-500",
+                        "text-[11px] font-semibold tabular-nums",
+                        "inline-flex items-center justify-center",
+                        "min-w-[28px] h-6 px-2 rounded-full",
+                        "border shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]",
+                        isOpen
+                          ? "bg-sky-50 text-sky-700 border-sky-200"
+                          : "bg-slate-50 text-slate-600 border-slate-200 group-hover:bg-sky-50 group-hover:text-sky-700 group-hover:border-sky-200",
                       ].join(" ")}
                     >
                       {g.tasks.length}
@@ -185,8 +228,11 @@ export default function LeftPanelForWorker({
 
                           <div className="h-full flex items-center">
                             <div className="pl-6 pr-3 min-w-0 w-full">
-                              <div className="text-[13px] font-medium text-slate-800 truncate">
-                                {r.taskName}
+                              <div className="flex items-center gap-1 min-w-0">
+                                <Tally1 className="h-4 w-4 text-slate-500 shrink-0" />
+                                <span className="text-[13px] font-medium text-slate-800 truncate">
+                                  {r.taskName}
+                                </span>
                               </div>
                             </div>
                           </div>

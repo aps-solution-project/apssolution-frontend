@@ -136,18 +136,18 @@ export default function SimulationPage() {
         <div className="mb-3">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <div className="flex items-center gap-2 text-indigo-600 mb-3">
                 <PlayCircle size={20} />
                 <span className="text-sm font-black uppercase tracking-widest">
                   Simulation
                 </span>
               </div>
 
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-3">
                 {scenario.title || "시뮬레이션"}
               </h1>
 
-              <p className="text-sm text-slate-400 font-medium">
+              <p className="text-sm text-slate-400 font-medium ">
                 {scenario.description || "생산 일정 시뮬레이션"} (총{" "}
                 <span className="text-slate-600 font-bold">{totalTasks}</span>
                 개)
@@ -168,9 +168,8 @@ export default function SimulationPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto bg-slate-50/50 rounded-b-2xl">
+      <div className="flex-1 overflow-auto bg-slate-50/80 rounded-b-2xl">
         <div className="p-6 space-y-6 min-w-[1000px]">
-          {/* 시뮬레이션 ID 카드 + 제품 목록 카드 (가로 배치) */}
           <div className="flex gap-6 items-start">
             <Card className="p-6 w-[380px] h-[420px] shrink-0">
               <div className="space-y-6">
@@ -178,7 +177,7 @@ export default function SimulationPage() {
                   <p className="text-sm text-slate-500 mb-2">시뮬레이션 ID</p>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-sky-500 ">
+                    <p className="text-xl font-bold text-sky-600 ">
                       {scenario.id}
                     </p>
 
@@ -226,9 +225,15 @@ export default function SimulationPage() {
             </Card>
 
             <Card className="p-6 flex-1 min-w-0 h-[420px] flex flex-col">
-              <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-1">
-                <ScrollText className="h-5 w-5 text-slate-600" />
-                제품 목록
+              <h2 className="flex items-center justify-between text-lg font-bold text-slate-900 mb-1">
+                <span className="flex items-center gap-2">
+                  <ScrollText className="h-5 w-5 text-slate-600" />
+                  제품 목록
+                </span>
+
+                <span className="text-base font-medium text-slate-400 mr-2">
+                  제품 ID
+                </span>
               </h2>
 
               <div className="space-y-3">

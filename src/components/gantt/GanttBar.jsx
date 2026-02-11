@@ -5,6 +5,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+  ContextMenuLabel,
+} from "@/components/ui/context-menu";
+
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -195,14 +204,49 @@ export default function GanttBar({
             }}
           >
             <PopoverTrigger asChild>
-              <div
-                className="absolute cursor-pointer"
-                style={{ left, top, width, height: barHeight }}
-                title={`${row.productName || ""}\n${row.taskName || ""}\n${displayWorkerName} · ${displayToolId}`}
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                {barContent}
-              </div>
+              <ContextMenu>
+                <ContextMenuTrigger asChild>
+                  <div
+                    className="absolute cursor-pointer"
+                    style={{ left, top, width, height: barHeight }}
+                    title={undefined} // tooltip 중복 싫으면 제거
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onContextMenu={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <PopoverTrigger asChild>
+                      <div
+                        className="h-full w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenPopover(bar);
+                        }}
+                      >
+                        {barContent}
+                      </div>
+                    </PopoverTrigger>
+                  </div>
+                </ContextMenuTrigger>
+
+                <ContextMenuContent className="w-72">
+                  <ContextMenuLabel className="text-[12px] font-semibold">
+                    {row.productName || "품목 없음"}
+                  </ContextMenuLabel>
+
+                  <div className="px-2 pb-2">
+                    <div className="text-[12px] text-slate-700">
+                      {row.taskName || "공정 없음"}
+                    </div>
+                    <div className="mt-1 text-[12px] text-slate-600">
+                      {displayWorkerName}{" "}
+                      <span className="text-slate-400">|</span> {displayToolId}
+                    </div>
+                  </div>
+
+                  <ContextMenuSeparator />
+                </ContextMenuContent>
+              </ContextMenu>
             </PopoverTrigger>
 
             <PopoverContent
