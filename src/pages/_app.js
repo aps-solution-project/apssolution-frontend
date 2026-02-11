@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 
-import { Spinner } from "@/components/ui/spinner";
 import MainLayout from "@/components/MainLayout";
+import { Spinner } from "@/components/ui/spinner";
 
 import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
@@ -9,6 +9,7 @@ import { useStomp } from "@/stores/stomp-store";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
+import { getUnreadCount } from "@/api/chat-api";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
@@ -23,6 +24,14 @@ export default function App({ Component, pageProps }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   const isLoginPage = router.pathname === "/login";
+
+  // 미확인 메시지 최초 불러오기
+  useEffect(() => {
+    if (!token) return;
+    getUnreadCount(token).then((count) => {
+      useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
+    });
+  }, [token]);
 
   /* ===================== 1️⃣ persist 복구 ===================== */
   useEffect(() => {
@@ -88,11 +97,6 @@ export default function App({ Component, pageProps }) {
 
           useStomp.getState().markChatUnread();
           return;
-
-          // 🔥 판단은 store에서만
-          useStomp
-            .getState()
-            .increaseUnreadIfNeeded(body, currentAccount.accountId);
         }
       } catch (e) {
         console.error("❌ STOMP handler error", e);
