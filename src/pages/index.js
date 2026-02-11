@@ -1,6 +1,12 @@
 import { getNotices } from "@/api/notice-api";
+import { getMonthlyCalendars } from "@/api/calendar-api";
 import { Calendar } from "@/components/ui/calendar";
 import { useAccount, useToken } from "@/stores/account-store";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import {
   ArrowRight,
   Calendar as CalendarIcon,
@@ -8,9 +14,13 @@ import {
   FileText,
   Home,
   MessageSquare,
+  X,
+  Clock,
+  User,
+  MapPin,
 } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function DashboardPage() {
   const { account } = useAccount();
@@ -19,11 +29,14 @@ export default function DashboardPage() {
   const userRole = account?.role;
 
   const [date, setDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [notices, setNotices] = useState([]);
+  const [serverSchedules, setServerSchedules] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 1. 공지사항 초기 로드
   useEffect(() => {
     if (!token) return;
-
     getNotices(token)
       .then((data) => {
         const list = data?.notices ?? [];
@@ -32,22 +45,82 @@ export default function DashboardPage() {
       .catch(console.error);
   }, [token]);
 
-  // 근무 데이터 맵핑
-  const scheduleData = {
-    "2026-02-05": { status: "오늘", color: "bg-indigo-600" },
-    "2026-02-06": { status: "야간", color: "bg-orange-400" },
-    "2026-02-10": { status: "휴무", color: "bg-rose-400" },
-    "2026-02-12": { status: "출장", color: "bg-emerald-400" },
-    "2026-02-15": { status: "주간", color: "bg-sky-400" },
+  useEffect(() => {
+    if (!token || !date || !(date instanceof Date) || isNaN(date.getTime()))
+      return;
+    const targetDate = new Date(date);
+    const monthNum = targetDate.getMonth() + 1;
+    if (monthNum === currentMonth) return;
+
+    getMonthlyCalendars(token, monthNum)
+      .then((data) => {
+        // 데이터가 monthlySchedules 안에 있으므로 정확히 맵핑
+        const schedules = data.monthlySchedules || [];
+        setServerSchedules(schedules);
+        setCurrentMonth(monthNum); // 현재 로드된 월 업데이트
+      })
+      .catch(console.error);
+  }, [token, date]);
+
+  // 2. 달력 데이터 로드 (월 변경 감지)
+  useEffect(() => {
+    // 🌟 방어 코드: token이 없거나 date가 유효하지 않으면 실행 중단
+    if (!token || !date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return;
+    }
+
+    // 🌟 백엔드가 원하는 것은 "2026-02" 문자열이 아니라 숫자 '월'입니다.
+    const monthNum = date.getMonth() + 1;
+    if (typeof monthNum !== "number" || isNaN(monthNum)) return;
+
+    getMonthlyCalendars(token, monthNum)
+      .then((data) => {
+        console.log("📥 서버 응답 원본:", data);
+        const schedules = data.monthlySchedules || data.schedules || data || [];
+        setServerSchedules(schedules);
+      })
+      .catch((err) => {
+        console.error("❌ 데이터 로드 실패:", err);
+      });
+  }, [token, date]);
+
+  // 4. 특정 날짜의 상태를 찾는 함수 (useMemo 대신 매번 호출)
+  const getStatusByDay = (day) => {
+    if (!Array.isArray(serverSchedules)) return null;
+    // 1. 달력의 날짜를 문자열로 변환 (예: 2026-02-11)
+    const y = day.getFullYear();
+    const m = String(day.getMonth() + 1).padStart(2, "0");
+    const d = String(day.getDate()).padStart(2, "0");
+    const targetKey = `${y}-${m}-${d}`;
+
+    // 2. 서버 데이터와 비교 (데이터가 있는지 로그로 확인)
+    const found = serverSchedules.find((item) => item.date === targetKey);
+
+    if (found) {
+      return found.shift;
+    }
+    return null;
   };
 
-  const getDayData = (day) => {
-    if (!day) return null;
-    const year = day.getFullYear();
-    const month = String(day.getMonth() + 1).padStart(2, "0");
-    const d = String(day.getDate()).padStart(2, "0");
-    return scheduleData[`${year}-${month}-${d}`];
-  };
+  // 5. 달력 Modifiers 설정
+  const modifiers = useMemo(
+    () => ({
+      work: (day) => getStatusByDay(day) === "day",
+      night: (day) => getStatusByDay(day) === "night",
+    }),
+    [serverSchedules],
+  );
+
+  const selectedSchedule = useMemo(() => {
+    if (!date || !Array.isArray(serverSchedules)) return null;
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const targetKey = `${y}-${m}-${d}`;
+
+    return serverSchedules.find((item) => item.date === targetKey);
+  }, [date, serverSchedules]);
 
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
 
@@ -99,26 +172,6 @@ export default function DashboardPage() {
         },
       ];
 
-  const formatKey = (day) =>
-    `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(
-      day.getDate(),
-    ).padStart(2, "0")}`;
-
-  const modifiers = {
-    work: (day) => {
-      const key = formatKey(day);
-      return scheduleData[key]?.status === "주간";
-    },
-    night: (day) => {
-      const key = formatKey(day);
-      return scheduleData[key]?.status === "야간";
-    },
-    off: (day) => {
-      const key = formatKey(day);
-      return scheduleData[key]?.status === "휴무";
-    },
-  };
-
   function formatRelativeTime(dateString) {
     const diff = Date.now() - new Date(dateString).getTime();
     const minutes = Math.floor(diff / 60000);
@@ -131,49 +184,21 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10 pb-12">
-      {/* 🌟 통일된 대시보드 헤더 */}
-      <div className="flex justify-between items-end border-b pb-3 border-slate-100">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-indigo-600 mb-1">
-            <Home size={20} />
-            <span className="text-xs font-black uppercase tracking-widest">
-              Overview
-            </span>
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            워크스페이스
-          </h1>
-          <p className="text-sm text-slate-400 font-medium">
-            오늘의 일정과 주요 작업을 확인하세요
-          </p>
-        </div>
-        {/* 필요 시 우측에 '오늘 날짜' 등을 표시하면 좋습니다 */}
-        <div className="text-right pb-1">
-          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border">
-            {new Date().toLocaleDateString("ko-KR", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </span>
-        </div>
-      </div>
-      {/* 상단 메인 레이아웃: 달력과 버튼 */}
+      {/* Header 영역 생략 */}
       <div className="max-w-6xl mx-auto w-full grid grid-cols-12 gap-8 items-stretch">
-        {/* [왼쪽] 달력 영역 (4/12 비율) */}
+        {/* [왼쪽] 달력 영역 */}
         <div className="col-span-5 bg-white rounded-[32px] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
           <div className="py-5 px-6 border-b border-slate-50 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-black text-slate-700 shrink-0">
+            <div className="flex items-center gap-2 text-sm font-black text-slate-700">
               <CalendarIcon size={18} className="text-indigo-500" />
               Work Schedule
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 text-[10px] font-bold text-slate-400">
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> 주간
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                야간
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" /> 야간
               </div>
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400" /> 휴무
@@ -185,25 +210,72 @@ export default function DashboardPage() {
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(newDate) => newDate && setDate(newDate)}
               modifiers={modifiers}
               modifiersClassNames={{
-                work: "after:bg-sky-400",
-                night: "after:bg-yellow-400",
-                off: "after:bg-gray-400",
+                work: "day-dot",
+                night: "night-dot",
               }}
-              classNames={{
-                day: `
-      relative
-      after:content-['']
-      after:absolute
-      after:bottom-1
-      after:left-1/2
-      after:-translate-x-1/2
-      after:w-1.5
-      after:h-1.5
-      after:rounded-full
-    `,
+              JavaScript
+              components={{
+                Day: (props) => {
+                  const dayDate = props.date || props.day?.date;
+                  if (!dayDate) return null;
+
+                  const formatted = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, "0")}-${String(dayDate.getDate()).padStart(2, "0")}`;
+                  const schedule = serverSchedules?.find(
+                    (s) => s.date === formatted,
+                  );
+
+                  // 1. 일정이 없는 날 (기존과 동일)
+                  if (!schedule) {
+                    return (
+                      <td {...props}>
+                        <div className="flex items-center justify-center w-full h-full min-h-[40px] text-slate-600">
+                          {dayDate.getDate()}
+                        </div>
+                      </td>
+                    );
+                  }
+
+                  // 2. 일정이 있는 날 (text-indigo-600 제거)
+                  return (
+                    <td {...props} className={`${props.className} p-0`}>
+                      <HoverCard openDelay={0} closeDelay={0}>
+                        <HoverCardTrigger asChild>
+                          <div className="relative flex items-center justify-center w-full h-full min-h-[40px] cursor-pointer text-slate-600 font-medium">
+                            {/* 🌟 text-indigo-600과 font-black을 제거하여 일반 날짜와 통일감을 줬습니다. */}
+                            {dayDate.getDate()}
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          side="top"
+                          className="w-48 p-4 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md z-[100]"
+                        >
+                          <div className="space-y-2">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                                schedule.shift === "day"
+                                  ? "bg-sky-100 text-sky-600"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {schedule.shift?.toUpperCase()}
+                            </span>
+                            <h4 className="text-sm font-black text-slate-800 truncate">
+                              {schedule.title}
+                            </h4>
+                            <div className="flex items-center gap-1.5 text-indigo-500 text-[11px] font-bold">
+                              <Clock size={12} />
+                              {schedule.startTime?.substring(0, 5)} -{" "}
+                              {schedule.endTime?.substring(0, 5)}
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </td>
+                  );
+                },
               }}
             />
           </div>
@@ -250,30 +322,47 @@ export default function DashboardPage() {
             <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
               Recent Updates
             </h2>
+            <button
+              onClick={() => router.push("/notice/list")}
+              className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+            >
+              모두 보기
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {notices.map((notice) => (
-              <div
-                key={notice.id}
-                onClick={() => router.push(`/notice/${notice.id}`)}
-                className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between cursor-pointer hover:border-indigo-200 hover:shadow-sm hover:-translate-y-0.5 transition-all group"
-              >
-                <span className="text-sm font-bold text-slate-600 truncate mr-2 group-hover:text-indigo-600 transition-colors">
-                  {notice.title}
-                </span>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
-                    {formatRelativeTime(notice.createdAt)}
+          {notices && notices.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              {notices.map((notice) => (
+                <div
+                  key={notice.id}
+                  onClick={() => router.push(`/notice/${notice.id}`)}
+                  className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between cursor-pointer hover:border-indigo-200 hover:shadow-sm hover:-translate-y-0.5 transition-all group"
+                >
+                  <span className="text-sm font-bold text-slate-600 truncate mr-2 group-hover:text-indigo-600 transition-colors">
+                    {notice.title}
                   </span>
-                  <ArrowRight
-                    size={14}
-                    className="text-slate-200 group-hover:text-indigo-400"
-                  />
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
+                      {/* 필드명이 createdDate일 수도 있으니 확인 필요 */}
+                      {formatRelativeTime(
+                        notice.createdAt || notice.createdDate,
+                      )}
+                    </span>
+                    <ArrowRight
+                      size={14}
+                      className="text-slate-200 group-hover:text-indigo-400"
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-10 text-center bg-white rounded-2xl border border-dashed border-slate-200">
+              <p className="text-sm font-medium text-slate-400">
+                등록된 공지사항이 없습니다.
+              </p>
+            </div>
+          )}
         </div>
       </footer>
     </div>

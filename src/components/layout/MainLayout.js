@@ -5,6 +5,7 @@ import { useAccount } from "@/stores/account-store";
 import { useRouter } from "next/router";
 import GlobalSearch from "./GlobalSearch";
 import { UserNav } from "./UserNav";
+import { cn } from "@/lib/utils";
 
 export default function MainLayout({ children }) {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function MainLayout({ children }) {
       <div className="flex h-screen w-full overflow-hidden bg-background">
         <AppSidebar />
 
-        <main className="flex flex-1 flex-col h-full min-w-0 overflow-hidden">
+        <main className="flex flex-1 flex-col h-full min-w-0 bg-slate-50/30">
           <header className="flex h-16 shrink-0 items-center justify-between border-b px-6 bg-white z-10">
             <div className="flex items-center gap-4 flex-1">
               <SidebarTrigger />
@@ -37,12 +38,14 @@ export default function MainLayout({ children }) {
           </header>
 
           <div
-            className={[
-              "flex-1 min-h-0 min-w-0 overflow-hidden",
+            className={cn(
+              "flex-1 min-w-0 overflow-y-auto custom-scrollbar", // overflow-hidden 대신 auto 사용
               isCalendar ? "p-0" : "p-8",
-            ].join(" ")}
+            )}
           >
-            {children}
+            <div className="max-w-[1600px] mx-auto w-full h-full">
+              {children}
+            </div>
           </div>
         </main>
       </div>

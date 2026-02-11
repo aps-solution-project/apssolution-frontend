@@ -1,5 +1,19 @@
 import { getProducts, getProductTasks } from "@/api/product-api";
 import {
+  Bar,
+  BarChart,
+  Legend,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -23,12 +37,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import ProcessBarChart from "@/pages/test";
 
 const PAGE_SIZE = 7;
 // 🌟 고정 그리드 정의 (마지막 60px는 화살표 공간)
-const GRID_COLS = "grid-cols-[160px_180px_1fr_120px_120px_48px]";
+const GRID_COLS = "grid-cols-[180px_160px_1fr_120px_120px_48px]";
 const cellBase =
   "px-4 py-3 flex items-center border-r last:border-r-0 min-h-[50px]";
+
+export const getBlueGradient = (index, total) => {
+  const start = 190;
+  const end = 70;
+  const totalCount = total > 1 ? total - 1 : 1;
+  const value = Math.round(start - ((start - end) * index) / totalCount);
+  return `rgb(${value}, ${value + 40}, 255)`;
+};
 
 export default function ResourcesPage() {
   useAuthGuard();
@@ -41,6 +64,7 @@ export default function ResourcesPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [chartMode, setChartMode] = useState("duration");
 
   const token = useToken((state) => state.token);
   const router = useRouter();
@@ -112,7 +136,7 @@ export default function ResourcesPage() {
         </div>
         <Button
           className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-5 py-6 shadow-sm transition-all gap-2"
-          onClick={() => router.push(`/products`)}
+          onClick={() => router.push(`/resources/product/edit`)}
         >
           <Pencil size={16} className="text-indigo-600" />
           <span className="font-bold">데이터 수정</span>
@@ -245,48 +269,46 @@ export default function ResourcesPage() {
                 </AccordionTrigger>
 
                 <AccordionContent className="bg-slate-50/30 border-t border-slate-100/50 p-0">
-                  {" "}
-                  {/* 패딩을 내부로 이동 */}
-                  <div className="p-6">
-                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">
-                      Related Tasks
-                    </div>
-
-                    {/* 🌟 내부 스크롤 영역: max-h로 높이 제한 및 스크롤바 커스텀 */}
-                    <div className="space-y-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
-                      {tasksMap[product.id]?.map((task) => (
-                        <div
-                          key={task.id}
-                          className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex justify-between items-center hover:border-indigo-200 transition-all"
-                        >
-                          <div className="flex gap-4 items-center">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                  <div className="flex flex-col lg:flex-row items-stretch h-[500px]">
+                    {/* 📋 [1/3] 왼쪽 리스트 */}
+                    <div className="w-full lg:w-1/3 p-6 border-r border-slate-100">
+                      <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">
+                        Related Tasks
+                      </div>
+                      <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
+                        {tasksMap[product.id]?.map((task, idx) => (
+                          <div
+                            key={task.id}
+                            className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-3"
+                          >
+                            <div
+                              className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                              style={{
+                                backgroundColor: getBlueGradient(
+                                  idx,
+                                  tasksMap[product.id].length,
+                                ),
+                              }}
+                            >
                               {task.seq}
                             </div>
-                            <div>
-                              <div className="font-bold text-slate-800 text-sm">
-                                {task.name}
-                              </div>
-                              <div className="text-[11px] text-slate-400 truncate max-w-md">
-                                {task.description}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 font-bold">
-                            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase">
-                              {task.toolCategoryId}
+                            <span className="font-bold text-slate-800 text-xs">
+                              {task.name}
                             </span>
-                            <div className="text-[11px] text-indigo-600 bg-indigo-50/50 px-3 py-1 rounded-full border border-indigo-100 whitespace-nowrap">
-                              ⏱ {task.duration}분 / 👤 {task.requiredWorkers}명
-                            </div>
                           </div>
-                        </div>
-                      ))}
-                      {tasksMap[product.id]?.length === 0 && (
-                        <div className="text-center py-10 text-slate-400 text-xs">
-                          연결된 공정 정보가 없습니다.
-                        </div>
-                      )}
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 📊 [2/3] 오른쪽 차트 컴포넌트 */}
+                    <div className="w-full lg:w-2/3 p-6 flex flex-col">
+                      {/* 🌟 3. sticky를 활용하면 전체 스크롤을 내려도 차트가 화면에 고정되어 따라오게 할 수 있습니다. */}
+                      <div className="sticky top-6 flex-1 min-h-[400px]">
+                        <ProcessBarChart
+                          productName={product.name}
+                          tasks={tasksMap[product.id] || []}
+                        />
+                      </div>
                     </div>
                   </div>
                 </AccordionContent>

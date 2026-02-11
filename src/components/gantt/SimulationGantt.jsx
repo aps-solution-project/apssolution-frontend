@@ -161,6 +161,7 @@ export default function SimulationGantt({
           workerName: ov?.workerName || s?.worker?.name || "미배정",
           toolId: ov?.toolId || s?.toolId || "미지정",
           raw: s,
+          requiredWorkerCount: s?.requiredWorkerCount || 1,
         });
       }
 

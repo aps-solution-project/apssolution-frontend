@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 export const SimulationContext = createContext({
   published: false,
@@ -285,35 +285,38 @@ export default function GanttBar({
 
               <div className="mt-3 space-y-3">
                 {/* 작업자 Select */}
-                <div className="space-y-1">
-                  <div className="text-[11px] font-medium text-slate-600">
-                    작업자
-                    <span className="ml-1 text-slate-400 font-normal">
-                      현재: {displayWorkerName}
-                    </span>
-                  </div>
-                  {normalizedWorkers.length > 0 ? (
-                    <Select
-                      value={draftWorkerId}
-                      onValueChange={setDraftWorkerId}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="작업자 선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {normalizedWorkers.map((w) => (
-                          <SelectItem key={w.id} value={w.id}>
-                            {w.name || w.id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="text-[11px] text-red-500 py-2">
-                      재직 사원 목록을 불러올 수 없습니다
+                {bar.raw.scheduleTask?.requiredWorkerCount > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-medium text-slate-600">
+                      작업자
+                      <span className="ml-1 text-slate-400 font-normal">
+                        현재: {displayWorkerName}
+                      </span>
                     </div>
-                  )}
-                </div>
+
+                    {normalizedWorkers.length > 0 ? (
+                      <Select
+                        value={draftWorkerId}
+                        onValueChange={setDraftWorkerId}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="작업자 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {normalizedWorkers.map((w) => (
+                            <SelectItem key={w.id} value={w.id}>
+                              {w.name || w.id}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="text-[11px] text-red-500 py-2">
+                        재직 사원 목록을 불러올 수 없습니다
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* 도구 Select */}
                 <div className="space-y-1">
