@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import {
   CalendarIcon,
   ClockIcon,
+  Loader2,
   Package,
   PlayCircle,
   RefreshCwIcon,
@@ -18,6 +19,7 @@ import { getScenarioResult } from "@/api/scenario-api";
 import SimulationGantt from "@/components/gantt/SimulationGantt";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
 import { SimulationContext } from "@/components/gantt/GanttBar";
+import { publishScenario, unpublishScenario } from "@/api/scenario-api";
 import { useToken } from "@/stores/account-store";
 
 const PRODUCT_COLORS = [
@@ -31,6 +33,7 @@ const PRODUCT_COLORS = [
 
 export default function SimulationPage() {
   const [data, setData] = useState({});
+  const [publishing, setPublishing] = useState(false);
   const [workers, setWorkers] = useState([]);
   const router = useRouter();
   const params = useParams();
@@ -50,6 +53,32 @@ export default function SimulationPage() {
     (sum, p) => sum + (p.scenarioSchedules?.length || 0),
     0,
   );
+
+  const handlePublish = async () => {
+    if (!token || !scenarioId) return;
+    setPublishing(true);
+    try {
+      await publishScenario(token, scenarioId);
+      fetchData();
+    } catch (err) {
+      alert(err.message || "배포에 실패했습니다.");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!token || !scenarioId) return;
+    setPublishing(true);
+    try {
+      await unpublishScenario(token, scenarioId);
+      fetchData();
+    } catch (err) {
+      alert(err.message || "배포 해제에 실패했습니다.");
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";
@@ -172,6 +201,38 @@ export default function SimulationPage() {
                 <RefreshCwIcon size={16} />
                 새로고침
               </Button>
+
+              {scenario.published ? (
+                <Button
+                  onClick={handleUnpublish}
+                  disabled={publishing}
+                  className="h-11 px-5 rounded-md bg-red-50 border border-red-200 text-red-600 font-bold hover:bg-red-600 hover:text-white cursor-pointer"
+                >
+                  {publishing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      해제 중...
+                    </>
+                  ) : (
+                    "배포 해제"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="h-11 px-5 rounded-md bg-indigo-600 text-white font-bold hover:bg-indigo-400 cursor-pointer"
+                >
+                  {publishing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      배포 중...
+                    </>
+                  ) : (
+                    "배포하기"
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
