@@ -27,6 +27,7 @@ export default function Timeline({
 
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(600);
+  const [openPopoverKey, setOpenPopoverKey] = useState(null);
 
   const dragRef = useRef({
     active: false,
@@ -213,6 +214,8 @@ export default function Timeline({
               dayOffset={dayOffset}
               workers={workers}
               tools={tools}
+              openPopoverKey={openPopoverKey}
+              setOpenPopoverKey={setOpenPopoverKey}
               onBarSave={onBarSave}
             />
           ))}

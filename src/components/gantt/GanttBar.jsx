@@ -32,8 +32,16 @@ export default function GanttBar({
   workers = [],
   tools = [],
   onBarSave,
+  openPopoverKey,
+  setOpenPopoverKey,
 }) {
-  const [openBarId, setOpenBarId] = useState(null);
+  const [localOpenBarId, setLocalOpenBarId] = useState(null);
+
+  const isControlled =
+    typeof openPopoverKey !== "undefined" && !!setOpenPopoverKey;
+  const openId = isControlled ? openPopoverKey : localOpenBarId;
+  const setOpenId = isControlled ? setOpenPopoverKey : setLocalOpenBarId;
+
   const [draftWorkerId, setDraftWorkerId] = useState("");
   const [draftToolId, setDraftToolId] = useState("");
   const [saving, setSaving] = useState(false);
@@ -55,7 +63,7 @@ export default function GanttBar({
     .filter((w) => w.id !== "");
 
   const handleOpenPopover = (bar) => {
-    setOpenBarId(bar.id);
+    setOpenId(bar.id);
     // 현재 값으로 초기화 (raw 데이터에서 가져옴)
     setDraftWorkerId(bar.raw?.worker?.id ? String(bar.raw.worker.id) : "");
     setDraftToolId(bar.raw?.toolId ? String(bar.raw.toolId) : "");
@@ -63,7 +71,7 @@ export default function GanttBar({
 
   const handleSave = async (bar) => {
     if (!onBarSave) {
-      setOpenBarId(null);
+      setOpenId(null);
       return;
     }
 
@@ -74,14 +82,14 @@ export default function GanttBar({
 
     // 아무것도 없으면 닫기
     if (!payload.workerId && !payload.toolId) {
-      setOpenBarId(null);
+      setOpenId(null);
       return;
     }
 
     setSaving(true);
     try {
       await onBarSave(bar.id, payload);
-      setOpenBarId(null);
+      setOpenId(null);
     } catch (err) {
       alert("저장 실패: " + (err?.message || "알 수 없는 오류"));
     } finally {
@@ -196,10 +204,10 @@ export default function GanttBar({
         return (
           <Popover
             key={bar.id}
-            open={openBarId === bar.id}
+            open={openId === bar.id}
             onOpenChange={(v) => {
               if (v) handleOpenPopover(bar);
-              else if (!saving) setOpenBarId(null);
+              else if (!saving) setOpenId(null);
             }}
           >
             <PopoverTrigger asChild>
@@ -208,7 +216,7 @@ export default function GanttBar({
                   <div
                     className="absolute cursor-pointer"
                     style={{ left, top, width, height: barHeight }}
-                    title={undefined} // tooltip 중복 싫으면 제거
+                    title={undefined}
                     onPointerDown={(e) => e.stopPropagation()}
                     onContextMenu={(e) => {
                       e.stopPropagation();
@@ -330,7 +338,7 @@ export default function GanttBar({
                     variant="ghost"
                     size="sm"
                     disabled={saving}
-                    onClick={() => setOpenBarId(null)}
+                    onClick={() => setOpenId(null)}
                   >
                     취소
                   </Button>
