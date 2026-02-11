@@ -17,7 +17,6 @@ export function useScenario() {
     try {
       const res = await fetcher.postScenario(payload);
       const scenario = res.data || res.scenario || res;
-      console.log("created scenario 👉", scenario);
       return scenario;
     } catch (e) {
       console.error(e);

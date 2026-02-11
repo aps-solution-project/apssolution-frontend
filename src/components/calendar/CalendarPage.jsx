@@ -226,10 +226,6 @@ export default function CalendarPage() {
   const currentHour = now.getHours();
   const isNightNow = currentHour >= 21 || currentHour < 7;
 
-  useEffect(() => {
-    console.log("selectedDateKey changed:", selectedDateKey);
-  }, [selectedDateKey]);
-
   return (
     <div className="h-full overflow-hidden pb-4 bg-gradient-to-br from-slate-50 via-blue-50/30 to-white">
       <div className="mx-auto h-full w-full max-w-[1520px] px-7 py-5 flex flex-col gap-4">

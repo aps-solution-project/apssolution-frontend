@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "@/components/layout/MainLayout";
 import { Spinner } from "@/components/ui/spinner";
 
 import { useAccount, useToken } from "@/stores/account-store";
