@@ -306,8 +306,8 @@ export default function ManagementPage() {
 
               <CardContent className="p-0">
                 <div className="flex h-44">
-                  <div className="w-32 bg-slate-50 flex flex-col items-center justify-center border-r border-slate-100 p-3 gap-2">
-                    <div className="w-24 h-28 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex items-center justify-center">
+                  <div className="w-32 flex flex-col items-center justify-center border-r border-slate-300 p-3 gap-2">
+                    <div className="w-24 h-28 bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center">
                       {fullImgPath ? (
                         <img
                           src={fullImgPath}
@@ -377,7 +377,7 @@ export default function ManagementPage() {
                       </p>
                     </div>
 
-                    <div className="pt-4 border-t border-dashed border-slate-200 flex items-center justify-between">
+                    <div className="pt-4 border-t border-dashed border-slate-400 flex items-center justify-between">
                       <div className="text-[10px]">
                         <p className="text-slate-400 font-bold tracking-tighter uppercase">
                           Joined Date
