@@ -69,7 +69,7 @@ export default function DeploymentPage() {
                 ...s.scheduleTask,
                 name: p.name,
               },
-              worker: s.worker || { id: "self", name: account.name || "나" },
+              worker: s.worker || { id: "self", name: account.name || "me" },
             })),
           }));
           setProducts(prods);
