@@ -10,64 +10,60 @@ import { useEffect, useRef, useState } from "react";
 export default function ChatList() {
   const { account } = useAccount();
   const { token } = useToken();
-  const { stomp } = useStomp();
-  const { setTotalUnreadCount } = useStomp();
+  const { stomp, setTotalUnreadCount } = useStomp();
   const router = useRouter();
+  const { chatId: currentChatId } = router.query;
 
   const [chatData, setChatData] = useState({ myChatList: [] });
   const rooms = chatData.myChatList || [];
 
-  /** 현재 구독 저장용 (중복 구독 방지) */
-  const subscriptionsRef = useRef({});
-
   /** ================= 채팅 목록 최초 로딩 ================= */
-  useEffect(() => {
+  const refreshChatList = async () => {
     if (!token) return;
+    try {
+      const data = await getMyChats(token);
+      setChatData(data);
 
-    const fetchChats = async () => {
-      try {
-        const data = await getMyChats(token);
-        setChatData(data);
-        const total = data.myChatList.reduce(
-          (acc, cur) => acc + (cur.unreadCount || 0),
-          0,
-        );
-        setTotalUnreadCount(total);
-      } catch (err) {
-        console.error("목록 로드 실패:", err);
-      }
-    };
+      const total = data.myChatList.reduce(
+        (acc, cur) => acc + (cur.unreadCount || 0),
+        0,
+      );
 
-    fetchChats();
-  }, [token, setTotalUnreadCount]);
+      // 🌟 이 부분이 핵심입니다!
+      // 숫자를 업데이트함과 동시에 'hasUnread' 상태도 true/false로 동기화해줘야 합니다.
+      setTotalUnreadCount(total);
+    } catch (err) {
+      console.error("목록 갱신 실패:", err);
+    }
+  };
 
+  /** 1. 최초 로드 */
   useEffect(() => {
-    if (!stomp || !stomp.connected) return;
+    refreshChatList();
+  }, [token]);
 
-    console.log("📡 채팅 구독 시작:!!!!!!", account);
+  /** 2. 🌟 실시간 구독 로직 수정 */
+  useEffect(() => {
+    // stomp가 연결되지 않았거나 account가 없으면 대기
+    if (!stomp || !stomp.connected || !account?.accountId) return;
 
-    const sub = stomp.subscribe(
-      `/topic/user/${account?.accountId}`,
-      (frame) => {
-        const body = JSON.parse(frame.body);
-        if (body.msg === "refresh") {
-          getMyChats(token).then((data) => {
-            setChatData(data);
-            const total = data.myChatList.reduce(
-              (acc, cur) => acc + (cur.unreadCount || 0),
-              0,
-            );
-            setTotalUnreadCount(total);
-          });
-        }
-      },
-    );
+    console.log("📡 채팅 리스트 구독 활성화:", account.accountId);
+
+    const sub = stomp.subscribe(`/topic/user/${account.accountId}`, (frame) => {
+      const body = JSON.parse(frame.body);
+      // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
+      if (body.msg === "refresh") {
+        console.log("🔄 새 메시지 감지: 목록 새로고침");
+        refreshChatList();
+      }
+    });
 
     return () => {
-      console.log("❌ 채팅 구독 해제:", account?.accountId);
+      console.log("❌ 채팅 리스트 구독 해제");
       sub.unsubscribe();
     };
-  }, [stomp, account?.accountId]);
+    // 🌟 stomp.connected와 currentChatId를 의존성에 추가하여 상태 변화에 대응
+  }, [stomp, stomp?.connected, account?.accountId, currentChatId]);
 
   /** ================= 날짜 안전 파싱 ================= */
   function parseDateSafe(value) {
@@ -92,12 +88,22 @@ export default function ChatList() {
       {rooms.length > 0 ? (
         rooms.map((room) => {
           const time = parseDateSafe(room.lastMessageTime);
+          const isSelected = String(currentChatId) === String(room.id);
+          const displayUnreadCount = isSelected ? 0 : room.unreadCount;
+          const showBadge = room.unreadCount > 0;
 
           return (
             <div
               key={room.id}
-              onClick={() => router.push(`/chat/${room.id}`)}
-              className="flex items-center gap-4 p-4 hover:bg-slate-50 cursor-pointer"
+              onClick={() => {
+                router.push(`/chat/${room.id}`);
+              }}
+              className={`flex items-center gap-4 p-4 transition-all cursor-pointer
+                ${
+                  isSelected
+                    ? "bg-indigo-50/80 border-l-4 border-indigo-600 shadow-inner" // 선택되었을 때 스타일
+                    : "hover:bg-slate-50 border-l-4 border-transparent" // 기본/호버 스타일
+                }`}
             >
               {/* 아바타 */}
               <div className="relative flex -space-x-3 overflow-hidden p-1">
@@ -145,7 +151,7 @@ export default function ChatList() {
                 </p>
               </div>
 
-              {room.unreadCount > 0 && (
+              {showBadge && (
                 <Badge variant="destructive">{room.unreadCount}</Badge>
               )}
             </div>
