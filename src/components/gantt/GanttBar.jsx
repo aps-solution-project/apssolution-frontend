@@ -34,7 +34,7 @@ export default function GanttBar({
     return null;
   }
 
-  const barHeight = 28;
+  const barHeight = 32;
   const top = row.row * rowHeight + (rowHeight - barHeight) / 2;
 
   // worker 목록 정규화: id/name 필드명이 다를 수 있으므로 여러 가지 대응
@@ -154,20 +154,22 @@ export default function GanttBar({
 
             <div className="flex items-center gap-2 px-2 min-w-0">
               <span
-                className={`text-[10px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
+                className={`text-[12px] font-mono font-semibold tracking-tight opacity-70 shrink-0 ${text}`}
               >
                 {startLabel}
               </span>
 
               {showText ? (
                 <span
-                  className={`text-[10px] font-medium opacity-55 truncate ${text}`}
+                  className={`text-[12px] font-medium opacity-60 truncate ${text}`}
                 >
                   {displayWorkerName}
                 </span>
               ) : (
-                <span className={`text-[11px] font-bold truncate ${text}`}>
-                  {row.taskName?.charAt(0)}
+                <span
+                  className={`text-[12px] font-medium opacity-60 truncate ${text}`}
+                >
+                  {row.workerName?.charAt(0)}
                 </span>
               )}
             </div>
