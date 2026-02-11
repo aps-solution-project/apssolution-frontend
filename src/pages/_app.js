@@ -25,6 +25,13 @@ export default function App({ Component, pageProps }) {
 
   const isLoginPage = router.pathname === "/login";
 
+  useEffect(() => {
+    if (!token) return;
+    getUnreadCount(token).then((count) => {
+      useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
+    });
+  }, [token]);
+
   /* ===================== 1️⃣ persist 복구 ===================== */
   useEffect(() => {
     useToken.persist.rehydrate().then(() => {

@@ -21,7 +21,6 @@ import {
   FlaskRound,
   Home,
   MessageSquareMore,
-  MessagesSquare,
   NotebookPen,
 } from "lucide-react";
 import { useRouter } from "next/router";
