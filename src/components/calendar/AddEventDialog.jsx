@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,7 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { getShiftType } from "@/lib/date";
+import { useEffect, useMemo, useState } from "react";
 
 export default function AddEventDialog({
   defaultDateKey,
@@ -134,7 +134,7 @@ export default function AddEventDialog({
                 Date (YYYY-MM-DD)
               </Label>
               <Input
-                value={form.date}
+                value={defaultDateKey || form.date}
                 onChange={(e) => set("date", e.target.value)}
                 placeholder="2026-02-10"
                 className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100"
