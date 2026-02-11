@@ -41,7 +41,18 @@ export function AppSidebar() {
   }
 
   const getFilteredSections = () => {
-    const sections = [];
+    const sections = [
+      {
+        title: "메인",
+        items: [
+          {
+            label: "대시보드",
+            href: "/dashboard",
+            icon: Home,
+          },
+        ],
+      },
+    ];
 
     // 1. 설계 엔진 (Manager 전용)
     if (isManager) {
@@ -65,7 +76,7 @@ export function AppSidebar() {
     // 2. 게시판 (공통 + 권한 분기)
     const boardItems = [
       { label: "공지사항", href: "/notice/announcements", icon: NotebookPen },
-      { label: "자료실", href: "/resources/products", icon: Brain },
+      { label: "자료실", href: "/resources/toolCategories", icon: Brain },
     ];
     if (isWorker) {
       boardItems.push({

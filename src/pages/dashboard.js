@@ -11,6 +11,7 @@ import {
   FileText,
   Calendar as CalendarIcon,
   ArrowRight,
+  Home,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -131,12 +132,33 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-10 pb-12 px-6">
-      <div className="max-w-6xl mx-auto w-full pt-4">
-        <h1 className="text-2xl font-black text-slate-800">워크스페이스</h1>
-        <p className="text-sm text-slate-400 mt-1">
-          오늘의 일정과 주요 작업을 확인하세요
-        </p>
+    <div className="flex flex-col gap-10 pb-12">
+      {/* 🌟 통일된 대시보드 헤더 */}
+      <div className="flex justify-between items-end border-b pb-3 border-slate-100">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-indigo-600 mb-1">
+            <Home size={20} />
+            <span className="text-xs font-black uppercase tracking-widest">
+              Overview
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            워크스페이스
+          </h1>
+          <p className="text-sm text-slate-400 font-medium">
+            오늘의 일정과 주요 작업을 확인하세요
+          </p>
+        </div>
+        {/* 필요 시 우측에 '오늘 날짜' 등을 표시하면 좋습니다 */}
+        <div className="text-right pb-1">
+          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border">
+            {new Date().toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
       </div>
       {/* 상단 메인 레이아웃: 달력과 버튼 */}
       <div className="max-w-6xl mx-auto w-full grid grid-cols-12 gap-8 items-stretch">
@@ -236,9 +258,7 @@ export default function DashboardPage() {
             {notices.map((notice) => (
               <div
                 key={notice.id}
-                onClick={() =>
-                  router.push(`/notice/${notice.id}`)
-                }
+                onClick={() => router.push(`/notice/${notice.id}`)}
                 className="bg-white px-5 py-4 rounded-2xl border border-slate-100 flex items-center justify-between cursor-pointer hover:border-indigo-200 hover:shadow-sm hover:-translate-y-0.5 transition-all group"
               >
                 <span className="text-sm font-bold text-slate-600 truncate mr-2 group-hover:text-indigo-600 transition-colors">

@@ -12,6 +12,12 @@ export default function MainLayout({ children }) {
   const isWorker = account?.role === "WORKER";
   const isCalendar = router.pathname === "/schedule";
 
+  const isLoginPage = router.pathname === "/login";
+
+  if (isLoginPage) {
+    return <div className="h-screen w-full">{children}</div>;
+  }
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
