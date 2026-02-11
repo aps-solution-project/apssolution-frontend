@@ -17,14 +17,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Pencil } from "lucide-react";
+import { Brain, Pencil } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 8;
 
 /**  컬럼 비율 재설계 (설명 넓힘) */
-const GRID_COLS = "grid-cols-[15%_15%_14%_5%_11%_30%_5%_5%]";
-
-const cellBase = "px-4 py-2.5 flex items-center border-r last:border-r-0";
+const GRID_COLS = "grid-cols-[15%_16%_13%_11%_23%_7%_8%_7%]";
+const cellBase =
+  "px-4 py-2.5 flex items-center border-r last:border-r-0 min-h-[50px]";
 
 export default function TaskPage() {
   useAuthGuard();
@@ -85,63 +86,84 @@ export default function TaskPage() {
 
   return (
     <div className="space-y-4">
-      {/* 상단 네비 */}
-      <div className="flex justify-between items-center">
-        <div className="flex gap-8 text-sm font-medium">
-          <Link
-            href="/resources/products"
-            className={isProducts ? "text-indigo-600" : "text-stone-400"}
-          >
-            품목
-          </Link>
-          <Link
-            href="/resources/toolCategories"
-            className={isCategories ? "text-indigo-600" : "text-stone-400"}
-          >
-            카테고리
-          </Link>
-          <Link
-            href="/resources/tools"
-            className={isTools ? "text-indigo-600" : "text-stone-400"}
-          >
-            도구
-          </Link>
-          <Link
-            href="/resources/tasks"
-            className={isProcesses ? "text-indigo-600" : "text-stone-400"}
-          >
-            공정
-          </Link>
+      {/* 🌟 1. 최상단 헤더 영역 (통일) */}
+      <div className="flex justify-between items-end border-b pb-3 border-slate-100">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-indigo-600 mb-1">
+            <Brain size={20} />
+            <span className="text-xs font-black uppercase tracking-widest">
+              Resources Library
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            자료실
+          </h1>
+          <p className="text-sm text-slate-400 font-medium">
+            시뮬레이션의 핵심인 공정(Task) 단위를 관리합니다.
+          </p>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <Button
+          className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-5 py-6 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
+          onClick={() => router.push("/tasks")}
+        >
+          <Pencil size={16} className="text-indigo-600" />
+          <span className="font-bold">공정 편집</span>
+        </Button>
+      </div>
+
+      {/* 🌟 2. 탭 네비게이션 및 검색 바 (통일) */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-fit">
+          {[
+            { name: "공정", href: "/resources/tasks", active: isProcesses },
+            { name: "품목", href: "/resources/products", active: isProducts },
+            { name: "도구", href: "/resources/tools", active: isTools },
+            {
+              name: "카테고리",
+              href: "/resources/toolCategories",
+              active: isCategories,
+            },
+          ].map((tab) => (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className="flex-1 md:flex-none"
+            >
+              <div
+                className={cn(
+                  "px-6 py-2 text-sm font-bold rounded-lg text-center transition-all cursor-pointer",
+                  tab.active
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 hover:bg-white/50",
+                )}
+              >
+                {tab.name}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="relative w-full md:w-72">
           <SearchBar
             value={search}
             onChange={(v) => {
               setSearch(v);
               setPage(1);
             }}
-            placeholder="검색"
+            placeholder="공정명 또는 ID 검색..."
+            className="rounded-xl border-slate-200"
           />
-          <Button
-            size="sm"
-            onClick={() => router.push("/tasks")}
-            className="flex gap-1"
-          >
-            <Pencil size={14} /> 수정
-          </Button>
         </div>
       </div>
 
-      {/* 표 */}
-      <div className="border rounded-lg overflow-hidden shadow-sm">
-        {/* 헤더 (세로폭 살짝 줄임) */}
+      {/* 🌟 3. 표 영역 (디자인 개선) */}
+      <div className="border rounded-2xl overflow-hidden shadow-sm bg-white border-slate-200">
         <div
-          className={`grid ${GRID_COLS} bg-slate-100 text-xs font-semibold border-b`}
+          className={`grid ${GRID_COLS} bg-slate-50 text-[11px] font-black text-slate-500 border-b border-slate-100 uppercase tracking-wider`}
         >
-          <div className={`${cellBase} py-2`}>ID</div>
-
-          <div className={`${cellBase} py-2`}>
+          <div className={`${cellBase} py-3`}>공정 ID</div>
+          <div className={`${cellBase} py-3`}>
             <TaskColumnFilter
               label="제품"
               options={productOptions}
@@ -152,8 +174,7 @@ export default function TaskPage() {
               }}
             />
           </div>
-
-          <div className={`${cellBase} py-2`}>
+          <div className={`${cellBase} py-3`}>
             <TaskColumnFilter
               label="도구"
               options={toolOptions}
@@ -164,33 +185,47 @@ export default function TaskPage() {
               }}
             />
           </div>
-
-          <div className={`${cellBase} justify-center py-2`}>순서</div>
-          <div className={`${cellBase} py-2`}>작업명</div>
-          <div className={`${cellBase} py-2`}>설명</div>
-          <div className={`${cellBase} py-2`}>시간(분)</div>
-          <div className={`${cellBase} justify-center py-2`}>요구인원</div>
+          <div className={`${cellBase} py-3`}>작업명</div>
+          <div className={`${cellBase} py-3`}>설명</div>
+          <div className={`${cellBase} justify-center py-3`}>순서</div>
+          <div className={`${cellBase} justify-center py-3`}>시간</div>
+          <div className={`${cellBase} justify-center py-3`}>인원</div>
         </div>
 
-        {/* 바디 */}
         {pageData.map((t) => (
           <div
             key={t.id}
-            className={`grid ${GRID_COLS} text-sm border-b last:border-b-0 hover:bg-slate-50`}
+            className={`grid ${GRID_COLS} text-sm border-b last:border-b-0 hover:bg-slate-50/80 transition-colors border-slate-100`}
           >
-            <div className={cellBase}>{t.id}</div>
-            <div className={`${cellBase} truncate`}>{t.productId}</div>
-            <div className={`${cellBase} truncate`}>
+            <div className={`${cellBase} font-mono text-xs text-slate-400`}>
+              #{t.id}
+            </div>
+            <div className={`${cellBase} truncate font-medium text-slate-600`}>
+              {t.productId}
+            </div>
+            <div className={`${cellBase} truncate font-bold text-indigo-600`}>
               {t.toolCategoryId || "-"}
             </div>
-            <div className={`${cellBase} justify-center`}>{t.seq}</div>
-            <div className={`${cellBase} truncate`}>{t.name}</div>
-            <div className={`${cellBase} truncate text-stone-500`}>
+            <div className={`${cellBase} truncate text-slate-800`}>
+              {t.name}
+            </div>
+            <div className={`${cellBase} truncate text-slate-500 text-xs`}>
               {t.description || "-"}
             </div>
-            <div className={`${cellBase} justify-center`}>{t.duration}</div>
+            <div
+              className={`${cellBase} justify-center font-black text-slate-500`}
+            >
+              {t.seq}
+            </div>
+            <div
+              className={`${cellBase} justify-center font-bold text-emerald-600`}
+            >
+              {t.duration}분
+            </div>
             <div className={`${cellBase} justify-center`}>
-              {t.requiredWorkers ?? 1}
+              <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px] font-bold text-slate-600">
+                👤 {t.requiredWorkers ?? 1}
+              </span>
             </div>
           </div>
         ))}
