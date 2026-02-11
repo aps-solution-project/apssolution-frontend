@@ -29,6 +29,7 @@ import { useRouter } from "next/router";
 export function AppSidebar() {
   const router = useRouter();
   const { account } = useAccount();
+  const { totalUnreadCount } = useStomp();
   const userRole = account?.role;
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
   const isWorker = userRole === "WORKER";
@@ -103,13 +104,8 @@ export function AppSidebar() {
       title: "메신저",
       items: [
         {
-          label: "채팅목록",
-          href: "/chat/list",
-          icon: MessagesSquare,
-        },
-        {
           label: "채팅",
-          href: "/chat/create",
+          href: "/chat",
           icon: MessageSquareMore,
         },
       ],
