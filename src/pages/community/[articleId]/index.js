@@ -53,7 +53,7 @@ export default function CommunityDetailPage() {
         <div className="flex justify-between items-center border-b pb-4 border-slate-100">
           <Button
             variant="ghost"
-            onClick={() => router.push("/community/posts")}
+            onClick={() => router.push("/community/list")}
             className="text-slate-500 hover:text-slate-800 gap-2 px-0"
           >
             <List size={18} />{" "}
