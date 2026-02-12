@@ -1,3 +1,4 @@
+import { AIReportFloatingButton } from "@/components/scenario/AIReport";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -181,7 +182,7 @@ export default function SimulationPage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden">
+    <div className="h-full w-full flex flex-col overflow-hidden relative">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shrink-0 rounded-t-[32px]">
         <div className="mb-3">
@@ -487,6 +488,13 @@ export default function SimulationPage() {
           </SimulationContext.Provider>
         </div>
       </div>
+
+      {/* ai 레포트 */}
+      <AIReportFloatingButton
+        scenarioId={scenarioId}
+        products={products}
+        feedback={data.scenario.aiScheduleFeedback}
+      />
     </div>
   );
 }
