@@ -32,7 +32,7 @@ export default forwardRef(function SimulationGanttForWorker(
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
 
-  // barId → { workerName, toolId }
+  // barId → { workerId, workerName, toolId }
   const [barOverrides, setBarOverrides] = useState({});
 
   const handleBarSave = async (scheduleId, payload) => {
@@ -47,6 +47,7 @@ export default forwardRef(function SimulationGanttForWorker(
       setBarOverrides((prev) => ({
         ...prev,
         [scheduleId]: {
+          workerId: sc.worker?.id ?? prev[scheduleId]?.workerId,
           workerName: sc.worker?.name ?? prev[scheduleId]?.workerName,
           toolId: sc.tool?.id ?? prev[scheduleId]?.toolId,
         },
@@ -72,33 +73,16 @@ export default forwardRef(function SimulationGanttForWorker(
     };
   }, []);
 
-  // 도구 목록 추출: 가능한 경우 도구의 categoryId/name 포함
-  // const tools = useMemo(() => {
-  //   const map = new Map();
-  //   for (const p of Array.isArray(products) ? products : []) {
-  //     for (const sc of p.scenarioSchedules || []) {
-  //       const id = sc?.tool?.id ?? sc?.toolId;
-  //       if (!id) continue;
-  //       const key = String(id);
-  //       if (!map.has(key)) {
-  //         map.set(key, {
-  //           id: key,
-  //           name: sc?.tool?.name ?? String(id),
-  //           categoryId: sc?.tool?.categoryId ?? sc?.tool?.category?.id ?? null,
-  //         });
-  //       }
-  //     }
-  //   }
-  //   return Array.from(map.values()).sort((a, b) =>
-  //     String(a.name).localeCompare(String(b.name)),
-  //   );
-  // }, [products]);
-
   useEffect(() => {
     if (!token) return;
-    getAllTools(token).then((obj) => {
-      setTools(() => obj.tools);
-    });
+    getAllTools(token)
+      .then((obj) => {
+        setTools(() => obj.tools || []);
+      })
+      .catch(() => {
+        // 권한 없는 작업자 계정 — 도구 목록 없이 진행
+        setTools([]);
+      });
   }, [token]);
 
   const [openWorkers, setOpenWorkers] = useState(() => {
@@ -117,7 +101,8 @@ export default forwardRef(function SimulationGanttForWorker(
     const ws = new Set();
     list.forEach((p) => {
       (p.scenarioSchedules || []).forEach((s) => {
-        ws.add(s?.worker?.id || "unassigned");
+        const ov = barOverrides[s?.id];
+        ws.add(ov?.workerId || s?.worker?.id || "unassigned");
       });
     });
 
@@ -126,12 +111,9 @@ export default forwardRef(function SimulationGanttForWorker(
       ws.forEach((w) => {
         if (next[w] === undefined) next[w] = true;
       });
-      for (const k of Object.keys(next)) {
-        if (!ws.has(k)) delete next[k];
-      }
       return next;
     });
-  }, [products]);
+  }, [products, barOverrides]);
 
   const toggleWorker = (workerId) =>
     setOpenWorkers((p) => ({ ...p, [workerId]: !p[workerId] }));
@@ -148,8 +130,8 @@ export default forwardRef(function SimulationGanttForWorker(
         : [];
 
       schedules.forEach((s, idx) => {
-        const workerId = s?.worker?.id || "unassigned";
         const ov = barOverrides[s?.id];
+        const workerId = ov?.workerId || s?.worker?.id || "unassigned";
         const workerName = ov?.workerName || s?.worker?.name || "미배정";
         const taskName = s?.scheduleTask?.name || "작업";
 

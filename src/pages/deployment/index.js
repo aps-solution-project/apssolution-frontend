@@ -171,13 +171,13 @@ export default function DeploymentPage() {
     ? Math.max(0, (lastEndTime - now) / 1000)
     : 0;
 
-  // 데이터 조회
-  const fetchData = () => {
+  // 데이터 조회 (silent: true면 로딩 스피너 표시 안 함)
+  const fetchData = (silent = false) => {
     if (!token) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     getTodaySchedules(token)
       .then((res) => {
-        if (res?.scenario) {
+        if (res?.scenario?.published) {
           setScenario(res.scenario);
           const prods = (res.products || []).map((p) => ({
             ...p,
@@ -208,6 +208,25 @@ export default function DeploymentPage() {
 
   useEffect(() => {
     fetchData();
+  }, [token]);
+
+  // ── 주기적 폴링 (30초) + 탭 복귀 시 재조회 ──
+  useEffect(() => {
+    if (!token) return;
+
+    // 30초마다 폴링 (silent — 스피너 표시 안 함)
+    const intervalId = setInterval(() => fetchData(true), 30_000);
+
+    // 탭 복귀 시 즉시 재조회 (silent)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchData(true);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [token]);
 
   const formatDateTime = (dateStr) => {
@@ -272,7 +291,7 @@ export default function DeploymentPage() {
               )}
 
               <Button
-                onClick={fetchData}
+                onClick={() => fetchData(false)}
                 className="h-11 px-8 rounded-md bg-slate-50 border border-slate-200 text-slate-600 font-bold hover:bg-emerald-600 hover:text-white cursor-pointer"
               >
                 <RefreshCwIcon size={16} />
