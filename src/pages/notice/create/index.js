@@ -1,11 +1,11 @@
-import BoardEditor from "@/components/ui/editor";
-import { Button } from "@/components/ui/button";
-import { ListIcon, Save, FileInput } from "lucide-react";
-import { useRef, useState } from "react";
-import { useRouter } from "next/router";
 import { createNotice } from "@/api/notice-api"; // ✅ 공지 작성 API
-import { useToken } from "@/stores/account-store";
+import { Button } from "@/components/ui/button";
+import BoardEditor from "@/components/ui/editor";
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useToken } from "@/stores/account-store";
+import { FileInput, ListIcon, Save } from "lucide-react";
+import { useRouter } from "next/router";
+import { useRef, useState } from "react";
 
 export default function NoticeCreatePage() {
   useAuthGuard();
@@ -19,7 +19,7 @@ export default function NoticeCreatePage() {
   const [files, setFiles] = useState([]);
 
   const goToList = () => {
-    router.push("/notice/announcements");
+    router.push("/notice/list");
   };
 
   const handleSubmit = async () => {
@@ -49,7 +49,7 @@ export default function NoticeCreatePage() {
       await createNotice(token, formData);
 
       alert("공지사항이 등록되었습니다.");
-      router.push("/notice/announcements");
+      router.push("/notice/list");
     } catch (err) {
       console.error("공지 등록 실패:", err);
       alert("저장 중 오류가 발생했습니다.");

@@ -1,16 +1,5 @@
-import { useEffect, useState } from "react";
 import { getNotices, searchNotice } from "@/api/notice-api";
-import { useToken, useAccount } from "@/stores/account-store";
-import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -20,12 +9,17 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  Paperclip,
-  Megaphone,
-  Search,
-  MegaphoneIcon,
-  Plus,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useAccount, useToken } from "@/stores/account-store";
+import { MegaphoneIcon, Paperclip, Plus, Search } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 const PAGE_SIZE = 10;
 
@@ -106,7 +100,7 @@ export default function AnnouncementsPage() {
           </div>
           {token && role?.toUpperCase() !== "WORKER" && (
             <Button
-              onClick={() => router.push("/notice/announcements-create")}
+              onClick={() => router.push("/notice/create")}
               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
             >
               <Plus size={18} />

@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -216,12 +215,13 @@ export default function CalendarPage({ title = "My Scheduel" }) {
     setSelectedDateKey(keyOf(new Date()));
   };
 
-  const clockStr = now.toLocaleTimeString("en-US", {
-    hour: "2-digit",
+  const clockStr = now.toLocaleTimeString("ko-KR", {
+    hour: "numeric",
     minute: "2-digit",
     second: "2-digit",
-    hour12: true,
+    //hour12: false,
   });
+
   const dateStr = now.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -288,7 +288,7 @@ export default function CalendarPage({ title = "My Scheduel" }) {
                 <Sun className="h-4 w-4 text-amber-500" />
               )}
               <div className="text-right">
-                <div className="text-sm font-bold text-slate-800 tabular-nums tracking-tight">
+                <div className="text-md font-bold text-slate-800 tabular-nums tracking-tight">
                   {clockStr}
                 </div>
                 <div className="text-[10px] text-slate-400 font-medium">

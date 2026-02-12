@@ -30,7 +30,7 @@ export default function PostsCreatePage() {
     try {
       await createWorkerPost(token, formData);
       alert("게시글이 생성되었습니다.");
-      router.push("/community/posts"); // 경로 명확히 지정
+      router.push("/community/list"); // 경로 명확히 지정
     } catch (e) {
       alert("생성 실패: " + e.message);
     }
@@ -47,7 +47,7 @@ export default function PostsCreatePage() {
         setFiles={setFiles}
         onSubmit={handleSave}
         submitText="저장"
-        onCancel={() => router.push("/community/posts")}
+        onCancel={() => router.push("/community/list")}
       />
     </div>
   );
