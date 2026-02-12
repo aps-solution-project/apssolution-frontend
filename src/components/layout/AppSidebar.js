@@ -92,11 +92,21 @@ export function AppSidebar() {
       sections.push({
         title: "나의 업무",
         items: [
-          { label: "근무표", href: "/calendar", icon: CalendarDays },
+          { label: "근무표", href: "/calendar/worker", icon: CalendarDays },
           { label: "배포 작업", href: "/deployment", icon: ClipboardCheck },
         ],
       });
     }
+
+    // 3-1. 일정 관리 (Admin, Planner 전용)
+    if (isManager) {
+    sections.push({
+      title: "캘린더",
+      items: [
+        { label: "캘린더", href: "/calendar/admin", icon: CalendarDays },
+      ],
+    });
+  }
 
     // 4. 채팅 (공통)
     sections.push({
