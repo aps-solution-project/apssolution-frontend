@@ -245,19 +245,39 @@ export default function TaskPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  isActive={page === i + 1}
-                  onClick={() => setPage(i + 1)}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {(() => {
+              // 표시할 페이지 번호 범위 계산
+              let startPage = Math.max(1, page - 2);
+              let endPage = Math.min(totalPages, startPage + 4);
+
+              // 마지막 페이지 근처일 때 시작 페이지 재조정
+              if (endPage === totalPages) {
+                startPage = Math.max(1, endPage - 4);
+              }
+
+              const pages = [];
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      isActive={page === i}
+                      onClick={() => setPage(i)}
+                      className="cursor-pointer"
+                    >
+                      {i}
+                    </PaginationLink>
+                  </PaginationItem>,
+                );
+              }
+              return pages;
+            })()}
+
+            {/* 3. 다음 페이지 버튼 */}
             <PaginationItem>
               <PaginationNext
+                className="cursor-pointer"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
               />
             </PaginationItem>
           </PaginationContent>

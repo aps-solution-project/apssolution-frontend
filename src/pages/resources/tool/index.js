@@ -8,12 +8,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import { Brain, Pencil } from "lucide-react";
@@ -181,25 +181,50 @@ export default function ToolPage() {
         <div className="flex justify-center pb-10">
           <Pagination>
             <PaginationContent>
+              {/* 이전 버튼 */}
               <PaginationItem>
                 <PaginationPrevious
-                  className="cursor-pointer"
+                  className={cn(
+                    "cursor-pointer",
+                    page === 1 && "pointer-events-none opacity-50",
+                  )}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <PaginationItem key={i} className="cursor-pointer">
-                  <PaginationLink
-                    isActive={page === i + 1}
-                    onClick={() => setPage(i + 1)}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
+              {/* 페이지 번호 로직 */}
+              {(() => {
+                const maxButtons = 5; // 한 번에 보여줄 버튼 개수
+                let start = Math.max(1, page - Math.floor(maxButtons / 2));
+                let end = Math.min(totalPages, start + maxButtons - 1);
+
+                // 끝 페이지에 걸렸을 때 시작 페이지 역보정
+                if (end - start + 1 < maxButtons) {
+                  start = Math.max(1, end - maxButtons + 1);
+                }
+
+                return Array.from(
+                  { length: end - start + 1 },
+                  (_, i) => start + i,
+                ).map((pageNum) => (
+                  <PaginationItem key={pageNum} className="cursor-pointer">
+                    <PaginationLink
+                      isActive={page === pageNum}
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ));
+              })()}
+
+              {/* 다음 버튼 */}
               <PaginationItem>
                 <PaginationNext
-                  className="cursor-pointer"
+                  className={cn(
+                    "cursor-pointer",
+                    page === totalPages && "pointer-events-none opacity-50",
+                  )}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 />
               </PaginationItem>

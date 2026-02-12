@@ -47,28 +47,28 @@ export default function ScenarioRightPannel({
     const duration = 700;
     const startProgress = animatedProgress;
     const targetProgress = displayProgress;
+    if (startProgress === targetProgress) return;
 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
-      const progressRatio = Math.min(
-        (timestamp - startTimestamp) / duration,
-        1,
+      const elapsed = timestamp - startTimestamp;
+      const progressRatio = Math.min(elapsed / duration, 1);
+
+      const easeOutQuad = progressRatio * (2 - progressRatio);
+
+      const current = Math.floor(
+        easeOutQuad * (targetProgress - startProgress) + startProgress,
       );
 
-      setAnimatedProgress(
-        Math.floor(
-          progressRatio * (targetProgress - startProgress) + startProgress,
-        ),
-      );
+      setAnimatedProgress(current);
 
       if (progressRatio < 1) {
         window.requestAnimationFrame(step);
       }
     };
-
     const animationId = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(animationId);
-  }, [displayProgress, selectedScenario?.id]); // 시나리오 ID가 바뀔 때마다 초기화
+  }, [displayProgress, selectedScenario?.id]);
 
   // 3. 훅 선언이 다 끝난 후에 "시나리오 선택 안됨" 화면을 보여줍니다.
   if (!selectedScenario) {
@@ -269,45 +269,85 @@ export default function ScenarioRightPannel({
           </div>
           <button
             onClick={() => {
-              if (isOptimal || isFeasible) {
+              // 결과 레포트 보기 (OPTIMAL일 때만)
+              if (selectedScenario.status === "OPTIMAL") {
                 router.push(`/scenarios/${selectedScenario.id}`);
                 return;
               }
+              // 그 외 상태(READY, FAIL 등)에서는 시뮬레이션 시작
               onStart();
             }}
-            // 실행 중이거나 분석 대기 중일 때는 클릭 방지
+            // 1. 데이터 전송 중(running), 2. 100% 도달 후 서버 대기(pending), 3. 서버 상태가 PENDING일 때 클릭 금지
             disabled={
               running ||
-              (isReady && pending) ||
-              (!isReady && selectedScenario.status === "PENDING")
+              (animatedProgress === 100 &&
+                selectedScenario.status === "READY") ||
+              selectedScenario.status === "PENDING"
             }
             className={`w-full py-4 rounded-2xl text-sm font-black transition-all shadow-lg flex items-center justify-center gap-2 active:scale-[0.95]
     ${
-      isOptimal || isFeasible
-        ? "bg-indigo-600 text-white hover:bg-indigo-700" // 완료 상태
-        : running || pending
-          ? "bg-emerald-500 text-white cursor-wait" // 진행 중 상태
-          : "bg-blue-600 text-white hover:bg-blue-700" // 시작 가능 상태
+      selectedScenario.status === "OPTIMAL"
+        ? "bg-indigo-600 text-white hover:bg-indigo-700" // 결과 완료
+        : running ||
+            (animatedProgress === 100 && selectedScenario.status === "READY") ||
+            selectedScenario.status === "PENDING"
+          ? "bg-slate-400 text-white cursor-wait" // 마우스 클릭 금지 및 진행 중 색상
+          : "bg-blue-600 text-white hover:bg-blue-700" // 시작 가능 (READY, FAIL)
     }`}
           >
-            {isOptimal || isFeasible ? (
-              <>
-                <FileText size={18} />
-                결과 레포트 보기
-              </>
-            ) : running || pending ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                {pending ? "엔진 분석 중..." : "데이터 전송 중..."}
-              </>
-            ) : (
-              <>
-                <Play size={18} fill="currentColor" />
-                {selectedScenario.status === "FAIL"
-                  ? "재시뮬레이션 시작"
-                  : "시뮬레이션 시작"}
-              </>
-            )}
+            {(() => {
+              // 1. 성공 상태
+              if (selectedScenario.status === "OPTIMAL") {
+                return (
+                  <>
+                    <FileText size={18} />
+                    결과 레포트 보기
+                  </>
+                );
+              }
+
+              // 2. 엔진 분석 중 상태 (애니메이션 100% 도달 후 또는 서버 상태가 PENDING일 때)
+              if (
+                (animatedProgress === 100 &&
+                  selectedScenario.status === "READY") ||
+                selectedScenario.status === "PENDING"
+              ) {
+                return (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    엔진 분석 중...
+                  </>
+                );
+              }
+
+              // 3. 데이터 전송 중 상태 (애니메이션 구동 중)
+              if (running) {
+                return (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    데이터 전송 중...
+                  </>
+                );
+              }
+
+              // 4. 실패 상태 (재시도)
+              if (selectedScenario.status === "FAIL") {
+                return (
+                  <>
+                    <Play size={18} fill="currentColor" />
+                    재시뮬레이션 시작
+                  </>
+                );
+              }
+
+              // 5. 기본 상태 (READY)
+              return (
+                <>
+                  <Play size={18} fill="currentColor" />
+                  시뮬레이션 시작
+                </>
+              );
+            })()}
           </button>
         </div>
       </div>
