@@ -2,7 +2,6 @@ import { getNotices } from "@/api/notice-api";
 import { getMonthlyCalendars } from "@/api/calendar-api";
 import { Calendar } from "@/components/ui/calendar";
 import { useAccount, useToken } from "@/stores/account-store";
-import { keyOf } from "@/lib/date";
 import {
   HoverCard,
   HoverCardContent,
@@ -22,7 +21,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { account } = useAccount();
@@ -34,8 +32,6 @@ export default function DashboardPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [notices, setNotices] = useState([]);
   const [serverSchedules, setServerSchedules] = useState([]);
-  const [cursorDate, setCursorDate] = useState(new Date());
-  const [selectedDateKey, setSelectedDateKey] = useState(keyOf(new Date()));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 1. 공지사항 초기 로드
@@ -79,6 +75,7 @@ export default function DashboardPage() {
 
     getMonthlyCalendars(token, monthNum)
       .then((data) => {
+        console.log("📥 서버 응답 원본:", data);
         const schedules = data.monthlySchedules || data.schedules || data || [];
         setServerSchedules(schedules);
       })
@@ -124,13 +121,6 @@ export default function DashboardPage() {
 
     return serverSchedules.find((item) => item.date === targetKey);
   }, [date, serverSchedules]);
-
-  const goToday = () => {
-    const today = new Date();
-    setDate(today); // Calendar가 보고 있는 실제 선택값 업데이트
-    setCursorDate(today); // 필요하다면 동기화
-    setSelectedDateKey(keyOf(today));
-  };
 
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
 
@@ -193,39 +183,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header 영역 */}
-      <div className="">
-        <div className="flex justify-between items-end border-b pb-2 border-slate-100">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-indigo-600 mb-1">
-              <Home size={20} />
-              <span className="text-xs font-black uppercase tracking-widest">
-                WORKSPACE
-              </span>
-            </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-              {account?.name ? `${account.name}님, 반갑습니다.` : "Dashboard"}
-            </h1>
-            <p className="text-sm text-slate-400 font-medium">
-              오늘의 업무 현황과 주요 공지사항을 확인하세요.
-            </p>
-          </div>
-
-          {/* 필요하다면 우측에 오늘 날짜 표시 */}
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold text-slate-500">
-              {new Date().toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                weekday: "long",
-              })}
-            </p>
-          </div>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-10 pb-12">
+      {/* Header 영역 생략 */}
       <div className="max-w-6xl mx-auto w-full grid grid-cols-12 gap-8 items-stretch">
         {/* [왼쪽] 달력 영역 */}
         <div className="col-span-5 bg-white rounded-[32px] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
@@ -234,27 +193,15 @@ export default function DashboardPage() {
               <CalendarIcon size={18} className="text-indigo-500" />
               Work Schedule
             </div>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-8 ml-2 px-3 rounded-lg border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold text-xs"
-                onClick={goToday}
-              >
-                Today
-              </Button>
-              <div className="w-[1px] h-3 bg-slate-200" />
-              <div className="flex gap-2 text-[10px] font-bold text-slate-400">
-                <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> 주간
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />{" "}
-                  야간
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400" /> 휴무
-                </div>
+            <div className="flex gap-2 text-[10px] font-bold text-slate-400">
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> 주간
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" /> 야간
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" /> 휴무
               </div>
             </div>
           </div>
@@ -264,62 +211,69 @@ export default function DashboardPage() {
               mode="single"
               selected={date}
               onSelect={(newDate) => newDate && setDate(newDate)}
-              month={date}
-              onMonthChange={setDate}
               modifiers={modifiers}
               modifiersClassNames={{
                 work: "day-dot",
                 night: "night-dot",
               }}
+              JavaScript
               components={{
-                DayContent: ({ date: dayDate }) => {
+                Day: (props) => {
+                  const dayDate = props.date || props.day?.date;
+                  if (!dayDate) return null;
+
                   const formatted = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, "0")}-${String(dayDate.getDate()).padStart(2, "0")}`;
                   const schedule = serverSchedules?.find(
                     (s) => s.date === formatted,
                   );
 
+                  // 1. 일정이 없는 날 (기존과 동일)
                   if (!schedule) {
                     return (
-                      <span className="relative z-10">{dayDate.getDate()}</span>
+                      <td {...props}>
+                        <div className="flex items-center justify-center w-full h-full min-h-[40px] text-slate-600">
+                          {dayDate.getDate()}
+                        </div>
+                      </td>
                     );
                   }
 
+                  // 2. 일정이 있는 날 (text-indigo-600 제거)
                   return (
-                    /* portal을 지원한다면 HoverCardContent를 Portal로 감싸는 것이 가장 확실합니다 */
-                    <HoverCard openDelay={100}>
-                      <HoverCardTrigger asChild>
-                        {/* 💡 핵심: 부모 버튼의 이벤트를 방해하지 않도록 w-full h-full 지정 */}
-                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-20">
-                          {dayDate.getDate()}
-                        </div>
-                      </HoverCardTrigger>
-                      {/* 💡 sideOffset을 주어 날짜와 겹치지 않게 함 */}
-                      <HoverCardContent
-                        side="top"
-                        sideOffset={8}
-                        className="w-48 p-4 rounded-2xl shadow-2xl border border-slate-100 bg-white/95 backdrop-blur-md z-[9999]"
-                      >
-                        <div className="space-y-2 text-left">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
-                              schedule.shift === "day"
-                                ? "bg-sky-100 text-sky-600"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {schedule.shift?.toUpperCase()}
-                          </span>
-                          <h4 className="text-sm font-black text-slate-800 truncate">
-                            {schedule.title}
-                          </h4>
-                          <div className="flex items-center gap-1.5 text-indigo-500 text-[11px] font-bold">
-                            <Clock size={12} />
-                            {schedule.startTime?.substring(0, 5)} -{" "}
-                            {schedule.endTime?.substring(0, 5)}
+                    <td {...props} className={`${props.className} p-0`}>
+                      <HoverCard openDelay={0} closeDelay={0}>
+                        <HoverCardTrigger asChild>
+                          <div className="relative flex items-center justify-center w-full h-full min-h-[40px] cursor-pointer text-slate-600 font-medium">
+                            {/* 🌟 text-indigo-600과 font-black을 제거하여 일반 날짜와 통일감을 줬습니다. */}
+                            {dayDate.getDate()}
                           </div>
-                        </div>
-                      </HoverCardContent>
-                    </HoverCard>
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          side="top"
+                          className="w-48 p-4 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md z-[100]"
+                        >
+                          <div className="space-y-2">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                                schedule.shift === "day"
+                                  ? "bg-sky-100 text-sky-600"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {schedule.shift?.toUpperCase()}
+                            </span>
+                            <h4 className="text-sm font-black text-slate-800 truncate">
+                              {schedule.title}
+                            </h4>
+                            <div className="flex items-center gap-1.5 text-indigo-500 text-[11px] font-bold">
+                              <Clock size={12} />
+                              {schedule.startTime?.substring(0, 5)} -{" "}
+                              {schedule.endTime?.substring(0, 5)}
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </td>
                   );
                 },
               }}

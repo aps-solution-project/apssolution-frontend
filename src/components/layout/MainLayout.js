@@ -44,7 +44,7 @@ export default function MainLayout({ children }) {
             )}
           >
             <div className="max-w-[1600px] mx-auto w-full h-full">
-              {children}
+             {children} 
             </div>
           </div>
         </main>
