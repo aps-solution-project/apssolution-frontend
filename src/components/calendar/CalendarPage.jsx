@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -40,6 +41,7 @@ import {
   saveCalendar,
 } from "@/api/calendar-api";
 import { useToken } from "@/stores/account-store";
+import { useStomp } from "@/stores/stomp-store";
 
 /* ── Real-time clock hook ── */
 function useRealTimeClock() {
@@ -56,7 +58,7 @@ function getToken() {
   return localStorage.getItem("token") || "";
 }
 
-export default function CalendarPage() {
+export default function CalendarPage({ title = "My Scheduel" }) {
   const [view, setView] = useState("month");
   const [cursorDate, setCursorDate] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(keyOf(new Date()));
@@ -65,6 +67,9 @@ export default function CalendarPage() {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const clearHasScenarioUnread = useStomp(
+    (state) => state.clearHasScenarioUnread,
+  );
 
   const now = useRealTimeClock();
   const { token } = useToken();
@@ -74,6 +79,7 @@ export default function CalendarPage() {
     const month = cursorDate.getMonth() + 1;
     getMonthlyCalendars(token, month).then((obj) => {
       setEvents(obj.monthlySchedules || []);
+      clearHasScenarioUnread();
     });
   }, [token, cursorDate]);
 
@@ -227,38 +233,43 @@ export default function CalendarPage() {
   const isNightNow = currentHour >= 21 || currentHour < 7;
 
   return (
-    <div className="h-full overflow-hidden pb-4 bg-gradient-to-br from-slate-50 via-blue-50/30 to-white">
-      <div className="mx-auto h-full w-full max-w-[1520px] px-7 py-5 flex flex-col gap-4">
-        {/* ═══ TOP BAR ═══ */}
-        <div className="flex items-center justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-800 italic">
-              My Schedule
-            </h1>
-            <div className="flex items-center gap-3 mt-1">
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-blue-100 text-blue-700 border-blue-200 font-bold text-[11px] px-3"
-              >
-                {totalRunning} Running Projects
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-amber-100 text-amber-700 border-amber-200 font-bold text-[11px] px-3"
-              >
-                <Sun className="h-3 w-3 mr-1" />
-                {dayShiftCount} Day
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-blue-100 text-blue-700 border-blue-200 font-bold text-[11px] px-3"
-              >
-                <Moon className="h-3 w-3 mr-1" />
-                {nightShiftCount} Night
-              </Badge>
+    <div className="h-full overflow-hidden">
+      <div className="mx-auto h-full w-full flex flex-col gap-4">
+        {/* ═══ 🌟 통일감 있게 바꾼 TOP BAR ═══ */}
+        <div className="flex items-center justify-between border-b pb-5 border-slate-100">
+          <div className="space-y-1 min-w-0">
+            {/* 상단 서브 타이틀 영역 */}
+            <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <CalendarIcon size={18} /> {/* Lucide-react의 Calendar 아이콘 */}
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                Workforce Operations
+              </span>
+            </div>
+
+            {/* 메인 타이틀 */}
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              {title}
               {loading && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
               )}
+            </h1>
+
+            {/* 배지 및 정보 영역 */}
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[11px] font-bold border border-indigo-100">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2 animate-pulse" />
+                {totalRunning} Running Projects
+              </div>
+
+              <div className="flex items-center bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[11px] font-bold border border-amber-100">
+                <Sun className="h-3 w-3 mr-1.5 text-amber-500" />
+                Day {dayShiftCount}
+              </div>
+
+              <div className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[11px] font-bold border border-blue-100">
+                <Moon className="h-3 w-3 mr-1.5 text-blue-500" />
+                Night {nightShiftCount}
+              </div>
             </div>
           </div>
 

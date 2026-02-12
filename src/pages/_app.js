@@ -10,6 +10,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
 import { getUnreadCount } from "@/api/chat-api";
+import { getUnreadScenario } from "@/api/scenario-api";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
@@ -19,7 +20,7 @@ export default function App({ Component, pageProps }) {
   const token = useToken((s) => s.token);
   const account = useAccount((s) => s.account);
   const stomp = useStomp((s) => s.stomp);
-
+  const { setHasScenarioUnread } = useStomp();
   const stompRef = useRef(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -29,6 +30,10 @@ export default function App({ Component, pageProps }) {
     if (!token) return;
     getUnreadCount(token).then((count) => {
       useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
+    });
+
+    getUnreadScenario(token).then((res) => {
+      useStomp.getState().setHasScenarioUnread(res.unreadCount || 0);
     });
   }, [token]);
 
@@ -96,6 +101,11 @@ export default function App({ Component, pageProps }) {
 
           useStomp.getState().markChatUnread();
           return;
+        } else if (body.message === "publishRefresh") {
+          getUnreadScenario(token).then((count) => {
+            // setHasScenarioUnread(count.unreadCount);
+            useStomp.getState().setHasScenarioUnread(count.unreadCount);
+          });
         }
       } catch (e) {
         console.error("❌ STOMP handler error", e);

@@ -16,6 +16,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStomp } from "@/stores/stomp-store";
 
 import { getTodaySchedules } from "@/api/scenario-api";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
@@ -97,6 +98,10 @@ export default function DeploymentPage() {
   }, []);
 
   const now = useNow();
+
+  const clearHasScenarioUnread = useStomp(
+    (state) => state.clearHasScenarioUnread,
+  );
 
   const totalTasks = products.reduce(
     (sum, p) => sum + (p.scenarioSchedules?.length || 0),
@@ -207,7 +212,9 @@ export default function DeploymentPage() {
   };
 
   useEffect(() => {
+    if (!token) return;
     fetchData();
+    clearHasScenarioUnread();
   }, [token]);
 
   // ── 주기적 폴링 (30초) + 탭 복귀 시 재조회 ──

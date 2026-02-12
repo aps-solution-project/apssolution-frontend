@@ -52,25 +52,36 @@ export default function ChatRoom() {
   const documentInputRef = useRef(null);
 
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || !token) return;
 
-    setCurrentChatId(chatId);
+    if (String(chatId).startsWith("new_direct_")) {
+      setChatInfo({
+        id: chatId,
+        chatRoomName: router.query.targetName || "새로운 대화",
+        messages: [],
+        isTemp: true, // 임시 상태임을 표시
+      });
+      setMessages([]);
+      return;
+    }
 
-    const markAsRead = async () => {
-      try {
-        const data = await getUnreadCount(token);
-        setTotalUnreadCount(data.unreadCount || 0);
-      } catch (err) {
-        console.error("읽음 처리 동기화 실패:", err);
-      }
-    };
-
-    markAsRead();
-
-    return () => {
-      setCurrentChatId(null);
-    };
-  }, [chatId, token, setCurrentChatId, setTotalUnreadCount]);
+    getChatDetail(token, chatId)
+      .then((data) => {
+        setChatInfo(data);
+        const chronologicalMessages = [...(data.messages || [])].reverse();
+        setMessages(chronologicalMessages);
+        markAsRead();
+      })
+      .catch((err) => {
+        // 404가 나더라도 새로운 채팅방 생성을 위한 화면은 유지해야 함
+        setChatInfo({
+          id: chatId,
+          chatRoomName: "새 메시지",
+          messages: [],
+          isTemp: true,
+        });
+      });
+  }, [chatId, token, router.query]);
 
   // 1. 초기 데이터 로드
   useEffect(() => {
@@ -159,14 +170,38 @@ export default function ChatRoom() {
   const handleSend = async () => {
     if (!inputText.trim()) return;
     try {
-      await sendMessage(token, chatId, {
+      let finalChatId = chatId;
+
+      // 만약 임시 채팅방 상태라면?
+      if (chatInfo?.isTemp) {
+        // 1. 방 생성과 동시에 첫 메시지 전송 (백엔드 API 구조에 맞춰 조정)
+        // 예: startDirectChat이 방을 만들고 ID를 반환한다면
+        const newRoom = await startDirectChat(token, router.query.targetUser);
+        finalChatId = newRoom.chatRoomId || newRoom.id;
+
+        // 2. 주소창의 ID를 실제 ID로 변경 (새로고침 없이)
+        router.replace(`/chat?chatId=${finalChatId}`, undefined, {
+          shallow: true,
+        });
+
+        // 3. 임시 상태 해제
+        setChatInfo((prev) => ({ ...prev, isTemp: false, id: finalChatId }));
+      }
+
+      // 실제 메시지 전송
+      await sendMessage(token, finalChatId, {
         type: "TEXT",
         content: inputText,
       });
-      setInputText(""); // 입력창만 초기화
-      // 메시지는 STOMP 이벤트에서 처리
+
+      setInputText("");
+
+      // 첫 메시지 전송 후 목록 갱신을 위해 필요한 로직 추가
+      if (chatInfo?.isTemp) {
+        // 목록 새로고침 트리거 (stomp publish 등으로 목록에 신호 주기)
+      }
     } catch (e) {
-      console.error(e);
+      console.error("메시지 전송 실패:", e);
     }
   };
 
@@ -226,12 +261,10 @@ export default function ChatRoom() {
   return (
     <div className="flex flex-col h-full w-full bg-white overflow-hidden">
       {/* 상단 헤더 (백버튼 제거 등 조정 가능) */}
-      <div className="p-4 border-b flex items-center justify-between bg-white/80 sticky top-0 z-10">
+      <div className="p-4 h-[83.5px] border-b flex items-center justify-between bg-white/80 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           {/* 스플릿 뷰에서는 백버튼이 필요 없으므로 제거하거나 숨김 처리 */}
           <div className="flex flex-col">
-            <ChevronLeft className="size-5 text-slate-900" />
-
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h2 className="font-bold text-slate-800">
@@ -246,7 +279,7 @@ export default function ChatRoom() {
             </div>
 
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-slate-500 truncate max-w-[120px]">
+              <span className="text-slate-500 truncate max-w-[200px]">
                 {[
                   account?.name,
                   ...(chatInfo?.otherUsers?.map((u) => u.name) || []),

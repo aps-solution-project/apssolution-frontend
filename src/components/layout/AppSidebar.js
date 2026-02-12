@@ -33,11 +33,16 @@ export function AppSidebar() {
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
   const isWorker = userRole === "WORKER";
   const hasUnread = useStomp((state) => state.hasUnread);
+  const hasScenarioUnread = useStomp((state) => state.hasScenarioUnread);
+
   const isLoginPage = router.pathname === "/login";
 
   if (isLoginPage) {
     return null;
   }
+
+  console.log("hasUnread!!! : " + hasUnread);
+  console.log("hasScenarioUnread!!! : " + hasScenarioUnread);
 
   const getFilteredSections = () => {
     const sections = [
@@ -92,8 +97,18 @@ export function AppSidebar() {
       sections.push({
         title: "나의 업무",
         items: [
-          { label: "근무표", href: "/calendar", icon: CalendarDays },
+          { label: "근무표", href: "/calendar/worker", icon: CalendarDays },
           { label: "배포 작업", href: "/deployment", icon: ClipboardCheck },
+        ],
+      });
+    }
+
+    // 3-1. 일정 관리 (Admin, Planner 전용)
+    if (isManager) {
+      sections.push({
+        title: "캘린더",
+        items: [
+          { label: "캘린더", href: "/calendar/admin", icon: CalendarDays },
         ],
       });
     }
@@ -144,19 +159,30 @@ export function AppSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {section.items.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      tooltip={item.label}
-                      onClick={() => router.push(item.href)}
-                      isActive={router.pathname === item.href}
-                    >
-                      {item.icon && <item.icon className="w-4 h-4" />}
-                      <span>{item.label}</span>
-                      <Badge show={hasUnread[item.href]} />
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {section.items.map((item) => {
+                  const isCalendarRoute = item.href.includes("/calendar");
+
+                  const shouldShowBadge = isCalendarRoute
+                    ? hasScenarioUnread["/calendar"] ||
+                      hasScenarioUnread["/calendar/worker"] // 서버가 줄 수 있는 두 가지 케이스 모두 체크
+                    : hasUnread[item.href];
+                  return (
+                    <SidebarMenuItem key={item.label}>
+                      <SidebarMenuButton
+                        tooltip={item.label}
+                        onClick={() => router.push(item.href)}
+                        isActive={router.pathname === item.href}
+                      >
+                        {item.icon && <item.icon className="w-4 h-4" />}
+
+                        <span className="relative flex items-center">
+                          {item.label}
+                          <Badge show={shouldShowBadge} />
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

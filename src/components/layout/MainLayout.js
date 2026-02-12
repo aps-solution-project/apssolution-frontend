@@ -24,7 +24,7 @@ export default function MainLayout({ children }) {
       <div className="flex h-screen w-full overflow-hidden bg-background">
         <AppSidebar />
 
-        <main className="flex flex-1 flex-col h-full min-w-0 bg-slate-50/30">
+        <main className="flex flex-1 flex-col h-full min-w-0 bg-slate-50/30 relative z-0">
           <header className="flex h-16 shrink-0 items-center justify-between border-b px-6 bg-white z-10">
             <div className="flex items-center gap-4 flex-1">
               <SidebarTrigger />
@@ -39,7 +39,7 @@ export default function MainLayout({ children }) {
 
           <div
             className={cn(
-              "flex-1 min-w-0 overflow-y-auto custom-scrollbar", // overflow-hidden 대신 auto 사용
+              "flex-1 min-w-0 overflow-y-auto custom-scrollbar",
               isCalendar ? "p-0" : "p-8",
             )}
           >

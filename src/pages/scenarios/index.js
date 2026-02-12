@@ -50,7 +50,7 @@ export default function ScenariosCreateForm() {
   /* ===================== Effect ===================== */
 
   useEffect(() => {
-    if (!stomp || !stomp.connected) return;
+    if (!stomp || !stomp.connected || !selectedScenario) return;
 
     console.log("📡 시나리오 stomp 구독 시작:!!!!!!");
 
