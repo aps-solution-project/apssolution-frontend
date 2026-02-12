@@ -56,9 +56,22 @@ export default function Timeline({
   const minorStep = 5;
   const innerWidth = Math.max(1, totalMinutes * minuteWidth);
 
+  // ── 배경 그리드를 실제 시각 기준 minorStep에 정렬 ──
   const gridStyle = useMemo(() => {
     const x = minorStep * minuteWidth;
     const y = rowHeight;
+
+    // scenarioStart의 분에서 다음 minorStep 배수까지의 오프셋 계산
+    let gridOffsetPx = 0;
+    if (scenarioStart) {
+      const startDate = new Date(scenarioStart);
+      const dayStartDate = new Date(startDate.getTime() + dayOffset * 60000);
+      const startMins = dayStartDate.getMinutes();
+      const minorRemainder = startMins % minorStep;
+      const firstMinorOffset =
+        minorRemainder === 0 ? 0 : minorStep - minorRemainder;
+      gridOffsetPx = firstMinorOffset * minuteWidth;
+    }
 
     return {
       backgroundImage: [
@@ -66,9 +79,9 @@ export default function Timeline({
         "linear-gradient(to bottom, rgba(148,163,184,0.18) 1px, transparent 1px)",
       ].join(", "),
       backgroundSize: `${x}px ${y}px`,
-      backgroundPosition: `0 0`,
+      backgroundPosition: `${gridOffsetPx}px 0px`,
     };
-  }, [minorStep, minuteWidth, rowHeight]);
+  }, [minorStep, minuteWidth, rowHeight, scenarioStart, dayOffset]);
 
   const handleScroll = (e) => {
     const el = e.target;
