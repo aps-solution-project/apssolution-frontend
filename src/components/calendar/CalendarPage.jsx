@@ -248,7 +248,7 @@ export default function CalendarPage() {
 
             {/* 메인 타이틀 */}
             <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              {title}
+              일정관리
               {loading && (
                 <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
               )}
