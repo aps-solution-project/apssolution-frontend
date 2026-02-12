@@ -196,7 +196,7 @@ export default function DashboardPage() {
     <div className="space-y-4">
       {/* Header 영역 */}
       <div className="">
-        <div className="flex justify-between items-end border-b pb-6 border-slate-100">
+        <div className="flex justify-between items-end border-b pb-2 border-slate-100">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-indigo-600 mb-1">
               <Home size={20} />
@@ -271,7 +271,6 @@ export default function DashboardPage() {
                 work: "day-dot",
                 night: "night-dot",
               }}
-              JavaScript
               components={{
                 DayContent: ({ date: dayDate }) => {
                   const formatted = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, "0")}-${String(dayDate.getDate()).padStart(2, "0")}`;
@@ -280,19 +279,25 @@ export default function DashboardPage() {
                   );
 
                   if (!schedule) {
-                    return <span>{dayDate.getDate()}</span>;
+                    return (
+                      <span className="relative z-10">{dayDate.getDate()}</span>
+                    );
                   }
 
                   return (
-                    <HoverCard openDelay={0} closeDelay={0}>
+                    /* portal을 지원한다면 HoverCardContent를 Portal로 감싸는 것이 가장 확실합니다 */
+                    <HoverCard openDelay={100}>
                       <HoverCardTrigger asChild>
-                        <span className="w-full h-full flex items-center justify-center">
+                        {/* 💡 핵심: 부모 버튼의 이벤트를 방해하지 않도록 w-full h-full 지정 */}
+                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-20">
                           {dayDate.getDate()}
-                        </span>
+                        </div>
                       </HoverCardTrigger>
+                      {/* 💡 sideOffset을 주어 날짜와 겹치지 않게 함 */}
                       <HoverCardContent
                         side="top"
-                        className="w-48 p-4 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md z-[100]"
+                        sideOffset={8}
+                        className="w-48 p-4 rounded-2xl shadow-2xl border border-slate-100 bg-white/95 backdrop-blur-md z-[9999]"
                       >
                         <div className="space-y-2 text-left">
                           <span

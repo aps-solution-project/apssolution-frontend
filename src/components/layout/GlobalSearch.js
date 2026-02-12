@@ -1,4 +1,4 @@
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 import {
   CheckSquare,
   FileText,
@@ -17,6 +17,8 @@ export default function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { token } = useToken();
+  const { account } = useAccount();
+  const userRole = account?.role;
   const router = useRouter();
   const searchRef = useRef(null);
 
@@ -64,6 +66,10 @@ export default function GlobalSearch() {
     setIsOpen(false);
     setQuery("");
   };
+
+  if (userRole === "WORKER") {
+    return null;
+  }
 
   return (
     <div

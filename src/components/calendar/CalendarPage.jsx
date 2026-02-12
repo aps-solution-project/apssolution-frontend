@@ -41,6 +41,7 @@ import {
   saveCalendar,
 } from "@/api/calendar-api";
 import { useToken } from "@/stores/account-store";
+import { useStomp } from "@/stores/stomp-store";
 
 /* ── Real-time clock hook ── */
 function useRealTimeClock() {
@@ -66,6 +67,9 @@ export default function CalendarPage({ title = "My Scheduel" }) {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const clearHasScenarioUnread = useStomp(
+    (state) => state.clearHasScenarioUnread,
+  );
 
   const now = useRealTimeClock();
   const { token } = useToken();
@@ -75,6 +79,7 @@ export default function CalendarPage({ title = "My Scheduel" }) {
     const month = cursorDate.getMonth() + 1;
     getMonthlyCalendars(token, month).then((obj) => {
       setEvents(obj.monthlySchedules || []);
+      clearHasScenarioUnread();
     });
   }, [token, cursorDate]);
 

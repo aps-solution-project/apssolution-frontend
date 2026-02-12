@@ -55,16 +55,12 @@ export const useStomp = create((set, get) => ({
      초기화 / 제어
   ========================= */
 
-  setHasScenarioUnread: function (unreadCount) {
-    if (unreadCount > 0) {
-      set({ hasScenarioUnread: { "/deployment": true } });
-    } else {
-      set({ hasScenarioUnread: { "/deployment": false } });
-    }
+  setHasScenarioUnread: (unreadCount) => {
+    set({ hasScenarioUnread: { "/calendar": unreadCount > 0 } });
   },
 
-  clearHasScenarioUnread: function () {
-    set({ hasScenarioUnread: { "/deployment": false } });
+  clearHasScenarioUnread: () => {
+    set({ hasScenarioUnread: { "/calendar": false } });
   },
 
   clearUnread: (path) =>

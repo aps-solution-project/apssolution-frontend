@@ -39,11 +39,11 @@ export default function MainLayout({ children }) {
 
           <div
             className={cn(
-              "flex-1 min-w-0 overflow-y-auto custom-scrollbar", // overflow-hidden 대신 auto 사용
+              "flex-1 min-w-0 overflow-y-auto custom-scrollbar",
               isCalendar ? "p-0" : "p-8",
             )}
           >
-            <div className="max-w-[1600px] mx-auto w-full h-full relative z-0">
+            <div className="max-w-[1600px] mx-auto w-full h-full">
               {children}
             </div>
           </div>

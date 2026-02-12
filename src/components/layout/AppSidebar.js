@@ -159,19 +159,30 @@ export function AppSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {section.items.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      tooltip={item.label}
-                      onClick={() => router.push(item.href)}
-                      isActive={router.pathname === item.href}
-                    >
-                      {item.icon && <item.icon className="w-4 h-4" />}
-                      <span>{item.label}</span>
-                      <Badge show={hasUnread[item.href]} />
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {section.items.map((item) => {
+                  const isCalendarRoute = item.href.includes("/calendar");
+
+                  const shouldShowBadge = isCalendarRoute
+                    ? hasScenarioUnread["/calendar"] ||
+                      hasScenarioUnread["/calendar/worker"] // 서버가 줄 수 있는 두 가지 케이스 모두 체크
+                    : hasUnread[item.href];
+                  return (
+                    <SidebarMenuItem key={item.label}>
+                      <SidebarMenuButton
+                        tooltip={item.label}
+                        onClick={() => router.push(item.href)}
+                        isActive={router.pathname === item.href}
+                      >
+                        {item.icon && <item.icon className="w-4 h-4" />}
+
+                        <span className="relative flex items-center">
+                          {item.label}
+                          <Badge show={shouldShowBadge} />
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

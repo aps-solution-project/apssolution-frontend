@@ -10,6 +10,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useStomp } from "@/stores/stomp-store";
 
 import { getTodaySchedules } from "@/api/scenario-api";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
@@ -32,6 +33,10 @@ export default function DeploymentPage() {
   const [scenario, setScenario] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const clearHasScenarioUnread = useStomp(
+    (state) => state.clearHasScenarioUnread,
+  );
 
   const totalTasks = products.reduce(
     (sum, p) => sum + (p.scenarioSchedules?.length || 0),
@@ -86,7 +91,9 @@ export default function DeploymentPage() {
   };
 
   useEffect(() => {
+    if (!token) return;
     fetchData();
+    clearHasScenarioUnread();
   }, [token]);
 
   const formatDateTime = (dateStr) => {
