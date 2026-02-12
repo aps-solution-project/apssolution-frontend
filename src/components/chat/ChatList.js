@@ -47,13 +47,10 @@ export default function ChatList() {
     // stomp가 연결되지 않았거나 account가 없으면 대기
     if (!stomp || !stomp.connected || !account?.accountId) return;
 
-    console.log("📡 채팅 리스트 구독 활성화:", account.accountId);
-
     const sub = stomp.subscribe(`/topic/user/${account.accountId}`, (frame) => {
       const body = JSON.parse(frame.body);
       // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
       if (body.msg === "refresh") {
-        console.log("🔄 새 메시지 감지: 목록 새로고침!!");
         refreshChatList();
       }
     });

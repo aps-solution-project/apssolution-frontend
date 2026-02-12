@@ -54,12 +54,9 @@ export default function ChatRoom({ chatId }) {
       setCurrentChatId(null);
       return;
     }
-
-    console.log("🎯 현재 채팅방 설정:", chatId);
     setCurrentChatId(chatId);
 
     return () => {
-      console.log("👋 채팅방 나감, currentChatId 초기화");
       setCurrentChatId(null);
     };
   }, [chatId, setCurrentChatId]);
@@ -69,30 +66,17 @@ export default function ChatRoom({ chatId }) {
     if (!chatId || !token) return;
     if (chatId === "chat-list" || chatId.startsWith("new_")) return;
 
-    console.log(
-      "📥 ChatRoom 데이터 로드 시작, chatId:",
-      chatId,
-      "forceRefresh:",
-      forceRefresh,
-    );
-
     const loadChatDetail = async () => {
       try {
         const data = await getChatDetail(token, chatId);
 
-        console.log("📦 받은 데이터:", data);
-        console.log("📨 메시지 개수:", data.messages?.length);
-
         setChatInfo(data);
         const chronologicalMessages = [...(data.messages || [])].reverse();
-
-        console.log("✅ 화면에 표시할 메시지:", chronologicalMessages);
 
         setMessages(chronologicalMessages);
 
         // forceRefresh 플래그가 있으면 URL에서 제거
         if (forceRefresh) {
-          console.log("🔄 forceRefresh 플래그 제거");
           router.replace(`/chat?chatId=${chatId}`, undefined, {
             shallow: true,
           });
@@ -113,24 +97,18 @@ export default function ChatRoom({ chatId }) {
     if (!stomp || !stomp.connected || !chatId) return;
     if (chatId === "chat-list" || chatId.startsWith("new_")) return;
 
-    console.log("📡 채팅 구독 시작:", chatId);
-
     const sub = stomp.subscribe(`/topic/chat/${chatId}`, async (frame) => {
       const body = JSON.parse(frame.body);
-
-      console.log("🔔 실시간 메시지 수신:", body);
 
       if (body.type !== "LEAVE") {
         // 🌟 메시지 목록 갱신
         getChatDetail(token, chatId).then((data) => {
           setMessages([...(data.messages || [])].reverse());
-          console.log("✅ 메시지 목록 갱신 완료");
         });
 
         // 🌟 즉시 읽음 처리 (안읽은 메시지 카운트 갱신)
         try {
           const data = await getUnreadCount(token);
-          console.log("📊 실시간 메시지 후 카운트 업데이트:", data.unreadCount);
           setTotalUnreadCount(data.unreadCount || 0);
         } catch (err) {
           console.error("카운트 업데이트 실패:", err);
@@ -161,7 +139,6 @@ export default function ChatRoom({ chatId }) {
     const updateGlobalCount = async () => {
       try {
         const data = await getUnreadCount(token);
-        console.log("📊 전역 카운트 업데이트:", data.unreadCount);
 
         setTimeout(() => {
           setTotalUnreadCount(data.unreadCount || 0);

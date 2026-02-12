@@ -17,29 +17,20 @@ export default function ChatPage() {
   const handleFirstSend = async (content) => {
     if (!targetUserId || !token) return;
 
-    try {
-      console.log("🚀 1. 채팅방 생성 시작, targetUserId:", targetUserId);
+    try { 
       
       // 1. 채팅방 생성
       const result = await startDirectChat(token, targetUserId);
       const newChatId = result.chatRoomId || result.id;
-      
-      console.log("✅ 2. 채팅방 생성 완료, newChatId:", newChatId);
-      console.log("📤 3. 첫 메시지 전송 시작:", content);
 
       // 2. 첫 메시지 전송
       const messageResult = await sendMessage(token, newChatId, {
         type: "TEXT",
         content: content,
       });
-      
-      console.log("✅ 4. 메시지 전송 완료:", messageResult);
-      console.log("⏳ 5. 1초 대기 중...");
 
       // 🌟 백엔드 저장 대기 시간 추가
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      console.log("🔄 6. 채팅방으로 이동:", newChatId);
 
       // 3. forceRefresh 플래그와 함께 이동
       router.replace(`/chat?chatId=${newChatId}&forceRefresh=true`);

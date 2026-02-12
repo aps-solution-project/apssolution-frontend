@@ -57,7 +57,7 @@ function getToken() {
   return localStorage.getItem("token") || "";
 }
 
-export default function CalendarPage({ title = "My Scheduel" }) {
+export default function CalendarPage() {
   const [view, setView] = useState("month");
   const [cursorDate, setCursorDate] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(keyOf(new Date()));
