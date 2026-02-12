@@ -218,62 +218,48 @@ export default function DashboardPage() {
               }}
               JavaScript
               components={{
-                Day: (props) => {
-                  const dayDate = props.date || props.day?.date;
-                  if (!dayDate) return null;
-
+                DayContent: ({ date: dayDate }) => {
                   const formatted = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, "0")}-${String(dayDate.getDate()).padStart(2, "0")}`;
                   const schedule = serverSchedules?.find(
                     (s) => s.date === formatted,
                   );
 
-                  // 1. 일정이 없는 날 (기존과 동일)
                   if (!schedule) {
-                    return (
-                      <td {...props}>
-                        <div className="flex items-center justify-center w-full h-full min-h-[40px] text-slate-600">
-                          {dayDate.getDate()}
-                        </div>
-                      </td>
-                    );
+                    return <span>{dayDate.getDate()}</span>;
                   }
 
-                  // 2. 일정이 있는 날 (text-indigo-600 제거)
                   return (
-                    <td {...props} className={`${props.className} p-0`}>
-                      <HoverCard openDelay={0} closeDelay={0}>
-                        <HoverCardTrigger asChild>
-                          <div className="relative flex items-center justify-center w-full h-full min-h-[40px] cursor-pointer text-slate-600 font-medium">
-                            {/* 🌟 text-indigo-600과 font-black을 제거하여 일반 날짜와 통일감을 줬습니다. */}
-                            {dayDate.getDate()}
+                    <HoverCard openDelay={0} closeDelay={0}>
+                      <HoverCardTrigger asChild>
+                        <span className="w-full h-full flex items-center justify-center">
+                          {dayDate.getDate()}
+                        </span>
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        side="top"
+                        className="w-48 p-4 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md z-[100]"
+                      >
+                        <div className="space-y-2 text-left">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
+                              schedule.shift === "day"
+                                ? "bg-sky-100 text-sky-600"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {schedule.shift?.toUpperCase()}
+                          </span>
+                          <h4 className="text-sm font-black text-slate-800 truncate">
+                            {schedule.title}
+                          </h4>
+                          <div className="flex items-center gap-1.5 text-indigo-500 text-[11px] font-bold">
+                            <Clock size={12} />
+                            {schedule.startTime?.substring(0, 5)} -{" "}
+                            {schedule.endTime?.substring(0, 5)}
                           </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent
-                          side="top"
-                          className="w-48 p-4 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md z-[100]"
-                        >
-                          <div className="space-y-2">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[9px] font-black ${
-                                schedule.shift === "day"
-                                  ? "bg-sky-100 text-sky-600"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {schedule.shift?.toUpperCase()}
-                            </span>
-                            <h4 className="text-sm font-black text-slate-800 truncate">
-                              {schedule.title}
-                            </h4>
-                            <div className="flex items-center gap-1.5 text-indigo-500 text-[11px] font-bold">
-                              <Clock size={12} />
-                              {schedule.startTime?.substring(0, 5)} -{" "}
-                              {schedule.endTime?.substring(0, 5)}
-                            </div>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    </td>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
                   );
                 },
               }}

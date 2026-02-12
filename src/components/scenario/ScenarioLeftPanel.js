@@ -25,8 +25,8 @@ export default function ScenarioLeftPanel({
   return (
     <section className="h-full w-full min-h-0 flex flex-col border-r border-slate-100 bg-slate-100 overflow-hidden">
       {/* HEADER */}
-      <div className="shrink-0 px-6 py-5 backdrop-blur">
-        <div className="flex justify-between items-start gap-3">
+      <div className="shrink-0 px-6 py-5">
+        <div className="flex justify-between items-start">
           <button
             onClick={onToggleForm}
             className={[
@@ -44,7 +44,7 @@ export default function ScenarioLeftPanel({
 
       {/* SCROLL */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
-        <div className="p-6 pt-2 relative">
+        <div className="p-6 relative">
           <div
             id="scroll-top-anchor"
             className="absolute top-0 left-0 h-1 w-1"
@@ -104,7 +104,6 @@ export default function ScenarioLeftPanel({
                     value={form.date}
                     onChange={(e) => {
                       setForm((v) => ({ ...v, date: e.target.value }));
-                      e.target.blur();
                     }}
                   />
                   <input
@@ -113,7 +112,6 @@ export default function ScenarioLeftPanel({
                     value={form.time}
                     onChange={(e) => {
                       setForm((v) => ({ ...v, time: e.target.value }));
-                      e.target.blur();
                     }}
                   />
                 </div>

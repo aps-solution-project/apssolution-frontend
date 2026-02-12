@@ -269,41 +269,75 @@ export default function ResourcesPage() {
                 </AccordionTrigger>
 
                 <AccordionContent className="bg-slate-50/30 border-t border-slate-100/50 p-0">
-                  <div className="flex flex-col lg:flex-row items-stretch h-[500px]">
+                  <div className="flex flex-col lg:flex-row items-stretch h-[550px]">
                     {/* 📋 [1/3] 왼쪽 리스트 */}
-                    <div className="w-full lg:w-1/3 p-6 border-r border-slate-100">
+                    <div className="w-full lg:w-1/3 p-6 border-r border-slate-100 flex flex-col">
                       <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">
-                        Related Tasks
+                        Related Tasks Details
                       </div>
-                      <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
+                      <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[500px]">
                         {tasksMap[product.id]?.map((task, idx) => (
                           <div
                             key={task.id}
-                            className="bg-white rounded-xl p-4 border border-slate-100 flex items-center gap-3"
+                            className="bg-white rounded-xl p-4 border border-slate-100 flex flex-col gap-3 shadow-sm hover:border-indigo-200 transition-all group"
                           >
-                            <div
-                              className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                              style={{
-                                backgroundColor: getBlueGradient(
-                                  idx,
-                                  tasksMap[product.id].length,
-                                ),
-                              }}
-                            >
-                              {task.seq}
+                            {/* 상단: 순번과 이름 */}
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
+                                style={{
+                                  backgroundColor: getBlueGradient(
+                                    idx,
+                                    tasksMap[product.id].length,
+                                  ),
+                                }}
+                              >
+                                {task.seq}
+                              </div>
+                              <span className="font-bold text-slate-800 text-xs truncate flex-1">
+                                {task.name}
+                              </span>
+                              {/* 카테고리 배지 */}
+                              <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 uppercase">
+                                {task.toolCategoryId}
+                              </span>
                             </div>
-                            <span className="font-bold text-slate-800 text-xs">
-                              {task.name}
-                            </span>
+
+                            {/* 하단: 시간 및 인원 정보 */}
+                            <div className="flex items-center justify-between border-t pt-2 border-slate-50">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-bold bg-indigo-50/50 py-0.5 rounded">
+                                  <span>⏱</span>
+                                  <span>{task.duration}분</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold bg-emerald-50/50 py-0.5 rounded">
+                                  <span>👤</span>
+                                  <span>{task.requiredWorkers}명</span>
+                                </div>
+                              </div>
+
+                              {/* 설명이 있다면 아주 작게 표시 (선택 사항) */}
+                              {task.description && (
+                                <div className="text-[9px] text-slate-400 truncate max-w-[180px]">
+                                  {task.description}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ))}
+                        {(!tasksMap[product.id] ||
+                          tasksMap[product.id].length === 0) && (
+                          <div className="py-20 text-center text-slate-400 text-xs font-medium">
+                            등록된 공정이 없습니다.
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* 📊 [2/3] 오른쪽 차트 컴포넌트 */}
                     <div className="w-full lg:w-2/3 p-6 flex flex-col">
                       {/* 🌟 3. sticky를 활용하면 전체 스크롤을 내려도 차트가 화면에 고정되어 따라오게 할 수 있습니다. */}
-                      <div className="sticky top-6 flex-1 min-h-[400px]">
+                      <div className="sticky top-6 flex-1 h-[500px]">
                         <ProcessBarChart
                           productName={product.name}
                           tasks={tasksMap[product.id] || []}
