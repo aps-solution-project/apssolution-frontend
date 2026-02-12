@@ -2,17 +2,13 @@ import { create } from "zustand";
 
 export const useStomp = create((set, get) => ({
   stomp: null,
-
   totalUnreadCount: 0,
-
   hasUnread: {
-    "/chat/list": false,
+    "/chat": false,
   },
-
   hasScenarioUnread: {
-    "/deployment": false,
+    "/calendar": false,
   },
-
   currentChatId: null,
 
   /* =========================
@@ -36,7 +32,6 @@ export const useStomp = create((set, get) => ({
   ========================= */
   increaseUnreadIfNeeded: (msg, myUserId) => {
     const { currentChatId, totalUnreadCount, hasUnread } = get();
-
     if (!msg?.chatId) return;
     if (msg.type === "LEAVE") return;
     if (String(msg.talker?.userId) === String(myUserId)) return;
@@ -54,7 +49,6 @@ export const useStomp = create((set, get) => ({
   /* =========================
      초기화 / 제어
   ========================= */
-
   setHasScenarioUnread: (unreadCount) => {
     set({ hasScenarioUnread: { "/calendar": unreadCount > 0 } });
   },

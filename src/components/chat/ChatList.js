@@ -95,7 +95,7 @@ export default function ChatList() {
             <div
               key={room.id}
               onClick={() => {
-                router.push(`/chat/${room.id}`);
+                router.push(`/chat?chatId=${room.id}`);
               }}
               className={`flex items-center gap-4 p-4 transition-all cursor-pointer relative
               border-l-4 border-transparent border-b border-slate-100 last:border-b-0
@@ -151,7 +151,7 @@ export default function ChatList() {
                 </p>
               </div>
 
-              {showBadge && (
+              {showBadge && currentChatId != room.id && (
                 <Badge variant="destructive">{room.unreadCount}</Badge>
               )}
             </div>
