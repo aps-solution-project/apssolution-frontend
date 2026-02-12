@@ -1,14 +1,4 @@
-import { useRouter } from "next/router";
 import { getWorkerPosts } from "@/api/community-api";
-import {
-  MegaphoneIcon,
-  Plus,
-  Search,
-  Paperclip,
-  Megaphone,
-  MessageSquare,
-  PenLine,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,8 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useEffect, useState } from "react";
 import { useToken } from "@/stores/account-store";
+import { MessageSquare, Paperclip, PenLine, Search } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 const PAGE_SIZE = 10;
 
@@ -99,7 +91,7 @@ export default function PostsPage() {
         </div>
         <Button
           className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
-          onClick={() => router.push("/community/post-create")}
+          onClick={() => router.push("/community/create")}
         >
           <PenLine size={18} />
           <span className="font-bold">글쓰기</span>
