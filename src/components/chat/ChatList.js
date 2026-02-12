@@ -84,12 +84,11 @@ export default function ChatList() {
 
   /** ================= 화면 렌더 ================= */
   return (
-    <div className="divide-y">
+    <div className="flex flex-col">
       {rooms.length > 0 ? (
         rooms.map((room) => {
           const time = parseDateSafe(room.lastMessageTime);
           const isSelected = String(currentChatId) === String(room.id);
-          const displayUnreadCount = isSelected ? 0 : room.unreadCount;
           const showBadge = room.unreadCount > 0;
 
           return (
@@ -98,12 +97,13 @@ export default function ChatList() {
               onClick={() => {
                 router.push(`/chat/${room.id}`);
               }}
-              className={`flex items-center gap-4 p-4 transition-all cursor-pointer
-                ${
-                  isSelected
-                    ? "bg-indigo-50/80 border-l-4 border-indigo-600 shadow-inner" // 선택되었을 때 스타일
-                    : "hover:bg-slate-50 border-l-4 border-transparent" // 기본/호버 스타일
-                }`}
+              className={`flex items-center gap-4 p-4 transition-all cursor-pointer relative
+              border-l-4 border-transparent border-b border-slate-100 last:border-b-0
+              ${
+                isSelected
+                  ? "bg-indigo-50/60 border-l-indigo-600 border-b-transparent"
+                  : "hover:bg-slate-50"
+              }`}
             >
               {/* 아바타 */}
               <div className="relative flex -space-x-3 overflow-hidden p-1">

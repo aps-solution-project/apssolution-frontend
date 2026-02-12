@@ -158,45 +158,54 @@ body {
   }
 }
 
-/* 기본 날짜 칸 설정 */
+/* 기본 테이블 구조 초기화 */
+.rdp-table {
+  width: 100% !important;
+  max-width: none !important;
+  border-collapse: collapse !important;
+}
+
+.rdp-tbody {
+  display: table-row-group !important;
+}
+
+/* 날짜 칸 설정 */
 .rdp-day {
   position: relative !important;
+  width: 44px !important; /* 크기를 살짝 키움 */
+  height: 44px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 40px !important;
-  width: 40px !important;
-  margin: 2px !important;
+  margin: 0 auto !important; /* 가운데 정렬 */
+  border-radius: 12px !important; /* 둥근 사각형 느낌 */
+  transition: all 0.2s;
 }
 
-/* 주간 점 (Day) */
-.day-dot::after {
-  content: "";
-  position: absolute;
-  bottom: 4px; /* 숫지 아래에서 4px 띄움 */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: #38bdf8; /* sky-400 */
+/* 요일 헤더 정렬 */
+.rdp-head_cell {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important; /* slate-400 */
+  padding-bottom: 1rem !important;
 }
 
-/* 야간 점 (Night) */
+/* 점(Dot) 위치 조정 */
+.day-dot::after,
 .night-dot::after {
   content: "";
   position: absolute;
-  bottom: 4px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background-color: #fbbf24; /* yellow-400 */
 }
 
-/* 오늘 날짜 표시와 점이 겹치지 않게 */
-.rdp-day_today {
-  font-weight: bold;
-  color: #6366f1; /* indigo-500 */
+.day-dot::after {
+  background-color: #38bdf8;
+}
+.night-dot::after {
+  background-color: #fbbf24;
 }

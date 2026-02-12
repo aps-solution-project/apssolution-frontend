@@ -226,12 +226,10 @@ export default function ChatRoom() {
   return (
     <div className="flex flex-col h-full w-full bg-white overflow-hidden">
       {/* 상단 헤더 (백버튼 제거 등 조정 가능) */}
-      <div className="p-4 border-b flex items-center justify-between bg-white/80 sticky top-0 z-10">
+      <div className="p-4 h-[83.5px] border-b flex items-center justify-between bg-white/80 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           {/* 스플릿 뷰에서는 백버튼이 필요 없으므로 제거하거나 숨김 처리 */}
           <div className="flex flex-col">
-            <ChevronLeft className="size-5 text-slate-900" />
-
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h2 className="font-bold text-slate-800">
@@ -246,7 +244,7 @@ export default function ChatRoom() {
             </div>
 
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-slate-500 truncate max-w-[120px]">
+              <span className="text-slate-500 truncate max-w-[200px]">
                 {[
                   account?.name,
                   ...(chatInfo?.otherUsers?.map((u) => u.name) || []),

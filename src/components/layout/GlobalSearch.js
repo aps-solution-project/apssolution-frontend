@@ -93,40 +93,47 @@ export default function GlobalSearch() {
 
       {/* 결과 드롭다운 */}
       {isOpen && results && (
-        <div className="absolute top-full mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl z-[100] max-h-[450px] overflow-y-auto custom-scrollbar p-2">
+        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-slate-200 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[999] max-h-[450px] overflow-y-auto custom-scrollbar p-2">
           <SearchSection
             title="Scenarios"
             icon={<FileText size={14} />}
             items={results.scenarios}
-            path="/scenarios"
+            path="/scenarios" // 상세페이지 있음 (/scenarios/[id])
             onLink={handleItemClick}
           />
           <SearchSection
             title="Products"
             icon={<Package size={14} />}
             items={results.products}
-            path="/products"
+            path="/resources/product" // 상세페이지 없음 (조회 경로로만)
             onLink={handleItemClick}
           />
           <SearchSection
             title="Tasks"
             icon={<CheckSquare size={14} />}
             items={results.tasks}
-            path="/tasks"
+            path="/resources/task" // 상세페이지 없음
             onLink={handleItemClick}
           />
           <SearchSection
             title="Notices"
             icon={<Megaphone size={14} />}
             items={results.notices}
-            path="/notice"
+            path="/notice" // 상세페이지 있음 (/notice/[id])
             onLink={handleItemClick}
           />
           <SearchSection
             title="Tools"
             icon={<Wrench size={14} />}
             items={results.tools}
-            path="/resources/tools"
+            path="/resources/tool" // 상세페이지 없음
+            onLink={handleItemClick}
+          />
+          <SearchSection
+            title="Categories"
+            icon={<Search size={14} />}
+            items={results.categories} // 백엔드에서 카테고리 결과도 준다면 추가
+            path="/resources/tool/category" // 상세페이지 없음
             onLink={handleItemClick}
           />
           {Object.values(results).every((arr) => !arr || arr.length === 0) && (
@@ -149,12 +156,10 @@ function SearchSection({ title, icon, items, path, onLink }) {
       </div>
       <div className="space-y-0.5">
         {items.map((item) => {
-          // 🌟 Tools처럼 상세 페이지가 없는 경우 처리
-          // path가 '/resources/tools'라면 id를 붙이지 않고 이동
-          const targetPath =
-            path === "/resources/tools"
-              ? `${path}?highlight=${item.id}` // 쿼리 파라미터 추가
-              : `${path}/${item.id}`;
+          const detailViewPaths = ["/scenarios", "/notice"];
+          const isDetail = detailViewPaths.includes(path);
+          const targetPath = isDetail ? `${path}/${item.id}` : path;
+
           return (
             <button
               key={item.id}
