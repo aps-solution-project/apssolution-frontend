@@ -179,6 +179,19 @@ async function simulateScenario(token, scenarioId) {
   return resp.json();
 }
 
+async function getUnreadScenario(token) {
+  const resp = await fetch(`${serverAddr}/api/scenarios/worker/unread`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error("unreadCount 조회 실패");
+  }
+  return resp.json();
+}
+
 export {
   copyScenario,
   deleteScenario,
@@ -187,9 +200,10 @@ export {
   getScenario,
   getScenarioResult,
   getScenarios,
+  getTodaySchedules,
+  getUnreadScenario,
   postScenario,
   publishScenario,
   simulateScenario,
   unpublishScenario,
-  getTodaySchedules,
 };

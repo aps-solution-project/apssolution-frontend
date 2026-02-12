@@ -33,11 +33,16 @@ export function AppSidebar() {
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
   const isWorker = userRole === "WORKER";
   const hasUnread = useStomp((state) => state.hasUnread);
+  const hasScenarioUnread = useStomp((state) => state.hasScenarioUnread);
+
   const isLoginPage = router.pathname === "/login";
 
   if (isLoginPage) {
     return null;
   }
+
+  console.log("hasUnread!!! : " + hasUnread);
+  console.log("hasScenarioUnread!!! : " + hasScenarioUnread);
 
   const getFilteredSections = () => {
     const sections = [
@@ -100,13 +105,13 @@ export function AppSidebar() {
 
     // 3-1. 일정 관리 (Admin, Planner 전용)
     if (isManager) {
-    sections.push({
-      title: "캘린더",
-      items: [
-        { label: "캘린더", href: "/calendar/admin", icon: CalendarDays },
-      ],
-    });
-  }
+      sections.push({
+        title: "캘린더",
+        items: [
+          { label: "캘린더", href: "/calendar/admin", icon: CalendarDays },
+        ],
+      });
+    }
 
     // 4. 채팅 (공통)
     sections.push({
