@@ -297,7 +297,7 @@ export default function ScenarioRightPannel({
           >
             {(() => {
               // 1. 성공 상태
-              if (selectedScenario.status === "OPTIMAL") {
+              if (selectedScenario.status === "OPTIMAL" || "FEASIBLE") {
                 return (
                   <>
                     <FileText size={18} />
