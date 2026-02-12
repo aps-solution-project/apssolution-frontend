@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { getNotices, searchNotice } from "@/api/notice-api";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ import { MegaphoneIcon, Paperclip, Plus, Search } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 export default function AnnouncementsPage() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function AnnouncementsPage() {
   // ------------------------------------------
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col">
       <div className="space-y-4">
         {/* 헤더 섹션 */}
         <div className="flex justify-between items-end border-b pb-3 border-slate-100">
@@ -160,91 +161,81 @@ export default function AnnouncementsPage() {
                     불러오는 중...
                   </TableCell>
                 </TableRow>
-              ) : pageData.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-40 text-center text-slate-300 italic"
-                  >
-                    등록된 공지사항이 없습니다.
-                  </TableCell>
-                </TableRow>
               ) : (
-                pageData.map(
-                  ({ id, title, writer, createdAt, attachmentCount }) => (
+                pageData.map((item) => {
+                  const actualId = item.noticeId || item.id;
+                  return (
                     <TableRow
-                      key={id}
-                      onClick={() => router.push(`/notice/${id}`)}
+                      key={actualId} // unique key 에러 해결
+                      onClick={() => router.push(`/notice/${actualId}`)} // 상세 페이지 이동
                       className="group cursor-pointer hover:bg-slate-50/80 transition-all border-slate-50"
                     >
                       <TableCell className="text-center font-mono text-slate-400 text-sm">
-                        {id}
+                        {actualId}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <span className="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
-                            {title}
+                          <span className="font-semibold text-slate-700 group-hover:text-indigo-600">
+                            {item.title}
                           </span>
-                          {attachmentCount > 0 && (
-                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 text-sky-500 text-[11px] font-black ring-1 ring-sky-100">
+                          {item.attachmentCount > 0 && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 text-sky-500 text-[11px] font-black">
                               <Paperclip size={10} strokeWidth={3} />
-                              {attachmentCount}
+                              {item.attachmentCount}
                             </span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="py-4">
                         <span className="text-sm font-bold text-slate-600">
-                          {writer?.name || "익명"}
+                          {item.writer?.name || "익명"}
                         </span>
                       </TableCell>
                       <TableCell className="text-center text-sm text-slate-400 font-medium">
-                        {createdAt?.slice(0, 10)}
+                        {item.createdAt?.slice(0, 10)}
                       </TableCell>
                     </TableRow>
-                  ),
-                )
+                  );
+                })
               )}
             </TableBody>
           </Table>
-
-          {/* 페이징 네비게이션 */}
-          {totalPages > 1 && (
-            <div className="py-6 border-t border-slate-50 flex justify-center">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      className="cursor-pointer"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    />
-                  </PaginationItem>
-
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        isActive={page === i + 1}
-                        onClick={() => setPage(i + 1)}
-                        className="cursor-pointer"
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
         </div>
+
+        {/* 페이징 네비게이션 */}
+        {totalPages > 0 && (
+          <div className="py-6 border-t border-slate-50 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    className="cursor-pointer"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      isActive={page === i + 1}
+                      onClick={() => setPage(i + 1)}
+                      className="cursor-pointer"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    className="cursor-pointer"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

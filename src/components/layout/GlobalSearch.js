@@ -6,6 +6,7 @@ import {
   Megaphone,
   Package,
   Search,
+  User,
   Wrench,
 } from "lucide-react";
 import { useRouter } from "next/router";
@@ -142,6 +143,13 @@ export default function GlobalSearch() {
             path="/resources/tool/category" // 상세페이지 없음
             onLink={handleItemClick}
           />
+          <SearchSection
+            title="Employees"
+            icon={<User size={14} />}
+            items={results.accounts} // 백엔드 결과물에 포함된 직원 리스트
+            path="/employees" // 이동할 경로
+            onLink={handleItemClick}
+          />
           {Object.values(results).every((arr) => !arr || arr.length === 0) && (
             <div className="p-8 text-center text-slate-400 text-sm">
               검색 결과가 없습니다.
@@ -155,6 +163,7 @@ export default function GlobalSearch() {
 
 function SearchSection({ title, icon, items, path, onLink }) {
   if (!items || items.length === 0) return null;
+
   return (
     <div className="mb-3 last:mb-0">
       <div className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold text-indigo-500 uppercase tracking-wider">
@@ -162,29 +171,64 @@ function SearchSection({ title, icon, items, path, onLink }) {
       </div>
       <div className="space-y-0.5">
         {items.map((item) => {
-          const detailViewPaths = ["/scenarios", "/notice"];
+          const isEmployee = title === "Employees";
+          const itemId = item.id || item.accountId || item.employeeId;
+
+          // 경로 설정
+          const detailViewPaths = ["/scenarios", "/notice", "/employees"];
           const isDetail = detailViewPaths.includes(path);
-          const targetPath = isDetail ? `${path}/${item.id}` : path;
+          const targetPath = isDetail ? `${path}/${itemId}` : path;
+
+          // 프로필 이미지 경로 처리
+          const rawImg = item.profileImageUrl || item.profileImage;
+          const fullImgPath = rawImg
+            ? rawImg.startsWith("http")
+              ? rawImg
+              : `http://192.168.0.20:8080${rawImg}`
+            : null;
 
           return (
             <button
-              key={item.id}
+              key={itemId}
               onClick={() => onLink(targetPath)}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors group"
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 transition-all group flex items-center gap-3"
             >
-              <div className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600">
-                {item.title || item.name || item.id}
-                {item.category?.name && (
-                  <span className="ml-2 text-[10px] bg-indigo-50 text-indigo-500 px-1.5 py-0.5 rounded uppercase">
-                    {item.category.name}
-                  </span>
-                )}
-              </div>
-              {item.description && (
-                <div className="text-xs text-slate-400 truncate mt-0.5">
-                  {item.description}
+              {/* 직원일 때만 아바타 표시 */}
+              {isEmployee && (
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 shadow-sm">
+                  {fullImgPath ? (
+                    <img
+                      src={fullImgPath}
+                      className="w-full h-full object-cover"
+                      alt="profile"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                      <User size={16} />
+                    </div>
+                  )}
                 </div>
               )}
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 truncate transition-colors">
+                    {item.accountName || item.name || item.title}
+                  </span>
+                  {item.role && (
+                    <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">
+                      {item.role}
+                    </span>
+                  )}
+                </div>
+
+                {/* 이메일 또는 설명문 */}
+                <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                  {isEmployee
+                    ? item.accountEmail || item.email
+                    : item.description || item.id}
+                </div>
+              </div>
             </button>
           );
         })}

@@ -8,13 +8,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
 import { MessageSquare, Paperclip, PenLine, Search } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 export default function PostsPage() {
   useAuthGuard();
@@ -68,148 +76,154 @@ export default function PostsPage() {
   const pageData = filteredPosts.slice(start, start + PAGE_SIZE);
 
   return (
-    <div className="space-y-4">
-      {/* 헤더 섹션 */}
-      <div className="flex justify-between items-end border-b pb-3 border-slate-100">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-indigo-600 mb-1">
-            <MessageSquare size={20} />
-            <span className="text-xs font-black uppercase tracking-widest">
-              Community
-            </span>
+    <div className="flex flex-col flex-1 min-h-0">
+      {" "}
+      {/* 부모 레이아웃 통일 */}
+      <div className="space-y-4">
+        {/* 헤더 섹션 */}
+        <div className="flex justify-between items-end border-b pb-3 border-slate-100">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <MessageSquare size={20} />
+              <span className="text-xs font-black uppercase tracking-widest">
+                Community
+              </span>
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              사원 게시판
+            </h1>
+            <p className="text-sm text-slate-400 font-medium">
+              회사의 자유로운 소통 공간입니다. (총{" "}
+              <span className="text-slate-600 font-bold">
+                {filteredPosts.length}
+              </span>
+              건)
+            </p>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            사원 게시판
-          </h1>
-          <p className="text-sm text-slate-400 font-medium">
-            총{" "}
-            <span className="text-slate-600 font-bold">
-              {filteredPosts.length}
-            </span>
-            개의 게시글
-          </p>
+          <Button
+            onClick={() => router.push("/community/create")}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
+          >
+            <PenLine size={18} />
+            <span className="font-bold">글쓰기</span>
+          </Button>
         </div>
-        <Button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
-          onClick={() => router.push("/community/create")}
-        >
-          <PenLine size={18} />
-          <span className="font-bold">글쓰기</span>
-        </Button>
-      </div>
 
-      {/* 검색 바 */}
-      <div className="max-w-2xl">
-        <div className="relative">
-          <Search
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
-          <input
-            type="search"
-            value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value);
-              setPage(1); // 검색 시 1페이지로 이동
-            }}
-            placeholder="제목이나 작성자 검색"
-            className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-          />
+        {/* 검색 */}
+        <div className="max-w-2xl">
+          <div className="relative">
+            <Search
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="search"
+              value={keyword}
+              onChange={(e) => {
+                setKeyword(e.target.value);
+                setPage(1);
+              }}
+              placeholder="제목이나 작성자 검색"
+              className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              spellCheck={false}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* 테이블 섹션 */}
-      <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm bg-white">
-        <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="w-[100px] text-center font-bold text-slate-400 py-4">
-                번호
-              </TableHead>
-              <TableHead className="font-bold text-slate-600 pl-3">
-                제목
-              </TableHead>
-              <TableHead className="w-[160px] font-bold text-slate-600 text-start">
-                작성자
-              </TableHead>
-              <TableHead className="w-[160px] font-bold text-slate-600 text-center">
-                등록일
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-40 text-center text-slate-400"
-                >
-                  불러오는 중...
-                </TableCell>
+        {/* 리스트(테이블) 섹션 */}
+        <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm bg-white">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="w-[100px] text-center font-bold text-slate-400 py-4">
+                  번호
+                </TableHead>
+                <TableHead className="font-bold text-slate-600 pl-3">
+                  제목
+                </TableHead>
+                <TableHead className="w-[160px] font-bold text-slate-600 text-start">
+                  작성자
+                </TableHead>
+                <TableHead className="w-[160px] font-bold text-slate-600 text-center">
+                  등록일
+                </TableHead>
               </TableRow>
-            ) : pageData.length > 0 ? (
-              pageData.map((post) => (
-                <TableRow
-                  key={post.id}
-                  className="group cursor-pointer hover:bg-slate-50/80 transition-all border-slate-50"
-                  onClick={() => router.push(`/community/${post.id}`)}
-                >
-                  <TableCell className="text-center font-mono text-slate-400 text-sm">
-                    {post.id}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
-                        {post.title}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {post.commentCount > 0 && (
-                          <span className="flex items-center gap-1 text-[11px] font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ring-1 ring-amber-100">
-                            <MessageSquare size={10} fill="currentColor" />{" "}
-                            {post.commentCount}
-                          </span>
-                        )}
-                        {post.attachmentCount > 0 && (
-                          <span className="flex items-center gap-1 text-[11px] font-black text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full ring-1 ring-sky-100">
-                            <Paperclip size={10} strokeWidth={3} />{" "}
-                            {post.attachmentCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-700">
-                        {post.writer?.name || post.writer?.id || "익명"}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium uppercase">
-                        {post.writer?.role}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center text-sm text-slate-400 font-medium">
-                    {post.createdAt?.slice(0, 10)}
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="h-40 text-center text-slate-400"
+                  >
+                    불러오는 중...
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-40 text-center text-slate-300 italic"
-                >
-                  표시할 게시글이 없습니다.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ) : pageData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="h-40 text-center text-slate-300 italic"
+                  >
+                    등록된 게시글이 없습니다.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pageData.map((post) => (
+                  <TableRow
+                    key={post.id}
+                    onClick={() => router.push(`/community/${post.id}`)}
+                    className="group cursor-pointer hover:bg-slate-50/80 transition-all border-slate-50"
+                  >
+                    <TableCell className="text-center font-mono text-slate-400 text-sm">
+                      {post.id}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                          {post.title}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {post.commentCount > 0 && (
+                            <span className="flex items-center gap-1 text-[11px] font-black text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ring-1 ring-amber-100">
+                              <MessageSquare size={10} fill="currentColor" />
+                              {post.commentCount}
+                            </span>
+                          )}
+                          {post.attachmentCount > 0 && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-50 text-sky-500 text-[11px] font-black ring-1 ring-sky-100">
+                              <Paperclip size={10} strokeWidth={3} />
+                              {post.attachmentCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {/* 공지사항과 높이를 맞추기 위해 작성자 정보를 한 줄로 처리하거나 간격을 최소화 */}
+                      <span className="text-sm font-bold text-slate-600">
+                        {post.writer?.name || "익명"}
+                      </span>
+                      {post.writer?.role && (
+                        <span className="ml-2 text-[10px] text-slate-400 font-medium uppercase">
+                          {post.writer.role}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-slate-400 font-medium">
+                      {post.createdAt?.slice(0, 10)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-        {/* 페이징 네비게이션 (참고 코드와 동일 방식) */}
-        {totalPages > 1 && (
-          <div className="py-6 border-t border-slate-50 flex justify-center">
+        {/* 페이징 네비게이션 - 카드 밖으로 분리 */}
+        {totalPages > 0 && (
+          <div className="py-6 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>

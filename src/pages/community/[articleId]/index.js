@@ -56,7 +56,7 @@ export default function CommunityDetailPage() {
             onClick={() => router.push("/community/list")}
             className="text-slate-500 hover:text-slate-800 gap-2 px-0"
           >
-            <List size={18} />{" "}
+            <List size={18} />
             <span className="font-bold">목록으로 돌아가기</span>
           </Button>
 
