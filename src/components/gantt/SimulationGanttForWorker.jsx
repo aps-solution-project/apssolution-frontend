@@ -1,7 +1,15 @@
 import { editScenarioSchedule } from "@/api/scenario-api";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useCallback,
+} from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
 import { getAllTools } from "@/api/tool-api";
@@ -10,12 +18,10 @@ const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
 const MINUTES_PER_DAY = 24 * 60;
 
-export default function SimulationGanttForWorker({
-  products,
-  scenarioStart,
-  workers = [],
-  token,
-}) {
+export default forwardRef(function SimulationGanttForWorker(
+  { products, scenarioStart, workers = [], token },
+  ref,
+) {
   const [tools, setTools] = useState([]);
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -26,7 +32,7 @@ export default function SimulationGanttForWorker({
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
 
-  // barId → { workerName, toolId }
+  // barId → { workerId, workerName, toolId }
   const [barOverrides, setBarOverrides] = useState({});
 
   const handleBarSave = async (scheduleId, payload) => {
@@ -41,6 +47,7 @@ export default function SimulationGanttForWorker({
       setBarOverrides((prev) => ({
         ...prev,
         [scheduleId]: {
+          workerId: sc.worker?.id ?? prev[scheduleId]?.workerId,
           workerName: sc.worker?.name ?? prev[scheduleId]?.workerName,
           toolId: sc.tool?.id ?? prev[scheduleId]?.toolId,
         },
@@ -66,33 +73,16 @@ export default function SimulationGanttForWorker({
     };
   }, []);
 
-  // 도구 목록 추출: 가능한 경우 도구의 categoryId/name 포함
-  // const tools = useMemo(() => {
-  //   const map = new Map();
-  //   for (const p of Array.isArray(products) ? products : []) {
-  //     for (const sc of p.scenarioSchedules || []) {
-  //       const id = sc?.tool?.id ?? sc?.toolId;
-  //       if (!id) continue;
-  //       const key = String(id);
-  //       if (!map.has(key)) {
-  //         map.set(key, {
-  //           id: key,
-  //           name: sc?.tool?.name ?? String(id),
-  //           categoryId: sc?.tool?.categoryId ?? sc?.tool?.category?.id ?? null,
-  //         });
-  //       }
-  //     }
-  //   }
-  //   return Array.from(map.values()).sort((a, b) =>
-  //     String(a.name).localeCompare(String(b.name)),
-  //   );
-  // }, [products]);
-
   useEffect(() => {
     if (!token) return;
-    getAllTools(token).then((obj) => {
-      setTools(() => obj.tools);
-    });
+    getAllTools(token)
+      .then((obj) => {
+        setTools(() => obj.tools || []);
+      })
+      .catch(() => {
+        // 권한 없는 작업자 계정 — 도구 목록 없이 진행
+        setTools([]);
+      });
   }, [token]);
 
   const [openWorkers, setOpenWorkers] = useState(() => {
@@ -111,7 +101,8 @@ export default function SimulationGanttForWorker({
     const ws = new Set();
     list.forEach((p) => {
       (p.scenarioSchedules || []).forEach((s) => {
-        ws.add(s?.worker?.id || "unassigned");
+        const ov = barOverrides[s?.id];
+        ws.add(ov?.workerId || s?.worker?.id || "unassigned");
       });
     });
 
@@ -120,12 +111,9 @@ export default function SimulationGanttForWorker({
       ws.forEach((w) => {
         if (next[w] === undefined) next[w] = true;
       });
-      for (const k of Object.keys(next)) {
-        if (!ws.has(k)) delete next[k];
-      }
       return next;
     });
-  }, [products]);
+  }, [products, barOverrides]);
 
   const toggleWorker = (workerId) =>
     setOpenWorkers((p) => ({ ...p, [workerId]: !p[workerId] }));
@@ -142,8 +130,8 @@ export default function SimulationGanttForWorker({
         : [];
 
       schedules.forEach((s, idx) => {
-        const workerId = s?.worker?.id || "unassigned";
         const ov = barOverrides[s?.id];
+        const workerId = ov?.workerId || s?.worker?.id || "unassigned";
         const workerName = ov?.workerName || s?.worker?.name || "미배정";
         const taskName = s?.scheduleTask?.name || "작업";
 
@@ -228,6 +216,107 @@ export default function SimulationGanttForWorker({
     return allRows;
   }, [products, openWorkers, scenarioStart, barOverrides]);
 
+  // ── 제품 클릭 → 간트 스크롤 이동 ──
+  const [highlightRowKey, setHighlightRowKey] = useState(null);
+  const highlightTimer = useRef(null);
+  const pendingScrollRef = useRef(null); // { productName }
+
+  // scrollToProduct: 작업자 그룹 펼치고 pendingScroll 예약
+  const scrollToProduct = useCallback(
+    (productName) => {
+      if (!productName) return;
+
+      // 해당 제품이 소속된 작업자 그룹 모두 펼치기
+      const list = Array.isArray(products) ? products : [];
+      const workerIds = new Set();
+      for (const p of list) {
+        if ((p.name || p.id) !== productName) continue;
+        for (const s of p.scenarioSchedules || []) {
+          workerIds.add(s?.worker?.id || "unassigned");
+        }
+      }
+
+      setOpenWorkers((prev) => {
+        const next = { ...prev };
+        workerIds.forEach((wId) => {
+          next[wId] = true;
+        });
+        return next;
+      });
+
+      pendingScrollRef.current = { productName };
+    },
+    [products],
+  );
+
+  // rows가 갱신된 후 실제 스크롤 수행
+  useEffect(() => {
+    const pending = pendingScrollRef.current;
+    if (!pending) return;
+    pendingScrollRef.current = null;
+
+    const { productName } = pending;
+
+    // 1) 해당 제품의 첫 번째 task row 찾기
+    let targetRow = null;
+    let earliestBarStart = Infinity;
+
+    for (const r of rows) {
+      if (r.type !== "task") continue;
+      if (r.productName !== productName) continue;
+      if (!targetRow) targetRow = r;
+      for (const b of r.bars || []) {
+        if (b.start < earliestBarStart) {
+          earliestBarStart = b.start;
+          targetRow = r;
+        }
+      }
+    }
+
+    if (!targetRow) return;
+
+    // 2) 해당 날짜로 전환
+    const dayIdx =
+      earliestBarStart !== Infinity
+        ? Math.floor(earliestBarStart / MINUTES_PER_DAY)
+        : 0;
+    setCurrentDayIndex(dayIdx);
+
+    // 3) 스크롤 (날짜 전환 후 다음 프레임)
+    requestAnimationFrame(() => {
+      const bodyEl = bodyRef.current;
+      if (!bodyEl) return;
+
+      // 세로 스크롤: 대상 row 위치
+      const targetY = Math.max(0, targetRow.row * ROW_HEIGHT - ROW_HEIGHT * 2);
+      bodyEl.scrollTop = targetY;
+
+      // 가로 스크롤: 첫 bar 위치 (현재 day 기준)
+      if (earliestBarStart !== Infinity) {
+        const dayStart = dayIdx * MINUTES_PER_DAY;
+        const barPosX = (earliestBarStart - dayStart) * minuteWidth;
+        const scrollX = Math.max(0, barPosX - 120);
+        bodyEl.scrollLeft = scrollX;
+
+        const scaleEl = scaleRef.current;
+        if (scaleEl) scaleEl.scrollLeft = scrollX;
+      }
+    });
+
+    // 4) 하이라이트
+    setHighlightRowKey(targetRow.key);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightRowKey(null), 2500);
+  }, [rows, minuteWidth]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToProduct,
+    }),
+    [scrollToProduct],
+  );
+
   const totalMinutes = useMemo(() => {
     let maxEnd = 0;
     for (const r of rows) {
@@ -288,14 +377,32 @@ export default function SimulationGanttForWorker({
         </div>
 
         {totalDays > 1 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
-            <Calendar className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-xs font-medium text-slate-700 whitespace-nowrap min-w-[100px] text-center">
-              {formatDayLabel(currentDayIndex)}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              ({currentDayIndex + 1}/{totalDays})
-            </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handlePrevDay}
+              disabled={currentDayIndex === 0}
+              className="h-9 w-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs font-medium text-slate-700 whitespace-nowrap min-w-[100px] text-center">
+                {formatDayLabel(currentDayIndex)}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                ({currentDayIndex + 1}/{totalDays})
+              </span>
+            </div>
+
+            <button
+              onClick={handleNextDay}
+              disabled={currentDayIndex === totalDays - 1}
+              className="h-9 w-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>
@@ -336,41 +443,14 @@ export default function SimulationGanttForWorker({
               workers={workers}
               tools={tools}
               onBarSave={handleBarSave}
+              highlightRowKey={highlightRowKey}
             />
           </div>
         </div>
-
-        <button
-          onClick={handlePrevDay}
-          disabled={totalDays === 1 || currentDayIndex === 0}
-          className="absolute top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full border border-slate-200 bg-white shadow-lg hover:bg-slate-50 hover:shadow-xl disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          style={{
-            left: `${panelWidth + 16}px`,
-            opacity: totalDays === 1 ? 0.3 : currentDayIndex === 0 ? 0.5 : 1,
-          }}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        <button
-          onClick={handleNextDay}
-          disabled={totalDays === 1 || currentDayIndex === totalDays - 1}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full border border-slate-200 bg-white shadow-lg hover:bg-slate-50 hover:shadow-xl disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          style={{
-            opacity:
-              totalDays === 1
-                ? 0.3
-                : currentDayIndex === totalDays - 1
-                  ? 0.5
-                  : 1,
-          }}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
       </div>
     </div>
   );
-}
+});
 
 function minutesFromStart(t, base) {
   if (!t || !base) return 0;
