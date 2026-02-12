@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
   ClockIcon,
   Package,
   PlayCircle,
@@ -38,7 +40,7 @@ export default function DeploymentPage() {
     0,
   );
 
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 4;
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
 
@@ -221,17 +223,62 @@ export default function DeploymentPage() {
                 <span className="flex items-center gap-2">
                   <ScrollText className="h-5 w-5 text-slate-600" />
                   제품 목록
+                  {/* 페이지네이션 */}
+                  <div className="flex items-center gap-1 ml-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className="h-7 w-7 p-0"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (num) => (
+                        <Button
+                          key={num}
+                          size="sm"
+                          variant={num === page ? "default" : "outline"}
+                          onClick={() => setPage(num)}
+                          className={[
+                            "h-7 w-7 p-0 text-xs font-medium",
+                            num === page
+                              ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                              : "text-slate-600 hover:bg-slate-100",
+                          ].join(" ")}
+                        >
+                          {num}
+                        </Button>
+                      ),
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={page >= totalPages}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className="h-7 w-7 p-0"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </span>
+
                 <span className="text-base font-medium text-slate-400 mr-2">
                   제품 ID
                 </span>
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 min-h-0">
                 {pageProducts.map((p, idx) => {
+                  const globalIdx = (page - 1) * PAGE_SIZE + idx;
                   const scheduleCount = p.scenarioSchedules?.length || 0;
                   const colorClass =
-                    PRODUCT_COLORS[idx % PRODUCT_COLORS.length];
+                    PRODUCT_COLORS[globalIdx % PRODUCT_COLORS.length];
                   const initial = (p.name || p.id || "?").charAt(0);
 
                   return (
@@ -272,11 +319,6 @@ export default function DeploymentPage() {
                     </div>
                   );
                 })}
-              </div>
-              <div className="mt-4 flex justify-end">
-                <span className="text-sm text-slate-500">
-                  {page} / {totalPages}
-                </span>
               </div>
             </Card>
           </div>

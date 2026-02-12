@@ -242,14 +242,32 @@ export default function SimulationGantt({
         </div>
 
         {totalDays > 1 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
-            <Calendar className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-xs font-medium text-slate-700 whitespace-nowrap min-w-[100px] text-center">
-              {formatDayLabel(currentDayIndex)}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              ({currentDayIndex + 1}/{totalDays})
-            </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handlePrevDay}
+              disabled={currentDayIndex === 0}
+              className="h-8 w-8  rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-md border border-slate-200">
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs font-medium text-slate-700 whitespace-nowrap min-w-[100px] text-center">
+                {formatDayLabel(currentDayIndex)}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                ({currentDayIndex + 1}/{totalDays})
+              </span>
+            </div>
+
+            <button
+              onClick={handleNextDay}
+              disabled={currentDayIndex === totalDays - 1}
+              className="h-8 w-8 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>
@@ -292,34 +310,6 @@ export default function SimulationGantt({
             />
           </div>
         </div>
-
-        <button
-          onClick={handlePrevDay}
-          disabled={totalDays === 1 || currentDayIndex === 0}
-          className="absolute top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full border border-slate-200 bg-white shadow-lg hover:bg-slate-50 hover:shadow-xl disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          style={{
-            left: `${panelWidth + 16}px`,
-            opacity: totalDays === 1 ? 0.3 : currentDayIndex === 0 ? 0.5 : 1,
-          }}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        <button
-          onClick={handleNextDay}
-          disabled={totalDays === 1 || currentDayIndex === totalDays - 1}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full border border-slate-200 bg-white shadow-lg hover:bg-slate-50 hover:shadow-xl disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          style={{
-            opacity:
-              totalDays === 1
-                ? 0.3
-                : currentDayIndex === totalDays - 1
-                  ? 0.5
-                  : 1,
-          }}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
       </div>
     </div>
   );
