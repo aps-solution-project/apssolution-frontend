@@ -54,7 +54,9 @@ export default function TimeScale({
       const hh = String(d.getHours()).padStart(2, "0");
       const mi = String(d.getMinutes()).padStart(2, "0");
       const isHour = d.getMinutes() === 0;
-      labelTicks.push({ m, label: `${hh}:${mi}`, isHour });
+      const isNoon = d.getHours() === 12 && d.getMinutes() === 0;
+      const isMidnight = d.getHours() === 0 && d.getMinutes() === 0;
+      labelTicks.push({ m, label: `${hh}:${mi}`, isHour, isNoon, isMidnight });
     }
   } else {
     for (let m = firstLabelOffset; m <= totalMinutes; m += 30) {
@@ -62,7 +64,13 @@ export default function TimeScale({
       const hh = String(Math.floor(totalMins / 60)).padStart(2, "0");
       const mi = String(totalMins % 60).padStart(2, "0");
       const isHour = m % 60 === 0;
-      labelTicks.push({ m, label: `${hh}:${mi}`, isHour });
+      labelTicks.push({
+        m,
+        label: `${hh}:${mi}`,
+        isHour,
+        isNoon: false,
+        isMidnight: false,
+      });
     }
   }
 
@@ -91,10 +99,20 @@ export default function TimeScale({
       })}
 
       {/* 주요 레이블 틱 (:00, :30) */}
-      {labelTicks.map(({ m, label, isHour }) => {
+      {labelTicks.map(({ m, label, isHour, isNoon, isMidnight }) => {
         const left = m * minuteWidth;
-        const h = isHour ? 14 : 10;
-        const color = isHour ? "bg-slate-400" : "bg-slate-300";
+        const h = isNoon || isMidnight ? 18 : isHour ? 14 : 10;
+
+        // 색상 결정
+        let tickColor = isHour ? "bg-slate-400" : "bg-slate-300";
+        let labelColor = "text-slate-600";
+        if (isNoon) {
+          tickColor = "bg-blue-400";
+          labelColor = "text-blue-600 font-semibold";
+        } else if (isMidnight) {
+          tickColor = "bg-red-400";
+          labelColor = "text-red-600 font-semibold";
+        }
 
         return (
           <div
@@ -103,13 +121,13 @@ export default function TimeScale({
             style={{ left, width: 0, height: 44 }}
           >
             <div
-              className="absolute top-1 text-[11px] font-medium text-slate-600 whitespace-nowrap"
+              className={`absolute top-1 text-[11px] font-medium ${labelColor} whitespace-nowrap`}
               style={{ transform: "translateX(-50%)" }}
             >
               {label}
             </div>
             <div
-              className={`absolute top-6 w-px ${color}`}
+              className={`absolute top-6 w-px ${tickColor}`}
               style={{ height: h }}
             />
           </div>

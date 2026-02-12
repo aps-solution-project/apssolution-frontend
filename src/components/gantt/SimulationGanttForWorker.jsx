@@ -1,7 +1,15 @@
 import { editScenarioSchedule } from "@/api/scenario-api";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useCallback,
+} from "react";
 import LeftPanelForWorker from "./LeftPanelForWoker";
 import Timeline from "./Timeline";
 import { getAllTools } from "@/api/tool-api";
@@ -10,12 +18,10 @@ const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
 const MINUTES_PER_DAY = 24 * 60;
 
-export default function SimulationGanttForWorker({
-  products,
-  scenarioStart,
-  workers = [],
-  token,
-}) {
+export default forwardRef(function SimulationGanttForWorker(
+  { products, scenarioStart, workers = [], token },
+  ref,
+) {
   const [tools, setTools] = useState([]);
   const [minuteWidth, setMinuteWidth] = useState(2);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -228,6 +234,107 @@ export default function SimulationGanttForWorker({
     return allRows;
   }, [products, openWorkers, scenarioStart, barOverrides]);
 
+  // ── 제품 클릭 → 간트 스크롤 이동 ──
+  const [highlightRowKey, setHighlightRowKey] = useState(null);
+  const highlightTimer = useRef(null);
+  const pendingScrollRef = useRef(null); // { productName }
+
+  // scrollToProduct: 작업자 그룹 펼치고 pendingScroll 예약
+  const scrollToProduct = useCallback(
+    (productName) => {
+      if (!productName) return;
+
+      // 해당 제품이 소속된 작업자 그룹 모두 펼치기
+      const list = Array.isArray(products) ? products : [];
+      const workerIds = new Set();
+      for (const p of list) {
+        if ((p.name || p.id) !== productName) continue;
+        for (const s of p.scenarioSchedules || []) {
+          workerIds.add(s?.worker?.id || "unassigned");
+        }
+      }
+
+      setOpenWorkers((prev) => {
+        const next = { ...prev };
+        workerIds.forEach((wId) => {
+          next[wId] = true;
+        });
+        return next;
+      });
+
+      pendingScrollRef.current = { productName };
+    },
+    [products],
+  );
+
+  // rows가 갱신된 후 실제 스크롤 수행
+  useEffect(() => {
+    const pending = pendingScrollRef.current;
+    if (!pending) return;
+    pendingScrollRef.current = null;
+
+    const { productName } = pending;
+
+    // 1) 해당 제품의 첫 번째 task row 찾기
+    let targetRow = null;
+    let earliestBarStart = Infinity;
+
+    for (const r of rows) {
+      if (r.type !== "task") continue;
+      if (r.productName !== productName) continue;
+      if (!targetRow) targetRow = r;
+      for (const b of r.bars || []) {
+        if (b.start < earliestBarStart) {
+          earliestBarStart = b.start;
+          targetRow = r;
+        }
+      }
+    }
+
+    if (!targetRow) return;
+
+    // 2) 해당 날짜로 전환
+    const dayIdx =
+      earliestBarStart !== Infinity
+        ? Math.floor(earliestBarStart / MINUTES_PER_DAY)
+        : 0;
+    setCurrentDayIndex(dayIdx);
+
+    // 3) 스크롤 (날짜 전환 후 다음 프레임)
+    requestAnimationFrame(() => {
+      const bodyEl = bodyRef.current;
+      if (!bodyEl) return;
+
+      // 세로 스크롤: 대상 row 위치
+      const targetY = Math.max(0, targetRow.row * ROW_HEIGHT - ROW_HEIGHT * 2);
+      bodyEl.scrollTop = targetY;
+
+      // 가로 스크롤: 첫 bar 위치 (현재 day 기준)
+      if (earliestBarStart !== Infinity) {
+        const dayStart = dayIdx * MINUTES_PER_DAY;
+        const barPosX = (earliestBarStart - dayStart) * minuteWidth;
+        const scrollX = Math.max(0, barPosX - 120);
+        bodyEl.scrollLeft = scrollX;
+
+        const scaleEl = scaleRef.current;
+        if (scaleEl) scaleEl.scrollLeft = scrollX;
+      }
+    });
+
+    // 4) 하이라이트
+    setHighlightRowKey(targetRow.key);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightRowKey(null), 2500);
+  }, [rows, minuteWidth]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToProduct,
+    }),
+    [scrollToProduct],
+  );
+
   const totalMinutes = useMemo(() => {
     let maxEnd = 0;
     for (const r of rows) {
@@ -292,7 +399,7 @@ export default function SimulationGanttForWorker({
             <button
               onClick={handlePrevDay}
               disabled={currentDayIndex === 0}
-              className="h-8 w-8 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+              className="h-9 w-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -310,7 +417,7 @@ export default function SimulationGanttForWorker({
             <button
               onClick={handleNextDay}
               disabled={currentDayIndex === totalDays - 1}
-              className="h-8 w-8 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+              className="h-9 w-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -354,13 +461,14 @@ export default function SimulationGanttForWorker({
               workers={workers}
               tools={tools}
               onBarSave={handleBarSave}
+              highlightRowKey={highlightRowKey}
             />
           </div>
         </div>
       </div>
     </div>
   );
-}
+});
 
 function minutesFromStart(t, base) {
   if (!t || !base) return 0;
