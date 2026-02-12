@@ -9,6 +9,10 @@ export const useStomp = create((set, get) => ({
     "/chat/list": false,
   },
 
+  hasScenarioUnread: {
+    "/deployment": false,
+  },
+
   currentChatId: null,
 
   /* =========================
@@ -50,6 +54,19 @@ export const useStomp = create((set, get) => ({
   /* =========================
      초기화 / 제어
   ========================= */
+
+  setHasScenarioUnread: function (unreadCount) {
+    if (unreadCount > 0) {
+      set({ hasScenarioUnread: { "/deployment": true } });
+    } else {
+      set({ hasScenarioUnread: { "/deployment": false } });
+    }
+  },
+
+  clearHasScenarioUnread: function () {
+    set({ hasScenarioUnread: { "/deployment": false } });
+  },
+
   clearUnread: (path) =>
     set((state) => ({
       hasUnread: {
