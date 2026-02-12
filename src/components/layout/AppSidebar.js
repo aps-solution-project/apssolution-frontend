@@ -43,12 +43,7 @@ export function AppSidebar() {
   if (isLoginPage) {
     return null;
   }
-
-  console.log("🔄 AppSidebar 렌더링");
-  console.log("   - hasUnread:", hasUnread);
-  console.log("   - hasScenarioUnread:", hasScenarioUnread);
-  console.log("   - totalUnreadCount:", totalUnreadCount);
-
+  
   const getFilteredSections = () => {
     const sections = [
       {
@@ -108,7 +103,7 @@ export function AppSidebar() {
         items: [
           {
             label: "근무표",
-            href: "/calendar/worker",
+            href: "/calendar",
             icon: CalendarDays,
             badgeKey: "/calendar", // 🌟 배포 작업도 같은 키 사용
           },
@@ -116,7 +111,6 @@ export function AppSidebar() {
             label: "배포 작업",
             href: "/deployment",
             icon: ClipboardCheck,
-            badgeKey: "/calendar", // 🌟 배포 작업도 같은 키 사용
           },
         ],
       });
@@ -129,7 +123,7 @@ export function AppSidebar() {
         items: [
           {
             label: "캘린더",
-            href: "/calendar/admin",
+            href: "/calendar",
             icon: CalendarDays,
             badgeKey: "/calendar",
           },
