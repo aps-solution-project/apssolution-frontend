@@ -7,6 +7,7 @@ import {
   Activity,
   Calendar,
   CheckCircle2,
+  FastForward,
   FileText,
   Globe,
   Loader2,
@@ -296,17 +297,7 @@ export default function ScenarioRightPannel({
     }`}
           >
             {(() => {
-              // 1. 성공 상태
-              if (selectedScenario.status === "OPTIMAL" || "FEASIBLE") {
-                return (
-                  <>
-                    <FileText size={18} />
-                    결과 레포트 보기
-                  </>
-                );
-              }
-
-              // 2. 엔진 분석 중 상태 (애니메이션 100% 도달 후 또는 서버 상태가 PENDING일 때)
+              // 1. 엔진 분석 중 상태 (가장 우선 순위)
               if (
                 (animatedProgress === 100 &&
                   selectedScenario.status === "READY") ||
@@ -320,7 +311,7 @@ export default function ScenarioRightPannel({
                 );
               }
 
-              // 3. 데이터 전송 중 상태 (애니메이션 구동 중)
+              // 2. 데이터 전송 중 상태
               if (running) {
                 return (
                   <>
@@ -330,17 +321,30 @@ export default function ScenarioRightPannel({
                 );
               }
 
-              // 4. 실패 상태 (재시도)
-              if (selectedScenario.status === "FAIL") {
+              // 3. 성공 상태 (비교문을 정확하게 작성: status === "A" || status === "B")
+              if (
+                selectedScenario.status === "OPTIMAL" ||
+                selectedScenario.status === "FEASIBLE"
+              ) {
                 return (
                   <>
-                    <Play size={18} fill="currentColor" />
-                    재시뮬레이션 시작
+                    <FileText size={18} />
+                    결과 레포트 보기
                   </>
                 );
               }
 
-              // 5. 기본 상태 (READY)
+              // 4. 실패 상태
+              if (selectedScenario.status === "FAIL") {
+                return (
+                  <>
+                    <FastForward size={18} fill="currentColor" />
+                    시뮬레이션 재시작
+                  </>
+                );
+              }
+
+              // 5. 기본 상태 (READY 등)
               return (
                 <>
                   <Play size={18} fill="currentColor" />
