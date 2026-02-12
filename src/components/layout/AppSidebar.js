@@ -28,12 +28,15 @@ import { useRouter } from "next/router";
 export function AppSidebar() {
   const router = useRouter();
   const { account } = useAccount();
-  const { totalUnreadCount } = useStomp();
+
+  // 🌟 각 상태를 개별 구독 (이게 핵심!)
+  const totalUnreadCount = useStomp((state) => state.totalUnreadCount);
+  const hasUnread = useStomp((state) => state.hasUnread);
+  const hasScenarioUnread = useStomp((state) => state.hasScenarioUnread);
+
   const userRole = account?.role;
   const isManager = userRole === "ADMIN" || userRole === "PLANNER";
   const isWorker = userRole === "WORKER";
-  const hasUnread = useStomp((state) => state.hasUnread);
-  const hasScenarioUnread = useStomp((state) => state.hasScenarioUnread);
 
   const isLoginPage = router.pathname === "/login";
 
@@ -41,8 +44,10 @@ export function AppSidebar() {
     return null;
   }
 
-  console.log("hasUnread!!! : " + hasUnread);
-  console.log("hasScenarioUnread!!! : " + hasScenarioUnread);
+  console.log("🔄 AppSidebar 렌더링");
+  console.log("   - hasUnread:", hasUnread);
+  console.log("   - hasScenarioUnread:", hasScenarioUnread);
+  console.log("   - totalUnreadCount:", totalUnreadCount);
 
   const getFilteredSections = () => {
     const sections = [
@@ -74,7 +79,11 @@ export function AppSidebar() {
 
     // 2. 게시판 (공통 + 권한 분기)
     const boardItems = [
-      { label: "공지사항", href: "/notice/list", icon: NotebookPen },
+      {
+        label: "공지사항",
+        href: "/notice/list",
+        icon: NotebookPen,
+      },
     ];
     if (isManager) {
       boardItems.push({
@@ -97,8 +106,18 @@ export function AppSidebar() {
       sections.push({
         title: "나의 업무",
         items: [
-          { label: "근무표", href: "/calendar/worker", icon: CalendarDays },
-          { label: "배포 작업", href: "/deployment", icon: ClipboardCheck },
+          {
+            label: "근무표",
+            href: "/calendar/worker",
+            icon: CalendarDays,
+            badgeKey: "/calendar", // 🌟 배포 작업도 같은 키 사용
+          },
+          {
+            label: "배포 작업",
+            href: "/deployment",
+            icon: ClipboardCheck,
+            badgeKey: "/calendar", // 🌟 배포 작업도 같은 키 사용
+          },
         ],
       });
     }
@@ -108,7 +127,12 @@ export function AppSidebar() {
       sections.push({
         title: "캘린더",
         items: [
-          { label: "캘린더", href: "/calendar/admin", icon: CalendarDays },
+          {
+            label: "캘린더",
+            href: "/calendar/admin",
+            icon: CalendarDays,
+            badgeKey: "/calendar",
+          },
         ],
       });
     }
@@ -121,6 +145,8 @@ export function AppSidebar() {
           label: "채팅",
           href: "/chat",
           icon: MessageSquareMore,
+          badgeKey: "/chat",
+          showCount: true, // 🌟 채팅은 숫자 표시
         },
       ],
     });
@@ -129,7 +155,13 @@ export function AppSidebar() {
     if (isManager) {
       sections.push({
         title: "관리",
-        items: [{ label: "사원 관리", href: "/employees", icon: ContactRound }],
+        items: [
+          {
+            label: "사원 관리",
+            href: "/employees",
+            icon: ContactRound,
+          },
+        ],
       });
     }
 
@@ -146,7 +178,6 @@ export function AppSidebar() {
           onClick={() => router.push("/")}
         >
           <img src="/images/logo.png" alt="logo" className="h-6 w-auto" />
-
           <span className="group-data-[collapsible=icon]:hidden">BakeFlow</span>
         </div>
       </SidebarHeader>
@@ -160,12 +191,15 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {section.items.map((item) => {
-                  const isCalendarRoute = item.href.includes("/calendar");
+                  // 🌟 배지 표시 로직
+                  let shouldShowBadge = false;
 
-                  const shouldShowBadge = isCalendarRoute
-                    ? hasScenarioUnread["/calendar"] ||
-                      hasScenarioUnread["/calendar/worker"] // 서버가 줄 수 있는 두 가지 케이스 모두 체크
-                    : hasUnread[item.href];
+                  if (item.badgeKey === "/chat") {
+                    shouldShowBadge = hasUnread?.["/chat"] === true;
+                  } else if (item.badgeKey === "/calendar") {
+                    shouldShowBadge = hasScenarioUnread?.["/calendar"] === true;
+                  }
+
                   return (
                     <SidebarMenuItem key={item.label}>
                       <SidebarMenuButton
@@ -177,7 +211,16 @@ export function AppSidebar() {
 
                         <span className="relative flex items-center">
                           {item.label}
-                          <Badge show={shouldShowBadge} />
+                          {/* 🌟 채팅은 숫자, 나머지는 점만 */}
+                          {shouldShowBadge && (
+                            <>
+                              {item.showCount && totalUnreadCount > 0 ? (
+                                <Badge show={true} count={totalUnreadCount} />
+                              ) : (
+                                <Badge show={true} />
+                              )}
+                            </>
+                          )}
                         </span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

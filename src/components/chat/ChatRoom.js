@@ -19,7 +19,6 @@ import { useAccount, useToken } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import {
-  ChevronLeft,
   FilePlus,
   FileText,
   Image as ImageIcon,
@@ -32,14 +31,12 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
-export default function ChatRoom() {
+export default function ChatRoom({ chatId }) {
   const router = useRouter();
-  const { chatId } = router.query;
+  const { forceRefresh } = router.query;
   const { account } = useAccount();
   const { token } = useToken();
-  const { stomp } = useStomp();
-  const { totalUnreadCount, setTotalUnreadCount } = useStomp();
-  const { setCurrentChatId } = useStomp();
+  const { stomp, setCurrentChatId, setTotalUnreadCount } = useStomp();
 
   const [chatInfo, setChatInfo] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -51,75 +48,93 @@ export default function ChatRoom() {
   const fileInputRef = useRef(null);
   const documentInputRef = useRef(null);
 
+  // 🌟 채팅방 진입 시 currentChatId 설정
   useEffect(() => {
-    if (!chatId || !token) return;
-
-    if (String(chatId).startsWith("new_direct_")) {
-      setChatInfo({
-        id: chatId,
-        chatRoomName: router.query.targetName || "새로운 대화",
-        messages: [],
-        isTemp: true, // 임시 상태임을 표시
-      });
-      setMessages([]);
+    if (!chatId || chatId === "chat-list" || chatId.startsWith("new_")) {
+      setCurrentChatId(null);
       return;
     }
 
-    getChatDetail(token, chatId)
-      .then((data) => {
-        setChatInfo(data);
-        const chronologicalMessages = [...(data.messages || [])].reverse();
-        setMessages(chronologicalMessages);
-        markAsRead();
-      })
-      .catch((err) => {
-        // 404가 나더라도 새로운 채팅방 생성을 위한 화면은 유지해야 함
-        setChatInfo({
-          id: chatId,
-          chatRoomName: "새 메시지",
-          messages: [],
-          isTemp: true,
-        });
-      });
-  }, [chatId, token, router.query]);
+    console.log("🎯 현재 채팅방 설정:", chatId);
+    setCurrentChatId(chatId);
+
+    return () => {
+      console.log("👋 채팅방 나감, currentChatId 초기화");
+      setCurrentChatId(null);
+    };
+  }, [chatId, setCurrentChatId]);
 
   // 1. 초기 데이터 로드
   useEffect(() => {
     if (!chatId || !token) return;
+    if (chatId === "chat-list" || chatId.startsWith("new_")) return;
 
-    getChatDetail(token, chatId)
-      .then((data) => {
+    console.log(
+      "📥 ChatRoom 데이터 로드 시작, chatId:",
+      chatId,
+      "forceRefresh:",
+      forceRefresh,
+    );
+
+    const loadChatDetail = async () => {
+      try {
+        const data = await getChatDetail(token, chatId);
+
+        console.log("📦 받은 데이터:", data);
+        console.log("📨 메시지 개수:", data.messages?.length);
+
         setChatInfo(data);
-        // 백엔드에서 reversed()로 오기 때문에 다시 뒤집어서 시간순 정렬
         const chronologicalMessages = [...(data.messages || [])].reverse();
-        setMessages(chronologicalMessages);
-      })
-      .catch((err) => {
-        console.error("채팅방 로드 실패:", err);
-        if (err.status === 403 || err.status === 404) {
-          router.replace("/chat/chat-list");
-          return;
-        }
-        setChatInfo({
-          id: chatId,
-          chatRoomName: "새로운 대화", // 혹은 상대방 이름 로직 추가
-          messages: [],
-        });
-        setMessages([]);
-      });
-  }, [chatId, token]);
 
+        console.log("✅ 화면에 표시할 메시지:", chronologicalMessages);
+
+        setMessages(chronologicalMessages);
+
+        // forceRefresh 플래그가 있으면 URL에서 제거
+        if (forceRefresh) {
+          console.log("🔄 forceRefresh 플래그 제거");
+          router.replace(`/chat?chatId=${chatId}`, undefined, {
+            shallow: true,
+          });
+        }
+      } catch (err) {
+        console.error("❌ 채팅방 로드 실패:", err);
+        if (err.status === 403 || err.status === 404) {
+          router.replace("/chat");
+        }
+      }
+    };
+
+    loadChatDetail();
+  }, [chatId, token, forceRefresh, router]);
+
+  // 2. 실시간 구독
   useEffect(() => {
     if (!stomp || !stomp.connected || !chatId) return;
+    if (chatId === "chat-list" || chatId.startsWith("new_")) return;
 
     console.log("📡 채팅 구독 시작:", chatId);
 
-    const sub = stomp.subscribe(`/topic/chat/${chatId}`, (frame) => {
+    const sub = stomp.subscribe(`/topic/chat/${chatId}`, async (frame) => {
       const body = JSON.parse(frame.body);
+
+      console.log("🔔 실시간 메시지 수신:", body);
+
       if (body.type !== "LEAVE") {
+        // 🌟 메시지 목록 갱신
         getChatDetail(token, chatId).then((data) => {
           setMessages([...(data.messages || [])].reverse());
+          console.log("✅ 메시지 목록 갱신 완료");
         });
+
+        // 🌟 즉시 읽음 처리 (안읽은 메시지 카운트 갱신)
+        try {
+          const data = await getUnreadCount(token);
+          console.log("📊 실시간 메시지 후 카운트 업데이트:", data.unreadCount);
+          setTotalUnreadCount(data.unreadCount || 0);
+        } catch (err) {
+          console.error("카운트 업데이트 실패:", err);
+        }
       }
     });
 
@@ -127,28 +142,27 @@ export default function ChatRoom() {
       console.log("❌ 채팅 구독 해제:", chatId);
       sub.unsubscribe();
     };
-  }, [stomp, chatId, token]);
+  }, [stomp, stomp?.connected, chatId, token, setTotalUnreadCount]);
 
-  // 하단 스크롤
+  // 3. 하단 스크롤
   const scrollToBottom = (behavior = "smooth") => {
     scrollRef.current?.scrollIntoView({ behavior });
   };
 
-  // 메시지 배열 변경 시 실행 (기존 코드 유지)
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // 채팅방 진입 시 안읽은 메세지 카운트 초기화
+  // 4. 🌟 채팅방 진입 시 안읽은 메시지 카운트 초기화
   useEffect(() => {
     if (!chatId || !token) return;
+    if (chatId === "chat-list" || chatId.startsWith("new_")) return;
 
     const updateGlobalCount = async () => {
       try {
-        // 서버에서 최신 안 읽은 개수 가져오기
         const data = await getUnreadCount(token);
+        console.log("📊 전역 카운트 업데이트:", data.unreadCount);
 
-        // 사파리 등 브라우저 렌더링 에러 방지를 위해 setTimeout 사용
         setTimeout(() => {
           setTotalUnreadCount(data.unreadCount || 0);
         }, 0);
@@ -159,59 +173,33 @@ export default function ChatRoom() {
 
     updateGlobalCount();
 
-    // (선택 사항) 채팅방을 나갈 때도 한 번 더 갱신하여
-    // 목록으로 돌아갔을 때 사이드바가 최신 상태를 유지하게 함
     return () => {
       updateGlobalCount();
     };
   }, [chatId, token, setTotalUnreadCount]);
 
-  // 텍스트 전송
+  // 5. 텍스트 전송
   const handleSend = async () => {
     if (!inputText.trim()) return;
+
     try {
-      let finalChatId = chatId;
-
-      // 만약 임시 채팅방 상태라면?
-      if (chatInfo?.isTemp) {
-        // 1. 방 생성과 동시에 첫 메시지 전송 (백엔드 API 구조에 맞춰 조정)
-        // 예: startDirectChat이 방을 만들고 ID를 반환한다면
-        const newRoom = await startDirectChat(token, router.query.targetUser);
-        finalChatId = newRoom.chatRoomId || newRoom.id;
-
-        // 2. 주소창의 ID를 실제 ID로 변경 (새로고침 없이)
-        router.replace(`/chat?chatId=${finalChatId}`, undefined, {
-          shallow: true,
-        });
-
-        // 3. 임시 상태 해제
-        setChatInfo((prev) => ({ ...prev, isTemp: false, id: finalChatId }));
-      }
-
-      // 실제 메시지 전송
-      await sendMessage(token, finalChatId, {
+      await sendMessage(token, chatId, {
         type: "TEXT",
         content: inputText,
       });
 
       setInputText("");
-
-      // 첫 메시지 전송 후 목록 갱신을 위해 필요한 로직 추가
-      if (chatInfo?.isTemp) {
-        // 목록 새로고침 트리거 (stomp publish 등으로 목록에 신호 주기)
-      }
     } catch (e) {
       console.error("메시지 전송 실패:", e);
     }
   };
 
-  // 파일 전송
+  // 6. 파일 전송
   const handleFileSend = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
     try {
-      // API 함수가 원하는 구조로 전달
       await sendMessage(token, chatId, {
         type: "FILE",
         files: files,
@@ -233,7 +221,7 @@ export default function ChatRoom() {
   function leaveChatRoom() {
     leaveChat(token, chatId)
       .then(() => {
-        router.push("/chat/chat-list");
+        router.push("/chat");
       })
       .catch((err) => {
         console.error("채팅방 나가기 실패:", err);
@@ -244,9 +232,7 @@ export default function ChatRoom() {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full bg-slate-50/30 space-y-4">
         <div className="relative">
-          {/* 부드럽게 회전하는 스피너 */}
           <Loader2 className="size-10 text-indigo-600 animate-spin" />
-          {/* 중앙에 고정된 작은 점 (디자인 포인트) */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="size-1.5 bg-indigo-200 rounded-full" />
           </div>
@@ -260,10 +246,9 @@ export default function ChatRoom() {
 
   return (
     <div className="flex flex-col h-full w-full bg-white overflow-hidden">
-      {/* 상단 헤더 (백버튼 제거 등 조정 가능) */}
+      {/* 헤더 */}
       <div className="p-4 h-[83.5px] border-b flex items-center justify-between bg-white/80 sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          {/* 스플릿 뷰에서는 백버튼이 필요 없으므로 제거하거나 숨김 처리 */}
           <div className="flex flex-col">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -294,7 +279,7 @@ export default function ChatRoom() {
           </div>
         </div>
 
-        {/* 🍔 우측 햄버거 메뉴 영역 */}
+        {/* 햄버거 메뉴 */}
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -306,16 +291,9 @@ export default function ChatRoom() {
               align="end"
               className="w-48 mt-2 shadow-xl rounded-xl border-slate-100"
             >
-              {/* 1. 사진 모아보기 */}
               <DropdownMenuItem
                 onClick={() => {
                   setIsGalleryOpen(true);
-                  const allImages = messages
-                    .filter((m) => m.type === "FILE")
-                    .flatMap((m) => m.attachments || [])
-                    .filter((a) =>
-                      /\.(jpg|jpeg|png|gif|webp)$/i.test(a.fileName),
-                    );
                 }}
                 className="gap-2 py-3 cursor-pointer focus:bg-slate-50"
               >
@@ -323,10 +301,8 @@ export default function ChatRoom() {
                 <span className="text-sm font-medium">사진 모아보기</span>
               </DropdownMenuItem>
 
-              {/* 구분선 */}
               <div className="h-px bg-slate-100 my-1" />
 
-              {/* 파일 모아보기 (새로 추가) */}
               <DropdownMenuItem
                 onClick={() => setIsFileModalOpen(true)}
                 className="gap-2 py-3 cursor-pointer"
@@ -335,10 +311,8 @@ export default function ChatRoom() {
                 <span className="text-sm font-medium">파일 모아보기</span>
               </DropdownMenuItem>
 
-              {/* 구분선 */}
               <div className="h-px bg-slate-100 my-1" />
 
-              {/* 3. 채팅방 나가기 */}
               <DropdownMenuItem
                 onClick={leaveChatRoom}
                 className="gap-2 py-3 cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
@@ -351,7 +325,7 @@ export default function ChatRoom() {
         </div>
       </div>
 
-      {/* 채팅 메시지 영역 */}
+      {/* 메시지 영역 */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f8f9fc]">
         {messages.map((msg) => {
           if (msg.type === "LEAVE") {
@@ -378,7 +352,6 @@ export default function ChatRoom() {
               key={msg.id}
               className={`flex ${isMe ? "justify-end" : "justify-start"} gap-3 mb-6`}
             >
-              {/* 상대방 아바타 */}
               {!isMe && (
                 <Avatar className="size-10 shrink-0 rounded-full overflow-hidden shadow-sm border border-slate-200">
                   <AvatarImage
@@ -393,24 +366,20 @@ export default function ChatRoom() {
                 </Avatar>
               )}
 
-              {/* 메시지 영역 */}
               <div
                 className={`flex flex-col max-w-[70%] ${
                   isMe ? "items-end" : "items-start"
                 }`}
               >
-                {/* 이름 */}
                 <span className="text-[11px] text-slate-500 mb-1 px-1">
                   {msg.talker?.name || "알 수 없음"}
                 </span>
 
-                {/* 💬 말풍선 + 시간 (한 줄) */}
                 <div
                   className={`flex items-end gap-2 ${
                     isMe ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* 말풍선 본체: TEXT일 때만 배경/패딩 적용 */}
                   <div
                     className={`whitespace-pre-wrap ${
                       msg.type === "TEXT"
@@ -419,13 +388,11 @@ export default function ChatRoom() {
                               ? "bg-indigo-600 text-white rounded-tr-none"
                               : "bg-white border text-slate-800 rounded-tl-none"
                           }`
-                        : "rounded-xl" // 이미지/파일은 별도 패딩 없이 둥글게만 처리
+                        : "rounded-xl"
                     }`}
                   >
-                    {/* 1. 텍스트 메시지 */}
                     {msg.type === "TEXT" && msg.content}
 
-                    {/* 2. 파일/이미지 메시지 */}
                     {msg.type === "FILE" && (
                       <div
                         className={`flex flex-col gap-2 ${isMe ? "items-end" : "items-start"}`}
@@ -468,7 +435,6 @@ export default function ChatRoom() {
                     )}
                   </div>
 
-                  {/* 시간 */}
                   <span className="text-[10px] text-slate-400 whitespace-nowrap">
                     {timeText}
                   </span>
@@ -481,10 +447,9 @@ export default function ChatRoom() {
         <div ref={scrollRef} />
       </div>
 
-      {/* 하단 입력바 */}
+      {/* 입력바 */}
       <div className="p-4 bg-white border-t flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          {/* 1. 이미지 전용 Input */}
           <input
             type="file"
             multiple
@@ -493,17 +458,15 @@ export default function ChatRoom() {
             onChange={handleFileSend}
             accept="image/*"
           />
-          {/* 2. 일반 파일 전용 Input (추가) */}
           <input
             type="file"
             multiple
-            ref={documentInputRef} // 새로운 ref 필요
+            ref={documentInputRef}
             className="hidden"
             onChange={handleFileSend}
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip" // 허용할 확장자 제한
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
           />
 
-          {/* 이미지 버튼 */}
           <Button
             variant="outline"
             size="icon"
@@ -513,7 +476,6 @@ export default function ChatRoom() {
             <ImageIcon className="size-5" />
           </Button>
 
-          {/* 일반 파일 추가 버튼 (수정) */}
           <Button
             variant="outline"
             size="icon"
@@ -543,6 +505,7 @@ export default function ChatRoom() {
           </div>
         </div>
       </div>
+
       <ChatGalleryModal
         isOpen={isGalleryOpen}
         onClose={setIsGalleryOpen}
