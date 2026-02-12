@@ -31,6 +31,10 @@ export default function App({ Component, pageProps }) {
     getUnreadCount(token).then((count) => {
       useStomp.getState().setTotalUnreadCount(count.totalUnreadCount || 0);
     });
+
+    getUnreadScenario(token).then((res) => {
+      useStomp.getState().setHasScenarioUnread(res.unreadCount || 0);
+    });
   }, [token]);
 
   /* ===================== 1️⃣ persist 복구 ===================== */
@@ -99,7 +103,8 @@ export default function App({ Component, pageProps }) {
           return;
         } else if (body.message === "publishRefresh") {
           getUnreadScenario(token).then((count) => {
-            setHasScenarioUnread(count.unreadCount);
+            // setHasScenarioUnread(count.unreadCount);
+            useStomp.getState().setHasScenarioUnread(count.unreadCount);
           });
         }
       } catch (e) {

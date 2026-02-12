@@ -172,14 +172,26 @@ body {
 /* 날짜 칸 설정 */
 .rdp-day {
   position: relative !important;
-  width: 44px !important; /* 크기를 살짝 키움 */
+  width: 44px !important;
   height: 44px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin: 0 auto !important; /* 가운데 정렬 */
-  border-radius: 12px !important; /* 둥근 사각형 느낌 */
+  margin: 0 auto !important;
+  border-radius: 12px !important;
   transition: all 0.2s;
+  overflow: visible !important;
+  cursor: pointer !important;
+}
+
+.rdp-day:has(.cursor-pointer) {
+  cursor: pointer !important;
+}
+
+/* 추가: HoverCard가 떴을 때 잘리지 않도록 상위 컨테이너들의 overflow를 해제 */
+.rdp-cell {
+  overflow: visible !important;
+  position: relative !important;
 }
 
 /* 요일 헤더 정렬 */
@@ -201,6 +213,8 @@ body {
   width: 4px;
   height: 4px;
   border-radius: 50%;
+  /* 추가: 점 때문에 호버 이벤트가 끊기지 않도록 설정 */
+  pointer-events: none !important;
 }
 
 .day-dot::after {
