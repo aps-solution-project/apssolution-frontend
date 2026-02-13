@@ -71,6 +71,8 @@ export const updateMyAccount = async (accountId, formData, token) => {
 
 // 비밀번호 변경
 export const changeMyPassword = async (accountId, data, token) => {
+  console.log(accountId);
+  console.log(data);
   const response = await fetch(`${URL}/api/accounts/${accountId}/password`, {
     method: "PATCH",
     headers: {
@@ -81,10 +83,9 @@ export const changeMyPassword = async (accountId, data, token) => {
   });
 
   if (!response.ok) {
-    throw new Error("비밀번호 변경에 실패했습니다.");
+    throw new Error("비밀번호 변경에 실패했습니다.!!!");
   }
-
-  return response.text();
+  return response.json();
 };
 
 //사원 퇴사 처리

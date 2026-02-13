@@ -4,7 +4,6 @@ import {
   updateMyAccount,
 } from "@/api/auth-api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthGuard } from "@/hooks/use-authGuard";
@@ -14,6 +13,7 @@ import {
   Camera,
   Check,
   KeyRound,
+  Loader2,
   Mail,
   Pencil,
   Shield,
@@ -114,16 +114,23 @@ export default function MyProfilePage() {
     if (!oldPw || !passwordValid) return;
     try {
       setLoading(true);
-      await changeMyPassword(
+      changeMyPassword(
         account.accountId,
         { oldPw, newPw, newPwConfirm },
         token,
-      );
-      setOldPw("");
-      setNewPw("");
-      setNewPwConfirm("");
-      setEditingPassword(false);
-      alert("비밀번호 변경 완료");
+      ).then((obj) => {
+        if (!obj.success) {
+          window.alert(obj.message);
+          window.location.reload();
+        } else {
+          alert("비밀번호 변경 완료");
+          window.location.reload();
+        }
+        setOldPw("");
+        setNewPw("");
+        setNewPwConfirm("");
+        setEditingPassword(false);
+      });
     } finally {
       setLoading(false);
     }
