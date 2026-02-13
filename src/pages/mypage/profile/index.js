@@ -23,7 +23,7 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE_URL = "http://192.168.0.20:8080";
+const API_BASE_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
 
 const ROLE_STYLE = {
   ADMIN: {

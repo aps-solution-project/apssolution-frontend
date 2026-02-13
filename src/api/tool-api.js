@@ -1,8 +1,7 @@
-const URL = "http://192.168.0.20:8080";
 
 // 도구 카테고리 생성
 export async function createToolCategory(data, token) {
-  const response = await fetch(`${URL}/api/tools/category`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools/category`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -25,7 +24,7 @@ export async function createToolCategory(data, token) {
 }
 // 도구 벌크 업서트
 export async function upsertTools(data, token) {
-  const response = await fetch(`${URL}/api/tools`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -48,7 +47,7 @@ export async function parseToolXls(file, token) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${URL}/api/tools/xls/parse`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools/xls/parse`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -66,7 +65,7 @@ export async function parseToolXls(file, token) {
 
 // 도구 카테고리 전체 조회
 export async function getToolCategories(token) {
-  const response = await fetch(`${URL}/api/tools/category`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools/category`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -87,7 +86,7 @@ export async function getAllTools(token) {
     console.error("유효하지 않은 토큰입니다.");
     throw new Error("인증 정보에 문제가 있습니다. 다시 로그인해주세요.");
   }
-  const response = await fetch(`${URL}/api/tools`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -104,7 +103,7 @@ export async function getAllTools(token) {
 
 // 도구 상세 조회
 export async function getToolDetail(toolId, token) {
-  const response = await fetch(`${URL}/api/tools/${toolId}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools/${toolId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -122,7 +121,7 @@ export async function getToolDetail(toolId, token) {
 
 // 도구 카테고리 삭제
 export async function deleteToolCategory(categoryId, token) {
-  const response = await fetch(`${URL}/api/tools/category/${categoryId}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tools/category/${categoryId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

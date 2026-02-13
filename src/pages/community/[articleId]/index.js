@@ -1,14 +1,13 @@
 import { deleteWorkerPost, getPostDetail } from "@/api/community-api";
 import CommentSection from "@/components/community/comment-section";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAccount, useToken } from "@/stores/account-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SquarePen, List, Trash2, Baby, Paperclip, X } from "lucide-react"; // Paperclip 아이콘 추가
+import { Button } from "@/components/ui/button";
+import EditorBlank from "@/components/ui/editorBlank";
+import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useAccount, useToken } from "@/stores/account-store";
+import { Baby, List, Paperclip, SquarePen, Trash2, X } from "lucide-react"; // Paperclip 아이콘 추가
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
-import EditorBlank from "@/components/ui/editorBlank";
 
 export default function CommunityDetailPage() {
   useAuthGuard();
@@ -120,7 +119,7 @@ export default function CommunityDetailPage() {
                 <AvatarImage
                   src={
                     post.writer?.profileImageUrl
-                      ? `http://192.168.0.20:8080${post.writer.profileImageUrl}`
+                      ? `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${post.writer.profileImageUrl}`
                       : undefined
                   }
                   className="object-cover"
@@ -163,7 +162,7 @@ export default function CommunityDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {post.attachments && post.attachments.length > 0 ? (
               post.attachments.map((file, index) => {
-                const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
+                const downloadUrl = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/files/download?path=${encodeURIComponent(
                   file.fileUrl.replace("/apssolution/notices/", ""),
                 )}`;
                 return (
@@ -200,7 +199,7 @@ export default function CommunityDetailPage() {
 
         {/* 댓글 섹션: 구분선 추가 */}
         <div className="pt-3 mt-12">
-          <CommentSection articleId={articleId} setPost={setPost}/>
+          <CommentSection articleId={articleId} setPost={setPost} />
         </div>
       </div>
     </div>

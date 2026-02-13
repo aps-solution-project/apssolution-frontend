@@ -1,7 +1,6 @@
-const serverAddr = "http://192.168.0.20:8080";
 
 async function postScenario(token, data) {
-  const resp = await fetch(`${serverAddr}/api/scenarios`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -17,7 +16,7 @@ async function postScenario(token, data) {
 }
 
 async function getScenarios(token) {
-  const resp = await fetch(`${serverAddr}/api/scenarios`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -30,7 +29,7 @@ async function getScenarios(token) {
 }
 
 async function getScenario(token, scenarioId) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/${scenarioId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -43,7 +42,7 @@ async function getScenario(token, scenarioId) {
 }
 
 async function getScenarioResult(token, scenarioId) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/${scenarioId}/result`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/result`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -56,7 +55,7 @@ async function getScenarioResult(token, scenarioId) {
 }
 
 async function deleteScenario(token, scenarioId) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/${scenarioId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -69,7 +68,7 @@ async function deleteScenario(token, scenarioId) {
 }
 
 async function editScenario(token, scenarioId, data) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/${scenarioId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +83,7 @@ async function editScenario(token, scenarioId, data) {
 }
 
 async function copyScenario(token, scenarioId) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/${scenarioId}/clone`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/clone`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -99,7 +98,7 @@ async function copyScenario(token, scenarioId) {
 
 async function publishScenario(token, scenarioId) {
   const resp = await fetch(
-    `${serverAddr}/api/scenarios/${scenarioId}/publish`,
+    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/publish`,
     {
       method: "PATCH",
       headers: {
@@ -116,7 +115,7 @@ async function publishScenario(token, scenarioId) {
 
 async function unpublishScenario(token, scenarioId) {
   const resp = await fetch(
-    `${serverAddr}/api/scenarios/${scenarioId}/unpublish`,
+    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/unpublish`,
     {
       method: "PATCH",
       headers: {
@@ -132,7 +131,7 @@ async function unpublishScenario(token, scenarioId) {
 }
 
 async function getTodaySchedules(token) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/schedules/today`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/schedules/today`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -146,7 +145,7 @@ async function getTodaySchedules(token) {
 
 async function editScenarioSchedule(token, scenarioScheduleId, data) {
   const resp = await fetch(
-    `${serverAddr}/api/scenarios/schedules/${scenarioScheduleId}`,
+    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/schedules/${scenarioScheduleId}`,
     {
       method: "PATCH",
       headers: {
@@ -164,7 +163,7 @@ async function editScenarioSchedule(token, scenarioScheduleId, data) {
 
 async function simulateScenario(token, scenarioId) {
   const resp = await fetch(
-    `${serverAddr}/api/scenarios/${scenarioId}/simulate`,
+    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/simulate`,
     {
       method: "POST",
       headers: {
@@ -180,7 +179,7 @@ async function simulateScenario(token, scenarioId) {
 }
 
 async function getUnreadScenario(token) {
-  const resp = await fetch(`${serverAddr}/api/scenarios/worker/unread`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/worker/unread`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

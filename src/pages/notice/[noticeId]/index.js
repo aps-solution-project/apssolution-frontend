@@ -1,13 +1,12 @@
 import { deleteNotice, getNotice } from "@/api/notice-api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EditorBlank from "@/components/ui/editorBlank";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useAccount, useToken } from "@/stores/account-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { List, SquarePen, Trash2 } from "lucide-react"; // Trash2 아이콘 추가
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
-import EditorBlank from "@/components/ui/editorBlank";
 
 export default function AnnouncementDetailPage() {
   useAuthGuard();
@@ -84,7 +83,8 @@ export default function AnnouncementDetailPage() {
               <Avatar className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
                 <AvatarImage
                   src={
-                    "http://192.168.0.20:8080" + notice.writer.profileImageUrl
+                    "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}" +
+                    notice.writer.profileImageUrl
                   }
                   className="object-cover h-full w-full"
                 />
@@ -126,7 +126,7 @@ export default function AnnouncementDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {notice.attachments && notice.attachments.length > 0 ? (
               notice.attachments.map((file, index) => {
-                const downloadUrl = `http://192.168.0.20:8080/api/notices/files/download?path=${encodeURIComponent(
+                const downloadUrl = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/files/download?path=${encodeURIComponent(
                   file.fileUrl.replace("/apssolution/notices/", ""),
                 )}`;
 

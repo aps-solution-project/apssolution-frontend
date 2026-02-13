@@ -1,8 +1,7 @@
-const URL = "http://192.168.0.20:8080";
 
 // 월별 개인 일정 조회
 // export const getMonthlyCalendars = async (token, month) => {
-//   const resp = await fetch(`${URL}/api/calendars?month=${month}`, {
+//   const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars?month=${month}`, {
 //     method: "GET",
 //     headers: {
 //       Authorization: `Bearer ${token}`,
@@ -14,7 +13,7 @@ const URL = "http://192.168.0.20:8080";
 // };
 
 // export const getMonthlyCalendars = async (token, month) => {
-//   const resp = await fetch(`${URL}/api/calendars?month=${month}`, {
+//   const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars?month=${month}`, {
 //     method: "GET",
 //     headers: {
 //       Authorization: `Bearer ${token}`,
@@ -31,9 +30,9 @@ export const getMonthlyCalendars = async (token, month) => {
     finalMonth = parseInt(month.split('-')[1], 10);
   }
 
-  // 2. URL 생성 시 finalMonth(숫자)가 정확히 들어가는지 확인
-  // ⚠️ 주의: 여기서 `${URL}/api/calendars?month=2026-02` 처럼 고정되어 있는지 꼭 확인하세요!
-  const response = await fetch(`${URL}/api/calendars?month=${finalMonth}`, {
+  // 2. process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS 생성 시 finalMonth(숫자)가 정확히 들어가는지 확인
+  // ⚠️ 주의: 여기서 `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars?month=2026-02` 처럼 고정되어 있는지 꼭 확인하세요!
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars?month=${finalMonth}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -50,7 +49,7 @@ export const getMonthlyCalendars = async (token, month) => {
 
 // 개인 일정 생성/수정 (id가 이미 존재하면 수정됨)
 export const saveCalendar = async (data, token) => {
-  const resp = await fetch(`${URL}/api/calendars`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -64,7 +63,7 @@ export const saveCalendar = async (data, token) => {
 
 // 개인 일정 삭제
 export const deleteCalendar = async (scheduleId, token) => {
-  const resp = await fetch(`${URL}/api/calendars/${scheduleId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/calendars/${scheduleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });

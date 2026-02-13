@@ -1,8 +1,7 @@
-const URL = "http://192.168.0.20:8080";
 
 async function createNotice(token, formData) {
   // 이미 formData가 밖에서 생성되어 들어오므로, 내부에서 새로 만들 필요가 없습니다.
-  const resp = await fetch(`${URL}/api/notices`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -19,7 +18,7 @@ async function createNotice(token, formData) {
 async function getNotices(token, page = 0, size = 10) {
   const safePage = Math.max(0, page);
 
-  const resp = await fetch(`${URL}/api/notices?page=${safePage}&size=${size}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices?page=${safePage}&size=${size}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -45,7 +44,7 @@ async function editNotice(token, noticeId, data) {
     headers["Content-Type"] = "application/json";
   }
 
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     method: "PATCH",
     headers: headers,
     // FormData라면 stringify 하지 않고 그대로 보냄
@@ -59,7 +58,7 @@ async function editNotice(token, noticeId, data) {
 }
 
 async function deleteNotice(token, noticeId) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -71,7 +70,7 @@ async function deleteNotice(token, noticeId) {
 }
 
 async function getNotice(token, noticeId) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -84,7 +83,7 @@ async function getNotice(token, noticeId) {
 }
 
 async function searchNotice(token, keyword, scenarioId) {
-  const params = new URLSearchParams();
+  const params = new process.env.NEXT_PUBLIC_APS_SURVER_ADDRESSSearchParams();
 
   // keyword 있을 때만 추가
   if (keyword && keyword.trim() !== "") {
@@ -96,7 +95,7 @@ async function searchNotice(token, keyword, scenarioId) {
     params.append("scenarioId", scenarioId);
   }
 
-  const resp = await fetch(`${URL}/api/notices/search?${params.toString()}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/search?${params.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

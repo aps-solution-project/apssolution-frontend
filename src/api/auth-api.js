@@ -1,8 +1,7 @@
-const URL = "http://192.168.0.20:8080";
 
 //로그인
 export const loginUser = async (accountId, pw) => {
-  return fetch(`${URL}/api/accounts/login`, {
+  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +17,7 @@ export const loginUser = async (accountId, pw) => {
 
 //사원 추가
 export const createAccount = async (data, token) => {
-  return fetch(`${URL}/api/accounts`, {
+  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -35,7 +34,7 @@ export const createAccount = async (data, token) => {
 
 //직원 정보 수정 (ADMIN)
 export const updateEmployeeAccount = async (accountId, data, token) => {
-  const response = await fetch(`${URL}/api/accounts/${accountId}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -53,7 +52,7 @@ export const updateEmployeeAccount = async (accountId, data, token) => {
 
 // 본인 정보 수정
 export const updateMyAccount = async (accountId, formData, token) => {
-  const response = await fetch(`${URL}/api/accounts/${accountId}/edit`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/edit`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -73,7 +72,7 @@ export const updateMyAccount = async (accountId, formData, token) => {
 export const changeMyPassword = async (accountId, data, token) => {
   console.log(accountId);
   console.log(data);
-  const response = await fetch(`${URL}/api/accounts/${accountId}/password`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/password`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -90,7 +89,7 @@ export const changeMyPassword = async (accountId, data, token) => {
 
 //사원 퇴사 처리
 export const deleteAccount = async (accountId, token) => {
-  return fetch(`${URL}/api/accounts/${accountId}/resign`, {
+  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/resign`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -105,7 +104,7 @@ export const deleteAccount = async (accountId, token) => {
 
 //사원 전체 조회
 export const getAllAccounts = async (token) => {
-  return fetch(`${URL}/api/accounts`, {
+  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -120,7 +119,7 @@ export const getAllAccounts = async (token) => {
 
 // 재직중인 사원 조회
 export async function getActiveAccounts(token) {
-  const resp = await fetch(`${URL}/api/accounts/active`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/active`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -130,7 +129,7 @@ export async function getActiveAccounts(token) {
 
 // 사원 상세 조회
 export function getAccountDetail(token, accountId) {
-  return fetch(`${URL}/api/accounts/${accountId}`, {
+  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

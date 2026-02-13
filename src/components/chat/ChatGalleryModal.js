@@ -4,8 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Images, ImageIcon, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Download, ImageIcon, Images } from "lucide-react";
 
 export default function ChatGalleryModal({
   isOpen,
@@ -41,7 +40,7 @@ export default function ChatGalleryModal({
                   className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl border bg-slate-50 shadow-sm transition-all hover:ring-2 hover:ring-indigo-500 hover:ring-offset-2"
                 >
                   <img
-                    src={`http://192.168.0.20:8080${img.fileUrl}`}
+                    src={`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${img.fileUrl}`}
                     alt={img.fileName}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />

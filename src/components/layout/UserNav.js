@@ -5,14 +5,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAccount, useToken } from "@/stores/account-store";
 import { FileText, LogOut, UserCog } from "lucide-react";
 import { useRouter } from "next/router";
 
-const API_BASE_URL = "http://192.168.0.20:8080";
+const API_BASE_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
 
 const ROLE_CONFIG = {
   ADMIN: {

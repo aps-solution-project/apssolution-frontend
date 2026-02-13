@@ -89,7 +89,7 @@ export default function AdminProfileEditModal({
         setProfileUrl(
           obj.profileImageUrl.startsWith("http")
             ? obj.profileImageUrl
-            : `http://192.168.0.20:8080${obj.profileImageUrl}`,
+            : `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${obj.profileImageUrl}`,
         );
       } else {
         setProfileUrl(null);

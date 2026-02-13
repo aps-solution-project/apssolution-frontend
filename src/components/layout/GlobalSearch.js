@@ -44,7 +44,7 @@ export default function GlobalSearch() {
       setLoading(true);
       try {
         const resp = await fetch(
-          `http://192.168.0.20:8080/api/search?keyword=${encodeURIComponent(query)}`,
+          `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/search?keyword=${encodeURIComponent(query)}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -184,7 +184,7 @@ function SearchSection({ title, icon, items, path, onLink }) {
           const fullImgPath = rawImg
             ? rawImg.startsWith("http")
               ? rawImg
-              : `http://192.168.0.20:8080${rawImg}`
+              : `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${rawImg}`
             : null;
 
           return (

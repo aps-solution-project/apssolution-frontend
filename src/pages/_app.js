@@ -58,7 +58,8 @@ export default function App({ Component, pageProps }) {
     if (!token) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://192.168.0.20:8080/ws"),
+      webSocketFactory: () =>
+        new SockJS("${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/ws"),
       reconnectDelay: 5000,
 
       onConnect: () => {

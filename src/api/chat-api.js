@@ -1,10 +1,9 @@
-const URL = "http://192.168.0.20:8080";
 
 /**
  * 1. 내가 속한 채팅방 목록 가져오기
  */
 export async function getMyChats(token) {
-  const resp = await fetch(`${URL}/api/chats`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -16,7 +15,7 @@ export async function getMyChats(token) {
  * 2. 채팅방 상세 정보 및 메시지 내역 가져오기
  */
 export async function getChatDetail(token, chatId) {
-  const resp = await fetch(`${URL}/api/chats/${chatId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/${chatId}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -43,7 +42,7 @@ export async function sendMessage(token, chatId, body) {
     body.files.forEach((file) => formData.append("files", file));
   }
 
-  const res = await fetch(`${URL}/api/chats/${chatId}/message`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/${chatId}/message`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`, // Content-Type은 명시하지 않음
@@ -59,7 +58,7 @@ export async function sendMessage(token, chatId, body) {
  * 4. 1:1 채팅방 생성 또는 기존 방 조회
  */
 export async function startDirectChat(token, targetId) {
-  const resp = await fetch(`${URL}/api/chats/direct/${targetId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/direct/${targetId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -72,7 +71,7 @@ export async function startDirectChat(token, targetId) {
  * { roomName: "방이름", members: ["id1", "id2"] }
  */
 export async function createGroupChat(token, data) {
-  const resp = await fetch(`${URL}/api/chats`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -85,7 +84,7 @@ export async function createGroupChat(token, data) {
 }
 
 export async function leaveChat(token, chatId) {
-  const resp = await fetch(`${URL}/api/chats/${chatId}/leave`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/${chatId}/leave`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -97,7 +96,7 @@ export async function leaveChat(token, chatId) {
 }
 
 export async function getUnreadCount(token) {
-  const resp = await fetch(`${URL}/api/chats/unread-count`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/unread-count`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

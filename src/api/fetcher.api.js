@@ -1,7 +1,5 @@
 import { useToken } from "@/stores/account-store";
 
-const server = "http://192.168.0.20:8080";
-
 async function request(url, options = {}) {
   const token = useToken.getState().token;
 
@@ -14,7 +12,7 @@ async function request(url, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const resp = await fetch(`${server}${url}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${url}`, {
     ...options,
     headers,
   });

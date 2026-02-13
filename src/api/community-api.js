@@ -1,8 +1,7 @@
-const URL = "http://192.168.0.20:8080";
 
 // 1. 사원 게시판 목록 조회 (백엔드에서 role=worker 필터를 지원한다고 가정)
 export async function getWorkerPosts(token) {
-  const resp = await fetch(`${URL}/api/notices/community`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/community`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (resp.status === 403) {
@@ -18,7 +17,7 @@ export async function getWorkerPosts(token) {
 
 // 2. 게시글 상세 조회 (공용 사용)
 export async function getPostDetail(token, noticeId) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!resp.ok) throw new Error("게시글 조회 실패");
@@ -28,7 +27,7 @@ export async function getPostDetail(token, noticeId) {
 // 3. 사원 게시글 생성 (파일 포함)
 export async function createWorkerPost(token, formData) {
   // FormData를 보낼 때는 Content-Type을 직접 설정하지 않아야 브라우저가 boundary를 잡습니다.
-  const resp = await fetch(`${URL}/api/notices`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData, // title, content, files 등이 담긴 FormData
@@ -39,7 +38,7 @@ export async function createWorkerPost(token, formData) {
 
 // 4. 게시글 수정 (PATCH)
 export async function editWorkerPost(token, noticeId, formData) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -50,7 +49,7 @@ export async function editWorkerPost(token, noticeId, formData) {
 
 // 5. 게시글 삭제
 export async function deleteWorkerPost(token, noticeId) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -59,7 +58,7 @@ export async function deleteWorkerPost(token, noticeId) {
 
 // 댓글 목록 조회
 export async function getComments(token, noticeId) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}/comments`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}/comments`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!resp.ok) throw new Error("댓글 로드 실패");
@@ -73,7 +72,7 @@ export async function createComment(
   content,
   parentCommentId = null,
 ) {
-  const resp = await fetch(`${URL}/api/notices/${noticeId}/comments`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}/comments`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -91,7 +90,7 @@ export async function createComment(
 // 댓글 삭제
 export async function deleteComment(token, noticeId, commentId) {
   const resp = await fetch(
-    `${URL}/api/notices/${noticeId}/comments/${commentId}`,
+    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/${noticeId}/comments/${commentId}`,
     {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },

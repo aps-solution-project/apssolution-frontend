@@ -1,11 +1,11 @@
 import { getActiveAccounts } from "@/api/auth-api";
-import { createGroupChat, startDirectChat } from "@/api/chat-api";
+import { createGroupChat } from "@/api/chat-api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useAccount, useToken } from "@/stores/account-store";
-import { Loader2, Search, User2, X, MessagesSquare, Users } from "lucide-react";
+import { Loader2, MessagesSquare, Search, User2, Users, X } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -21,7 +21,7 @@ export default function CreateChatModal({ onClose }) {
   const [roomName, setRoomName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const SERVER_URL = "http://192.168.0.20:8080";
+  const SERVER_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
   const DEFAULT_IMAGE = "/images/default-profile.png";
 
   useEffect(() => {

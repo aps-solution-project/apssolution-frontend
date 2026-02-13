@@ -1,7 +1,6 @@
-const serverAddr = "http://192.168.0.20:8080";
 
 async function upsertTasks(token, tasks) {
-  const resp = await fetch(`${serverAddr}/api/tasks`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tasks`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -19,7 +18,7 @@ async function upsertTasks(token, tasks) {
 }
 
 async function getTasks(token) {
-  const resp = await fetch(`${serverAddr}/api/tasks`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tasks`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +32,7 @@ async function getTasks(token) {
 }
 
 async function getTask(token, taskId) {
-  const resp = await fetch(`${serverAddr}/api/tasks/${taskId}`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tasks/${taskId}`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -48,7 +47,7 @@ async function getTask(token, taskId) {
 async function parseTaskXls(token, data) {
   const formData = new FormData();
   formData.append("file", data);
-  const resp = await fetch(`${serverAddr}/api/tasks/xls/parse`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/tasks/xls/parse`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

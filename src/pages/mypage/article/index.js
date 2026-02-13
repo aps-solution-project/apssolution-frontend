@@ -21,7 +21,7 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = "http://192.168.0.20:8080";
+const API_BASE_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
 const POSTS_PER_PAGE = 5;
 
 const ROLE_STYLE = {

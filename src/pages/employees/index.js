@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://192.168.0.20:8080";
+const BACKEND_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
 import {
   Loader2,
   MoreHorizontal,
