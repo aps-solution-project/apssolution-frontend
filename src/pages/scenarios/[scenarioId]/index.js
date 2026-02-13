@@ -19,12 +19,16 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getActiveAccounts } from "@/api/auth-api";
-import { getScenarioResult } from "@/api/scenario-api";
+import {
+  getScenarioResult,
+  publishScenario,
+  unpublishScenario,
+} from "@/api/scenario-api";
+import { SimulationContext } from "@/components/gantt/GanttBar";
 import SimulationGantt from "@/components/gantt/SimulationGantt";
 import SimulationGanttForWorker from "@/components/gantt/SimulationGanttForWorker";
-import { SimulationContext } from "@/components/gantt/GanttBar";
-import { publishScenario, unpublishScenario } from "@/api/scenario-api";
 import { useAccount, useToken } from "@/stores/account-store";
+import { useStomp } from "@/stores/stomp-store";
 
 const PRODUCT_COLORS = [
   "bg-sky-100 text-sky-700",
@@ -44,6 +48,7 @@ export default function SimulationPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { token } = useToken();
+  const { stomp } = useStomp();
 
   const scenarioId = params.scenarioId;
 
@@ -126,6 +131,23 @@ export default function SimulationPage() {
     const start = (page - 1) * PAGE_SIZE;
     return products.slice(start, start + PAGE_SIZE);
   }, [products, page]);
+
+  useEffect(() => {
+    if (!stomp || !stomp.connected || router) return;
+
+    const sub = stomp.subscribe(`/topic/scenario/${router.query}`, (frame) => {
+      const body = JSON.parse(frame.body);
+      // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
+      if (body.message === "scheduleRefresh") {
+        refreshChatList();
+      }
+    });
+
+    return () => {
+      console.log("❌ 시뮬레이션 결과 페이지 구독 해제");
+      sub.unsubscribe();
+    };
+  }, [stomp, stomp?.connected, router]);
 
   useEffect(() => {
     if (page > totalPages) {

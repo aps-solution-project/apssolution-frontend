@@ -1,18 +1,19 @@
+import { editScenarioSchedule } from "@/api/scenario-api";
+import { getAllTools } from "@/api/tool-api";
 import { Slider } from "@/components/ui/slider";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/router";
 import {
+  forwardRef,
+  useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  forwardRef,
-  useImperativeHandle,
-  useCallback,
 } from "react";
 import LeftPanel from "./LeftPanel";
 import Timeline from "./Timeline";
-import { editScenarioSchedule } from "@/api/scenario-api";
-import { getAllTools } from "@/api/tool-api";
 
 const ROW_HEIGHT = 44;
 const HEADER_HEIGHT = 44;
@@ -32,6 +33,8 @@ export default forwardRef(function SimulationGantt(
 
   const [panelWidth, setPanelWidth] = useState(320);
   const resizing = useRef(false);
+
+  
 
   // barId → { workerName, toolId } (로컬 오버라이드 — API 응답으로 업데이트)
   const [barOverrides, setBarOverrides] = useState({});
@@ -65,6 +68,8 @@ export default forwardRef(function SimulationGantt(
 
   const startResize = () => (resizing.current = true);
   const stopResize = () => (resizing.current = false);
+
+  
 
   useEffect(() => {
     const resize = (e) => {
