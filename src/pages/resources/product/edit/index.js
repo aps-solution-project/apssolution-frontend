@@ -5,9 +5,10 @@ import {
 } from "@/api/product-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { cn } from "@/lib/utils";
-import { useAccount, useToken } from "@/stores/account-store";
+import { useToken } from "@/stores/account-store";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -17,7 +18,6 @@ import {
   Save,
   Trash2,
   Wrench,
-  X,
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/router";
@@ -26,17 +26,17 @@ import { useEffect, useState } from "react";
 export default function ProductManagementPage() {
   useAuthGuard();
   const router = useRouter();
-  const loginAccount = useAccount((state) => state.account);
   const token = useToken((state) => state.token);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 🌟 Grid 너비 설정 (품목 관리 컬럼 비율)
   const gridLayout = "grid-cols-[80px_200px_200px_450px_80px_60px]";
 
   const loadData = async () => {
-    if (!token || loginAccount?.role === "WORKER") return;
+    if (!token) return;
     setLoading(true);
     try {
       const data = await getProducts(token);
@@ -55,30 +55,7 @@ export default function ProductManagementPage() {
 
   useEffect(() => {
     loadData();
-  }, [token, loginAccount?.role]);
-
-  if (loginAccount?.role === "WORKER") {
-    return (
-      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
-        <div className="p-4 bg-red-50 rounded-full">
-          <X className="w-12 h-12 text-red-500" />
-        </div>
-        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
-        <p className="text-slate-500 font-medium text-center">
-          품목 수정 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
-          <br />
-          권한이 필요하시다면 관리자에게 문의하세요.
-        </p>
-        <Button
-          onClick={() => router.push("/")}
-          variant="outline"
-          className="rounded-xl"
-        >
-          메인으로 돌아가기
-        </Button>
-      </div>
-    );
-  }
+  }, [token]);
 
   const handleInputChange = (index, field, value) => {
     setProducts((prev) => {
@@ -96,7 +73,9 @@ export default function ProductManagementPage() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      setIsLoading(true);
       const data = await upLoadFiles(file, token);
+      setIsLoading(false);
       const newItems = (data.products || []).map((item) => ({
         id: item.id,
         name: item.name || "",
@@ -111,6 +90,7 @@ export default function ProductManagementPage() {
       e.target.value = "";
     } catch (err) {
       alert("엑셀 파싱 실패: " + err.message);
+      setIsLoading(false);
     }
   };
 
@@ -255,6 +235,11 @@ export default function ProductManagementPage() {
           )}
 
           <div className="divide-y divide-slate-100">
+            {isLoading && (
+              <div className="flex justify-center items-center">
+                <Spinner className="size-20" />
+              </div>
+            )}
             {products.map((p, i) => (
               <div
                 key={i}

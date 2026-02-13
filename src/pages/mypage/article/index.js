@@ -330,9 +330,11 @@ export default function MyArticlePage() {
                       <div key={post.noticeId}>
                         {/* 게시글 행 */}
                         <div
-                          onClick={() =>
-                            router.push(`/notice/${post.noticeId}`)
-                          }
+                          onClick={() => {
+                            account.role == "WORKER"
+                              ? router.push(`/community/${post.noticeId}`)
+                              : router.push(`/notice/${post.noticeId}`);
+                          }}
                           className="flex items-center gap-3 px-5 py-3.5 cursor-pointer group hover:bg-slate-50 transition-colors"
                         >
                           <span className="text-xs font-bold text-slate-300 w-6 text-center shrink-0">
