@@ -1,18 +1,27 @@
-import { getAccountDetail, updateEmployeeAccount } from "@/api/auth-api";
+import {
+  getAccountDetail,
+  getAllAccounts,
+  updateEmployeeAccount,
+} from "@/api/auth-api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useToken } from "@/stores/account-store";
 import { useEffect, useMemo, useState } from "react";
-import { useAuthGuard } from "@/hooks/use-authGuard";
 
-export default function AdminProfileEditModal({ open, onOpenChange, account }) {
+export default function AdminProfileEditModal({
+  setData,
+  open,
+  onOpenChange,
+  account,
+}) {
   useAuthGuard();
 
   const token = useToken((s) => s.token);
@@ -44,9 +53,12 @@ export default function AdminProfileEditModal({ open, onOpenChange, account }) {
         workedAt,
       };
 
-      await updateEmployeeAccount(account.id, payload, token);
-
-      onOpenChange(false);
+      updateEmployeeAccount(account.id, payload, token).then((obj) => {
+        getAllAccounts(token).then((data) => {
+          setData(data.accounts);
+        });
+        onOpenChange(false);
+      });
     } catch (e) {
       alert(e.message || "직원 정보 수정 실패");
     } finally {

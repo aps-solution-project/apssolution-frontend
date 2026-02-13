@@ -237,6 +237,7 @@ export default function ManagementPage() {
         />
       </div>
       <AdminProfileEditModal
+        setData={setData}
         open={profileOpen}
         onOpenChange={setProfileOpen}
         account={target}
