@@ -1,6 +1,7 @@
 import { getTasks, parseTaskXls, upsertTasks } from "@/api/task-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { cn } from "@/lib/utils";
 import { useAccount, useToken } from "@/stores/account-store";
@@ -25,6 +26,7 @@ export default function TaskManagementPage() {
   const [tasks, setTasks] = useState([]);
   // 🌟 isAdding 상태 추가
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (token && loginAccount?.role !== "WORKER") loadServerData();
@@ -68,7 +70,9 @@ export default function TaskManagementPage() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      setIsLoading(true);
       const data = await parseTaskXls(token, file);
+      setIsLoading(false);
       const newItems = (data.tasks || []).map((item) => ({
         ...item,
         isSaved: false,
@@ -240,6 +244,11 @@ export default function TaskManagementPage() {
           )}
 
           <div className="divide-y divide-slate-100">
+            {isLoading && (
+              <div className="flex justify-center items-center">
+                <Spinner className="size-20" />
+              </div>
+            )}
             {tasks.map((t, i) => (
               <div
                 key={i}
