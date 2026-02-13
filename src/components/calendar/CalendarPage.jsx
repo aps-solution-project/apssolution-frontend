@@ -301,7 +301,7 @@ export default function CalendarPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 className="pl-9 h-10 rounded-xl border-slate-200 focus:border-blue-400 focus:ring-blue-100 bg-white shadow-sm"
-                placeholder="Search events..."
+                placeholder="검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -317,10 +317,6 @@ export default function CalendarPage() {
                 </Button>
               }
             />
-
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm border-[3px] border-white shadow-md shadow-blue-200/40">
-              A
-            </div>
           </div>
         </div>
 
@@ -328,7 +324,7 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-base font-bold text-slate-700">
-              Schedule Task
+              나의 스케줄
             </div>
 
             <div className="flex items-center gap-1.5">
