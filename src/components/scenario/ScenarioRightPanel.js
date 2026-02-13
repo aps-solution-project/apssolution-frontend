@@ -137,7 +137,14 @@ export default function ScenarioRightPannel({
             </div>
             <button
               onClick={() => onEdit?.(selectedScenario)}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-xl text-xs font-bold hover:bg-yellow-600 transition-all shadow-md"
+              className="h-9
+min-w-[64px]
+px-3
+text-xs
+rounded-md
+whitespace-nowrap
+flex items-center justify-center
+transition-none bg-yellow-500 text-white rounded-xl text-xs font-bold hover:bg-yellow-600 transition-all shadow-md"
             >
               수정
             </button>
