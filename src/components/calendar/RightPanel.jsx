@@ -1,20 +1,15 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-
 import {
   Clock,
   MapPin,
   Bell,
-  Users,
   X,
   Sparkles,
   CalendarDays,
-  Plus,
   Sun,
   Moon,
   Trash2,
@@ -24,44 +19,6 @@ import {
 import { formatDateLabel } from "@/lib/date";
 import AddEventDialog from "./AddEventDialog";
 
-/* ── avatar colors ── */
-const avatarColors = [
-  "bg-blue-500",
-  "bg-violet-500",
-  "bg-pink-500",
-  "bg-amber-500",
-  "bg-teal-500",
-  "bg-rose-500",
-  "bg-indigo-500",
-  "bg-sky-500",
-];
-
-function ParticipantAvatar({ name, index = 0 }) {
-  const bg = avatarColors[index % avatarColors.length];
-  const initials = name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    <div
-      title={name}
-      className={[
-        "w-9 h-9",
-        bg,
-        "rounded-full flex items-center justify-center",
-        "text-white font-bold text-xs",
-        "border-2 border-white shadow-sm shrink-0",
-      ].join(" ")}
-    >
-      {initials}
-    </div>
-  );
-}
-
-/* ── color badge map ── */
 const colorBadge = {
   blue: "bg-blue-100 text-blue-700 border-blue-200",
   sky: "bg-sky-100 text-sky-700 border-sky-200",
@@ -75,13 +32,7 @@ const colorBadge = {
   night: "bg-blue-100 text-blue-700 border-blue-300",
 };
 
-export default function RightPanel({
-  event,
-  onClose,
-  onToggleTodo,
-  onDelete,
-  onUpdate,
-}) {
+export default function RightPanel({ event, onClose, onDelete, onUpdate }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!event) {
@@ -94,9 +45,6 @@ export default function RightPanel({
   }
 
   const dateStr = formatDateLabel(event.date);
-  const doneCount = (event.todos || []).filter((t) => t.done).length;
-  const totalTodos = (event.todos || []).length;
-  const progress = totalTodos > 0 ? (doneCount / totalTodos) * 100 : 0;
   const badgeCls = colorBadge[event.color] || colorBadge.blue;
 
   const handleDelete = () => {
@@ -110,12 +58,10 @@ export default function RightPanel({
 
   return (
     <div className="space-y-4">
-      {/* ── Header Card ── */}
       <Card className="rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              {/* tags */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span
                   className={[
@@ -125,6 +71,7 @@ export default function RightPanel({
                 >
                   {event.color}
                 </span>
+
                 {event.shift && (
                   <span
                     className={[
@@ -208,7 +155,6 @@ export default function RightPanel({
         <CardContent className="p-4 space-y-3">
           <Separator className="bg-slate-100" />
           <div className="grid grid-cols-2 gap-2">
-            {/* 수정 버튼 → AddEventDialog (수정 모드) */}
             <AddEventDialog
               defaultDateKey={event.date}
               editEvent={event}
@@ -221,7 +167,6 @@ export default function RightPanel({
               }
             />
 
-            {/* 삭제 버튼 */}
             <Button
               variant={confirmDelete ? "destructive" : "secondary"}
               className={[
@@ -238,106 +183,32 @@ export default function RightPanel({
         </CardContent>
       </Card>
 
-      {/* ── Todo Card ── */}
-      <Card className="rounded-2xl border border-slate-200 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="font-bold text-sm text-slate-800">To Do List</div>
-              {totalTodos > 0 && (
-                <span className="text-[11px] text-slate-400 font-semibold">
-                  {doneCount}/{totalTodos}
-                </span>
-              )}
-            </div>
-            <button
-              className="rounded-lg p-1.5 hover:bg-blue-50 transition-colors border border-slate-200"
-              aria-label="Add todo"
-            >
-              <Plus className="h-4 w-4 text-slate-500" />
-            </button>
-          </div>
-
-          {totalTodos > 0 && (
-            <div className="mt-3 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          )}
-
-          <div className="mt-3">
-            <ScrollArea className="h-[200px] pr-3">
-              <div className="space-y-2">
-                {(event.todos || []).map((t) => (
-                  <label
-                    key={t.id}
-                    className={[
-                      "flex items-center gap-3 text-sm rounded-xl px-3 py-2.5 transition-colors cursor-pointer",
-                      t.done
-                        ? "bg-slate-50 border border-slate-100"
-                        : "bg-white border border-blue-50 hover:bg-blue-50/50",
-                    ].join(" ")}
-                  >
-                    <Checkbox
-                      checked={t.done}
-                      onCheckedChange={() => onToggleTodo(t.id)}
-                      className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
-                    />
-                    <span
-                      className={
-                        t.done
-                          ? "line-through text-slate-400"
-                          : "text-slate-700 font-medium"
-                      }
-                    >
-                      {t.text}
-                    </span>
-                  </label>
-                ))}
-
-                {!event.todos?.length ? (
-                  <div className="text-sm text-slate-400 text-center py-6">
-                    No todos yet
-                  </div>
-                ) : null}
-              </div>
-            </ScrollArea>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Participant Card ── */}
       <Card className="rounded-2xl border border-slate-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
+              <FileText className="h-4 w-4 text-blue-500" />
               <span className="font-bold text-sm text-slate-800">
-                Participant
+                Description
               </span>
             </div>
             <span className="text-[11px] text-slate-400 font-semibold">
-              {(event.participants || []).length} people
+              {event.description
+                ? `${event.description.length} chars`
+                : "empty"}
             </span>
           </div>
 
-          {(event.participants || []).length > 0 ? (
-            <div className="flex items-center">
-              <div className="flex -space-x-2">
-                {event.participants.map((name, i) => (
-                  <ParticipantAvatar key={name + i} name={name} index={i} />
-                ))}
-              </div>
-              {event.participants.length > 5 && (
-                <span className="ml-3 text-xs text-slate-400 font-semibold">
-                  +{event.participants.length - 5} more
-                </span>
-              )}
+          {event.description ? (
+            <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5">
+              <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                {event.description}
+              </p>
             </div>
           ) : (
-            <div className="text-sm text-slate-400">No participants</div>
+            <div className="text-sm text-slate-400 text-center py-6">
+              No description
+            </div>
           )}
         </CardContent>
       </Card>
