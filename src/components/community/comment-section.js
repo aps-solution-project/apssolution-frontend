@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { getComments, createComment, deleteComment } from "@/api/community-api";
-import { useToken, useAccount } from "@/stores/account-store";
+import { createComment, deleteComment, getComments } from "@/api/community-api";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, Send } from "lucide-react";
-import CommentItem from "./comment-item"; // 분리한 컴포넌트 임포트
 import { useAuthGuard } from "@/hooks/use-authGuard";
+import { useAccount, useToken } from "@/stores/account-store";
+import { Bot, Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import CommentItem from "./comment-item"; // 분리한 컴포넌트 임포트
 
-export default function CommentSection({ noticeId }) {
+export default function CommentSection({ articleId, setPost }) {
   useAuthGuard();
   const { token } = useToken();
   const { account } = useAccount();
@@ -17,7 +17,7 @@ export default function CommentSection({ noticeId }) {
 
   const loadComments = async () => {
     try {
-      const data = await getComments(token, noticeId);
+      const data = await getComments(token, articleId);
       setComments(data.map((item) => item.comment || item));
     } catch (e) {
       console.error(e);
@@ -25,12 +25,12 @@ export default function CommentSection({ noticeId }) {
   };
 
   useEffect(() => {
-    if (noticeId && token) loadComments();
-  }, [noticeId, token]);
+    if (articleId && token) loadComments();
+  }, [articleId, token]);
 
   const handlePost = async (text, parentId = null) => {
     try {
-      await createComment(token, noticeId, text, parentId);
+      await createComment(token, articleId, text, parentId);
       setMainContent("");
       loadComments();
     } catch (e) {
@@ -41,7 +41,7 @@ export default function CommentSection({ noticeId }) {
   const handleDelete = async (id) => {
     if (!confirm("삭제하시겠습니까?")) return;
     try {
-      await deleteComment(token, noticeId, id);
+      await deleteComment(token, articleId, id);
       loadComments();
     } catch (e) {
       alert("삭제 실패");

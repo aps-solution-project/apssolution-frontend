@@ -200,7 +200,7 @@ export default function CommunityDetailPage() {
 
         {/* 댓글 섹션: 구분선 추가 */}
         <div className="pt-3 mt-12">
-          <CommentSection articleId={articleId} />
+          <CommentSection articleId={articleId} setPost={setPost}/>
         </div>
       </div>
     </div>
