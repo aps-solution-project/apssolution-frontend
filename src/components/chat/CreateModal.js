@@ -21,7 +21,7 @@ export default function CreateChatModal({ onClose }) {
   const [roomName, setRoomName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const SERVER_URL = "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}";
+  const SERVER_URL = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}`;
   const DEFAULT_IMAGE = "/images/default-profile.png";
 
   useEffect(() => {

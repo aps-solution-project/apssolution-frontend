@@ -333,7 +333,7 @@ export default function ChatRoom({ chatId }) {
                 <Avatar className="size-10 shrink-0 rounded-full overflow-hidden shadow-sm border border-slate-200">
                   <AvatarImage
                     src={
-                      "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}" +
+                      `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}` +
                       msg.talker?.profileImageUrl
                     }
                     className="h-full w-full object-cover"

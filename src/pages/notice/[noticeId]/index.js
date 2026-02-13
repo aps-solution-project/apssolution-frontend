@@ -83,7 +83,7 @@ export default function AnnouncementDetailPage() {
               <Avatar className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
                 <AvatarImage
                   src={
-                    "${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}" +
+                    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}` +
                     notice.writer.profileImageUrl
                   }
                   className="object-cover h-full w-full"
