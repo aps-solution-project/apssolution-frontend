@@ -6,6 +6,7 @@ import {
   User,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -35,12 +36,14 @@ import AdminProfileEditModal from "@/components/layout/modal/adminProfileSetting
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { cn } from "@/lib/utils";
 import { useAccount, useToken } from "@/stores/account-store";
+import { useRouter } from "next/router";
 
 export default function ManagementPage() {
   useAuthGuard();
 
   const token = useToken((state) => state.token);
   const loginAccount = useAccount((state) => state.account);
+  const router = useRouter();
 
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,7 +64,34 @@ export default function ManagementPage() {
   });
 
   if (!loginAccount) return null;
-  const isAdmin = loginAccount.role === "ADMIN";
+
+  const userRole = loginAccount.role;
+  const isAdmin = userRole === "ADMIN";
+  const isPlanner = userRole === "PLANNER";
+  const isWorker = userRole === "WORKER";
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          사원 관리 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   /* =========================
      데이터 로딩 & 이벤트 (기능 유지)
@@ -318,7 +348,7 @@ export default function ManagementPage() {
                       ) : (
                         <img
                           src="/images/default-profile.png"
-                          className="w-full h-full object-cover opacity-50" // 디폴트 느낌을 주려면 투명도 조절 가능
+                          className="w-full h-full object-cover opacity-20" // 디폴트 느낌을 주려면 투명도 조절 가능
                           alt="default profile"
                         />
                       )}
@@ -335,34 +365,36 @@ export default function ManagementPage() {
 
                   <div className="flex-1 p-5 relative flex flex-col justify-between">
                     <div className="absolute top-2 right-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-400"
-                          >
-                            <MoreHorizontal className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>관리</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleOpenDetail(account)}
-                          >
-                            상세 정보
-                          </DropdownMenuItem>
-                          {!isResigned && isAdmin && (
-                            <DropdownMenuItem
-                              className="text-red-600 font-bold"
-                              onClick={() => handleDelete(account.accountId)}
+                      {isAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400"
                             >
-                              퇴사 처리
+                              <MoreHorizontal className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>관리</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleOpenDetail(account)}
+                            >
+                              상세 정보
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {!isResigned && isAdmin && (
+                              <DropdownMenuItem
+                                className="text-red-600 font-bold"
+                                onClick={() => handleDelete(account.accountId)}
+                              >
+                                퇴사 처리
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
 
                     <div className="space-y-0.5">

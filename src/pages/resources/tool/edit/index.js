@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { cn } from "@/lib/utils";
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 import {
   ArrowLeft,
   FileInput,
@@ -12,6 +12,7 @@ import {
   Save,
   Trash2,
   Wrench,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -20,7 +21,7 @@ export default function ToolManagementPage() {
   useAuthGuard();
   const router = useRouter();
   const token = useToken((state) => state.token);
-
+  const loginAccount = useAccount((state) => state.account);
   const [tools, setTools] = useState([]);
   const [isAdding, setIsAdding] = useState(false); // 🌟 isAdding 상태
   const [isLoading, setIsLoading] = useState(false);
@@ -44,8 +45,31 @@ export default function ToolManagementPage() {
   };
 
   useEffect(() => {
-    loadServerData();
-  }, [token]);
+    if (token && loginAccount?.role !== "WORKER") loadServerData();
+  }, [token, loginAccount?.role]);
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          도구 수정 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   const handleInputChange = (index, field, value) => {
     const updatedTools = [...tools];
@@ -90,7 +114,7 @@ export default function ToolManagementPage() {
       };
       await upsertTools(requestData, token);
       alert("성공적으로 저장되었습니다.");
-      router.push("/resources/tools");
+      router.push("/resources/tool");
     } catch (err) {
       alert("저장 중 오류가 발생했습니다: " + err.message);
     } finally {

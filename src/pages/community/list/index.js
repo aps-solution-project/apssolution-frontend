@@ -17,8 +17,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
-import { MessageSquare, Paperclip, PenLine, Search } from "lucide-react";
+import { useAccount, useToken } from "@/stores/account-store";
+import { MessageSquare, Paperclip, PenLine, Search, X } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -27,6 +27,7 @@ const PAGE_SIZE = 8;
 export default function PostsPage() {
   useAuthGuard();
   const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
   const { token } = useToken();
 
   const [posts, setPosts] = useState([]);
@@ -36,7 +37,12 @@ export default function PostsPage() {
 
   // 1. 데이터 로드 로직
   useEffect(() => {
-    if (!token) return;
+    if (
+      !token ||
+      loginAccount?.role === "ADMIN" ||
+      loginAccount?.role === "PLANNER"
+    )
+      return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -60,6 +66,27 @@ export default function PostsPage() {
       post.title?.toLowerCase().includes(keyword.toLowerCase()) ||
       post.writer?.name?.toLowerCase().includes(keyword.toLowerCase()),
   );
+
+  if (loginAccount?.role === "ADMIN" || loginAccount?.role === "PLANNER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          사원게시판 페이지는 사원(WORKER) 전용 구역입니다.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   // 2. 전체 페이지 수 계산
   const totalPages = Math.ceil(filteredPosts.length / PAGE_SIZE);

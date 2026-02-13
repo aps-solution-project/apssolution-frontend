@@ -2,14 +2,15 @@ import { editWorkerPost, getPostDetail } from "@/api/community-api";
 import CommunityForm from "@/components/community/community-form";
 import { Button } from "@/components/ui/button";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
-import { ChevronLeft, PenLine } from "lucide-react"; // 아이콘 추가
+import { useAccount, useToken } from "@/stores/account-store";
+import { ChevronLeft, PenLine, X } from "lucide-react"; // 아이콘 추가
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function CommunityEditPage() {
   useAuthGuard();
   const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
   const { articleId } = router.query;
   const token = useToken((state) => state.token);
 
@@ -18,7 +19,14 @@ export default function CommunityEditPage() {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
-    if (!router.isReady || !articleId || articleId === "undefined" || !token)
+    if (
+      !router.isReady ||
+      !articleId ||
+      articleId === "undefined" ||
+      !token ||
+      loginAccount?.role === "ADMIN" ||
+      loginAccount?.role === "PLANNER"
+    )
       return;
 
     getPostDetail(token, articleId)
@@ -33,7 +41,28 @@ export default function CommunityEditPage() {
         console.error("데이터 로드 에러:", e);
         alert("게시글을 불러오지 못했습니다.");
       });
-  }, [router.isReady, articleId, token]);
+  }, [router.isReady, articleId, token, loginAccount?.role]);
+
+  if (loginAccount?.role === "ADMIN" || loginAccount?.role === "PLANNER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          사원게시판 페이지는 사원(WORKER) 전용 구역입니다.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     if (!title.trim() || !content.trim()) {

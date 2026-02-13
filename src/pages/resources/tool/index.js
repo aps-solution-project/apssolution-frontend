@@ -1,7 +1,7 @@
 import { getAllTools } from "@/api/tool-api";
 import SearchBar from "@/components/layout/SearchBar";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -16,7 +16,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { Brain, Pencil } from "lucide-react";
+import { Brain, Pencil, X } from "lucide-react";
 
 const PAGE_SIZE = 8;
 
@@ -33,6 +33,7 @@ export default function ToolPage() {
 
   const token = useToken((state) => state.token);
   const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
 
   const isProducts = router.pathname === "/resources/product";
   const isCategories = router.pathname === "/resources/tool/category";
@@ -40,9 +41,32 @@ export default function ToolPage() {
   const isProcesses = router.pathname === "/resources/task";
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || loginAccount?.role === "WORKER") return;
     getAllTools(token).then((data) => setTools(data.tools || []));
-  }, [token]);
+  }, [token, loginAccount?.role]);
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          도구 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -97,8 +121,8 @@ export default function ToolPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-fit">
           {[
-            { name: "공정", href: "/resources/task", active: isProcesses },
             { name: "품목", href: "/resources/product", active: isProducts },
+            { name: "공정", href: "/resources/task", active: isProcesses },
             { name: "도구", href: "/resources/tool", active: isTools },
             {
               name: "카테고리",

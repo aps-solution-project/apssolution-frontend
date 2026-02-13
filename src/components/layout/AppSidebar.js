@@ -83,7 +83,7 @@ export function AppSidebar() {
     if (isManager) {
       boardItems.push({
         label: "자료실",
-        href: "/resources/task",
+        href: "/resources/product",
         icon: Brain,
       });
     }
