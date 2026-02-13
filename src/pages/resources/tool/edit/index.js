@@ -220,7 +220,7 @@ export default function ToolManagementPage() {
           )}
         >
           {[
-            { label: "상태", align: "text-center" },
+            { label: "신규", align: "text-center" },
             { label: "도구 ID", align: "text-left px-3" },
             { label: "카테고리 ID", align: "text-left px-3" },
             { label: "설명", align: "text-left px-3" },
@@ -264,7 +264,7 @@ export default function ToolManagementPage() {
                     className={cn(
                       "w-1.5 h-1.5 rounded-full",
                       !tool.isSaved
-                        ? "bg-indigo-500 animate-pulse"
+                        ? "bg-indigo-500"
                         : "bg-slate-200",
                     )}
                   />

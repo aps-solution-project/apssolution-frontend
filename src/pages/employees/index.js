@@ -2,6 +2,7 @@ const BACKEND_URL = "http://192.168.0.20:8080";
 import {
   Loader2,
   MoreHorizontal,
+  RefreshCw,
   Search,
   User,
   UserPlus,
@@ -119,12 +120,20 @@ export default function ManagementPage() {
         },
         token,
       );
-      setData((prev) => [res, ...prev]);
+
+      // 🌟 서버 응답 데이터에 isNew 플래그 주입
+      const newMember = { ...res, isNew: true };
+
+      // 리스트 최상단에 추가
+      setData((prev) => [newMember, ...prev]);
+
       alert(
         "사원 계정이 생성되었습니다.\n임시 비밀번호는 이메일로 발송되었습니다.",
       );
       setIsAdding(false);
       setNewAccount({ name: "", email: "", role: "WORKER" });
+    } catch (err) {
+      alert("계정 생성 실패: " + err.message);
     } finally {
       setIsSaving(false);
     }
@@ -144,6 +153,16 @@ export default function ManagementPage() {
     );
   };
 
+  const handleRefresh = async () => {
+    try {
+      // 🌟 서버에서 최신 목록 가져오기 (이미 정의된 getAccounts 등 사용)
+      const res = await getAllAccounts(token);
+      setData(res.accounts || []); // 정렬된 순수 데이터로 교체
+    } catch (err) {
+      console.error("새로고침 실패:", err);
+    }
+  };
+
   /* =========================
      검색 및 페이징 계산
   ========================= */
@@ -157,7 +176,7 @@ export default function ManagementPage() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentItems = filteredData.slice(
     (page - 1) * itemsPerPage,
-    page * itemsPerPage,
+    page * itemsPerPage - (isAdding ? 1 : 0),
   );
 
   const roleColor = {
@@ -213,15 +232,25 @@ export default function ManagementPage() {
             명의 사원
           </p>
         </div>
-        {isAdmin && (
+        <div className="flex justify-end gap-5">
           <Button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
-            onClick={() => setIsAdding(true)}
+            variant="outline"
+            onClick={handleRefresh}
+            className="h-12 w-12 rounded-xl border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95"
           >
-            <UserPlus size={18} />
-            <span className="font-bold">사원 추가</span>
+            <RefreshCw size={20} />
           </Button>
-        )}
+
+          {isAdmin && (
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 gap-2"
+              onClick={() => setIsAdding(true)}
+            >
+              <UserPlus size={18} />
+              <span className="font-bold">사원 추가</span>
+            </Button>
+          )}
+        </div>
       </div>
       {/* 검색 바 */}
       <div className="relative w-64">
@@ -320,10 +349,18 @@ export default function ManagementPage() {
             <Card
               key={account.accountId}
               className={cn(
-                "relative overflow-hidden transition-all duration-300 hover:shadow-xl border-slate-200",
+                "relative transition-all duration-300 hover:shadow-xl border-slate-200", // 🌟 overflow-hidden 삭제
                 isResigned && "grayscale opacity-80 bg-slate-50",
               )}
             >
+              {account.isNew && (
+                <div className="absolute -top-2 -right-2 z-30">
+                  <span className="bg-[#eab308] text-white text-[12px] font-black px-3 py-1 rounded-full shadow-md border border-white animate-pulse">
+                    New
+                  </span>
+                </div>
+              )}
+
               {isResigned && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
                   <div className="border-4 border-red-600/30 px-4 py-2 text-red-600/30 text-4xl font-black uppercase tracking-tighter rotate-12 border-double rounded-lg">

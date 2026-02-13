@@ -189,9 +189,24 @@ export default function AddEventDialog({
               <Label className="text-slate-600 font-semibold text-xs">
                 Shift
               </Label>
-              <Select value={form.shift} onValueChange={(v) => set("shift", v)}>
+              <Select
+                value={form.shift}
+                onValueChange={(v) => {
+                  // 1. Shift 상태 업데이트
+                  set("shift", v);
+
+                  // 2. Shift 선택에 따른 시작/종료 시간 자동 설정
+                  if (v === "day") {
+                    set("startTime", "07:00");
+                    set("endTime", "19:00");
+                  } else if (v === "night") {
+                    set("startTime", "21:00");
+                    set("endTime", "07:00"); // 익일 종료
+                  }
+                }}
+              >
                 <SelectTrigger className="rounded-xl border-slate-200">
-                  <SelectValue />
+                  <SelectValue placeholder="근무 선택" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="day">☀ Day (07:00~)</SelectItem>

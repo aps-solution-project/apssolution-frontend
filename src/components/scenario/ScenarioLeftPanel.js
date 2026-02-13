@@ -179,12 +179,15 @@ export default function ScenarioLeftPanel({
                       <div className="relative w-28">
                         <input
                           type="number"
+                          min="1"
                           placeholder="수량"
                           className="w-full rounded-xl px-4 py-3 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-right pr-10"
                           value={item.quantity}
-                          onChange={(e) =>
-                            onUpdateItem(i, "quantity", e.target.value)
-                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val !== "" && Number(val) < 1) return;
+                            onUpdateItem(i, "quantity", val);
+                          }}
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">
                           QTY

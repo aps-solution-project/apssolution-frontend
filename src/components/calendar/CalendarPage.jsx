@@ -154,15 +154,16 @@ export default function CalendarPage() {
     if (!eventId) return;
 
     try {
-      deleteCalendar(eventId, token).then((flag) => {
-        if (flag) {
-          window.alert("정상처리되었습니다");
-          const month = cursorDate.getMonth() + 1;
-          getMonthlyCalendars(token, month).then((obj) => {
-            setEvents(obj.monthlySchedules || []);
-          });
-        } else window.alert("오류");
-      });
+      const flag = await deleteCalendar(eventId, token);
+      if (flag) {
+        window.alert("정상 처리되었습니다.");
+        setSelectedEvent(null);
+        const month = cursorDate.getMonth() + 1;
+        const obj = await getMonthlyCalendars(token, month);
+        setEvents(obj.monthlySchedules || []);
+      } else {
+        window.alert("삭제 중 오류가 발생했습니다.");
+      }
     } catch (err) {
       console.error("일정 삭제 실패:", err);
       alert("일정 삭제에 실패했습니다.");
@@ -248,7 +249,7 @@ export default function CalendarPage() {
 
             {/* 메인 타이틀 */}
             <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              일정관리
+              일정 관리
               {loading && (
                 <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
               )}
@@ -313,14 +314,10 @@ export default function CalendarPage() {
               trigger={
                 <Button className="h-10 rounded-xl px-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-200/60 font-bold">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add
+                  일정 추가
                 </Button>
               }
             />
-
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm border-[3px] border-white shadow-md shadow-blue-200/40">
-              A
-            </div>
           </div>
         </div>
 

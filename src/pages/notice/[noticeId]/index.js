@@ -35,7 +35,7 @@ export default function AnnouncementDetailPage() {
     if (!confirm("정말로 공지사항을 삭제하시겠습니까?")) return;
     deleteNotice(token, noticeId).then(() => {
       window.alert("공지사항이 성공적으로 삭제되었습니다.");
-      router.push("/notice/announcements");
+      router.push("/notice/list");
     });
   }
 
