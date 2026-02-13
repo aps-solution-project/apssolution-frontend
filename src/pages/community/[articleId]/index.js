@@ -68,7 +68,7 @@ export default function CommunityDetailPage() {
     deleteWorkerPost(token, articleId)
       .then(() => {
         window.alert("게시글이 삭제되었습니다.");
-        router.push("/community/posts");
+        router.push("/community/list");
       })
       .catch(() => alert("삭제에 실패했습니다."));
   }

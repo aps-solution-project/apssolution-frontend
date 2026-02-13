@@ -141,7 +141,7 @@ export default function TaskManagementPage() {
   };
 
   const gridLayout =
-    "grid-cols-[25px_150px_130px_110px_140px_1fr_60px_80px_60px_50px]";
+    "grid-cols-[30px_150px_130px_110px_140px_1fr_60px_80px_60px_50px]";
   const inputStyle =
     "h-8 w-full bg-transparent border-none shadow-none focus-visible:ring-1 focus-visible:ring-indigo-500/20 hover:bg-slate-100/50 transition-all rounded-sm px-2 text-xs text-slate-700 text-left placeholder:text-slate-300";
 
@@ -208,7 +208,7 @@ export default function TaskManagementPage() {
           )}
         >
           {[
-            { label: "상태", align: "text-center" },
+            { label: "신규", align: "text-center" },
             { label: "ID" },
             { label: "제품" },
             { label: "도구" },
@@ -263,7 +263,7 @@ export default function TaskManagementPage() {
                     className={cn(
                       "w-1.5 h-1.5 rounded-full",
                       !t.isSaved
-                        ? "bg-indigo-500 animate-pulse"
+                        ? "bg-indigo-500"
                         : "bg-slate-200",
                     )}
                   />

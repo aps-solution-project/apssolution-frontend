@@ -48,7 +48,7 @@ export default function ScenariosCreateForm() {
     date: "",
     time: "",
     maxWorkerCount: "",
-    scenarioProductList: [{ productId: "", quantity: "" }],
+    scenarioProductList: [{ productId: "", quantity: "1" }],
   });
 
   /* ===================== Effect ===================== */
@@ -218,7 +218,7 @@ export default function ScenariosCreateForm() {
       ...v,
       scenarioProductList: [
         ...v.scenarioProductList,
-        { productId: "", quantity: "" },
+        { productId: "", quantity: "1" },
       ],
     }));
 
@@ -235,6 +235,29 @@ export default function ScenariosCreateForm() {
   };
 
   const handleAddScenario = () => {
+    // 🌟 [추가] 필수값 검증 로직
+    const newErrors = {};
+    if (!form.title.trim()) newErrors.title = "제목을 입력해주세요.";
+    if (!form.date || !form.time)
+      newErrors.schedule = "시작 일정을 선택해주세요.";
+    if (!form.maxWorkerCount || Number(form.maxWorkerCount) <= 0)
+      newErrors.maxWorkerCount = "최대 작업 인원을 1명 이상 입력해주세요.";
+
+    // 품목 검증: 품목이 없거나, 품목 ID가 없거나, 수량이 1 미만인 경우
+    const invalidProduct = form.scenarioProductList.some(
+      (p) => !p.productId || !p.quantity || Number(p.quantity) < 1,
+    );
+    if (form.scenarioProductList.length === 0 || invalidProduct) {
+      newErrors.products =
+        "모든 품목의 종류와 수량(최소 1개)을 정확히 입력해주세요.";
+    }
+
+    // 에러가 하나라도 있으면 중단
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors); // errors 상태에 저장하여 UI에 노출
+      alert("입력되지 않은 항목이 있습니다. 확인 후 다시 시도해주세요.");
+      return;
+    }
     const payload = {
       title: form.title,
       description: form.description,
@@ -257,7 +280,7 @@ export default function ScenariosCreateForm() {
         date: "",
         time: "",
         maxWorkerCount: "",
-        scenarioProductList: [{ productId: "", quantity: "" }],
+        scenarioProductList: [{ productId: "", quantity: "1" }],
       });
       scrollToTop();
     });
@@ -271,7 +294,7 @@ export default function ScenariosCreateForm() {
         date: "",
         time: "",
         maxWorkerCount: "",
-        scenarioProductList: [{ productId: "", quantity: "" }],
+        scenarioProductList: [{ productId: "", quantity: "1" }],
       });
       setShowForm(true);
 

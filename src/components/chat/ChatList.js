@@ -28,9 +28,6 @@ export default function ChatList() {
         (acc, cur) => acc + (cur.unreadCount || 0),
         0,
       );
-
-      // 🌟 이 부분이 핵심입니다!
-      // 숫자를 업데이트함과 동시에 'hasUnread' 상태도 true/false로 동기화해줘야 합니다.
       setTotalUnreadCount(total);
     } catch (err) {
       console.error("목록 갱신 실패:", err);
@@ -46,12 +43,16 @@ export default function ChatList() {
   useEffect(() => {
     // stomp가 연결되지 않았거나 account가 없으면 대기
     if (!stomp || !stomp.connected || !account?.accountId) return;
-
+    const topic = `/topic/user/${account.accountId}`;
     const sub = stomp.subscribe(`/topic/user/${account.accountId}`, (frame) => {
-      const body = JSON.parse(frame.body);
-      // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
-      if (body.msg === "refresh") {
-        refreshChatList();
+      try {
+        const body = JSON.parse(frame.body);
+        // 서버에서 'refresh' 신호가 오면 목록을 새로 가져옴
+        if (body.msg === "refresh") {
+          refreshChatList();
+        }
+      } catch (e) {
+        console.error("메시지 파싱 에러:", e);
       }
     });
 

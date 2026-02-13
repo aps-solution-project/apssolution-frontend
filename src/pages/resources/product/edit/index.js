@@ -83,7 +83,7 @@ export default function ProductManagementPage() {
         active: item.active || false,
         isSaved: false,
       }));
-      setProducts((prev) => [...prev, ...newItems]);
+      setProducts((prev) => [...newItems, ...prev]);
       alert(
         `${newItems.length}건의 데이터를 불러왔습니다. '전체 저장'을 눌러 확정하세요.`,
       );
@@ -204,7 +204,7 @@ export default function ProductManagementPage() {
           )}
         >
           {[
-            { label: "상태", align: "text-center" },
+            { label: "신규", align: "text-center" },
             { label: "품목 ID", align: "text-left px-3" },
             { label: "품목명", align: "text-left px-3" },
             { label: "품목 설명", align: "text-left px-3" },
@@ -255,7 +255,7 @@ export default function ProductManagementPage() {
                     className={cn(
                       "w-1.5 h-1.5 rounded-full",
                       !p.isSaved
-                        ? "bg-indigo-500 animate-pulse"
+                        ? "bg-indigo-500"
                         : "bg-slate-200",
                     )}
                   />
