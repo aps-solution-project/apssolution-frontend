@@ -9,14 +9,14 @@ import {
 } from "@/api/scenario-api";
 import { useAuthGuard } from "@/hooks/use-authGuard";
 import { useAccount, useToken } from "@/stores/account-store";
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
 
 import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
 import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
+import { Button } from "@/components/ui/button";
 import { useStomp } from "@/stores/stomp-store";
 import { DraftingCompass, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
