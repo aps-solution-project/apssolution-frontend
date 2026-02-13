@@ -223,3 +223,8 @@ body {
 .night-dot::after {
   background-color: #fbbf24;
 }
+
+html,
+body {
+  min-width: 1280px;
+}
