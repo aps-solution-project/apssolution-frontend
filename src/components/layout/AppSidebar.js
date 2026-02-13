@@ -13,12 +13,12 @@ import {
 import { useAccount } from "@/stores/account-store";
 import { useStomp } from "@/stores/stomp-store";
 import {
-  Brain,
-  CalendarDays,
-  Captions,
-  ClipboardCheck,
+  BellRing,
+  CalendarFold,
+  ClipboardList,
   ContactRound,
-  FlaskRound,
+  FolderOpen,
+  Hammer,
   Home,
   MessageSquareMore,
   NotebookPen,
@@ -43,7 +43,7 @@ export function AppSidebar() {
   if (isLoginPage) {
     return null;
   }
-  
+
   const getFilteredSections = () => {
     const sections = [
       {
@@ -66,7 +66,7 @@ export function AppSidebar() {
           {
             label: "시나리오 설계",
             href: "/scenarios",
-            icon: FlaskRound,
+            icon: Hammer,
           },
         ],
       });
@@ -77,21 +77,21 @@ export function AppSidebar() {
       {
         label: "공지사항",
         href: "/notice/list",
-        icon: NotebookPen,
+        icon: BellRing,
       },
     ];
     if (isManager) {
       boardItems.push({
         label: "자료실",
         href: "/resources/product",
-        icon: Brain,
+        icon: FolderOpen,
       });
     }
     if (isWorker) {
       boardItems.push({
         label: "사원 게시판",
         href: "/community/list",
-        icon: Captions,
+        icon: NotebookPen,
       });
     }
     sections.push({ title: "게시판", items: boardItems });
@@ -104,13 +104,13 @@ export function AppSidebar() {
           {
             label: "근무표",
             href: "/calendar",
-            icon: CalendarDays,
+            icon: CalendarFold,
             badgeKey: "/calendar", // 🌟 배포 작업도 같은 키 사용
           },
           {
             label: "배포 작업",
             href: "/deployment",
-            icon: ClipboardCheck,
+            icon: ClipboardList,
           },
         ],
       });
@@ -124,7 +124,7 @@ export function AppSidebar() {
           {
             label: "캘린더",
             href: "/calendar",
-            icon: CalendarDays,
+            icon: CalendarFold,
             badgeKey: "/calendar",
           },
         ],

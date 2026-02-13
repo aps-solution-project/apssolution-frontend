@@ -119,7 +119,7 @@ export default function EditScenarioForm({
         {/* 2. 입력 영역: 스크롤 가능 */}
         <div className="flex-1 min-h-0 relative">
           <ScrollArea className="h-full w-full">
-            <div className="p-5">
+            <div className="p-8">
               {/* 기본 정보 카드 */}
               <div className="">
                 <div className="">
@@ -151,60 +151,63 @@ export default function EditScenarioForm({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase ml-1">
-                      Schedule
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Calendar
-                          size={14}
-                          className="absolute left-3 top-3 text-slate-400"
-                        />
-                        <input
-                          type="date"
-                          className="w-full bg-slate-50 border-none rounded-xl pl-9 pr-3 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
-                          value={form.date}
-                          onChange={(e) =>
-                            setForm({ ...form, date: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="relative flex-1">
-                        <Clock
-                          size={14}
-                          className="absolute left-3 top-3 text-slate-400"
-                        />
-                        <input
-                          type="time"
-                          className="w-full bg-slate-50 border-none rounded-xl pl-9 pr-3 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
-                          value={form.time}
-                          onChange={(e) =>
-                            setForm({ ...form, time: e.target.value })
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase ml-1">
-                      Workforce
-                    </label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase ml-1 tracking-wider">
+                    Schedule
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {" "}
+                    {/* 여기에만 grid를 적용해서 날짜/시간만 가로 배치 */}
                     <div className="relative">
-                      <Users
-                        size={14}
-                        className="absolute left-3 top-3 text-slate-400"
+                      <Calendar
+                        size={16}
+                        className="absolute left-4 top-3.5 text-slate-400"
                       />
                       <input
-                        type="number"
-                        className="w-full bg-slate-50 border-none rounded-xl pl-9 pr-3 py-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={form.maxWorkerCount}
+                        type="date"
+                        className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        value={form.date}
                         onChange={(e) =>
-                          setForm({ ...form, maxWorkerCount: e.target.value })
+                          setForm({ ...form, date: e.target.value })
                         }
                       />
                     </div>
+                    <div className="relative">
+                      <Clock
+                        size={16}
+                        className="absolute left-4 top-3.5 text-slate-400"
+                      />
+                      <input
+                        type="time"
+                        className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        value={form.time}
+                        onChange={(e) =>
+                          setForm({ ...form, time: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Workforce 섹션: Schedule 아래에 독립적으로 배치 */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase ml-1 tracking-wider">
+                    Workforce *
+                  </label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-4 pointer-events-none text-slate-400">
+                      <Users size={18} />
+                    </div>
+                    {/* pl-12 패딩으로 아이콘과 숫자가 절대 겹치지 않음 */}
+                    <input
+                      type="number"
+                      placeholder="인원 수 입력"
+                      className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      value={form.maxWorkerCount}
+                      onChange={(e) =>
+                        setForm({ ...form, maxWorkerCount: e.target.value })
+                      }
+                    />
                   </div>
                 </div>
               </div>

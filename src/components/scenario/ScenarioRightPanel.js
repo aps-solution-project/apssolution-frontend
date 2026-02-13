@@ -270,62 +270,30 @@ export default function ScenarioRightPannel({
           </div>
           <button
             onClick={() => {
-              // 결과 레포트 보기 (OPTIMAL일 때만)
-              if (selectedScenario.status === "OPTIMAL") {
+              // 결과 완료 상태일 때만 리포트로 이동
+              if (["OPTIMAL", "FEASIBLE"].includes(selectedScenario.status)) {
                 router.push(`/scenarios/${selectedScenario.id}`);
                 return;
               }
-              // 그 외 상태(READY, FAIL 등)에서는 시뮬레이션 시작
+              // 그 외(READY, FAIL)에는 시뮬레이션 시작
               onStart();
             }}
-            // 1. 데이터 전송 중(running), 2. 100% 도달 후 서버 대기(pending), 3. 서버 상태가 PENDING일 때 클릭 금지
-            disabled={
-              running ||
-              (animatedProgress === 100 &&
-                selectedScenario.status === "READY") ||
-              selectedScenario.status === "PENDING"
-            }
+            // 전송 중이거나 엔진 분석 중일 때 버튼 잠금
+            disabled={running || selectedScenario.status === "PENDING"}
             className={`w-full py-4 rounded-2xl text-sm font-black transition-all shadow-lg flex items-center justify-center gap-2 active:scale-[0.95]
     ${
-      selectedScenario.status === "OPTIMAL"
-        ? "bg-indigo-600 text-white hover:bg-indigo-700" // 결과 완료
-        : running ||
-            (animatedProgress === 100 && selectedScenario.status === "READY") ||
-            selectedScenario.status === "PENDING"
-          ? "bg-slate-400 text-white cursor-wait" // 마우스 클릭 금지 및 진행 중 색상
-          : "bg-blue-600 text-white hover:bg-blue-700" // 시작 가능 (READY, FAIL)
+      ["OPTIMAL", "FEASIBLE"].includes(selectedScenario.status)
+        ? "bg-indigo-600 text-white hover:bg-indigo-700"
+        : running || selectedScenario.status === "PENDING"
+          ? "bg-slate-400 text-white cursor-wait"
+          : "bg-blue-600 text-white hover:bg-blue-700"
     }`}
           >
             {(() => {
-              // 1. 엔진 분석 중 상태 (가장 우선 순위)
-              if (
-                (animatedProgress === 100 &&
-                  selectedScenario.status === "READY") ||
-                selectedScenario.status === "PENDING"
-              ) {
-                return (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    엔진 분석중...
-                  </>
-                );
-              }
+              const status = selectedScenario.status;
 
-              // 2. 데이터 전송 중 상태
-              if (running) {
-                return (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    데이터 전송중...
-                  </>
-                );
-              }
-
-              // 3. 성공 상태 (비교문을 정확하게 작성: status === "A" || status === "B")
-              if (
-                selectedScenario.status === "OPTIMAL" ||
-                selectedScenario.status === "FEASIBLE"
-              ) {
+              // 1. 성공 상태 (결과 레포트)
+              if (["OPTIMAL", "FEASIBLE"].includes(status)) {
                 return (
                   <>
                     <FileText size={18} />
@@ -334,8 +302,28 @@ export default function ScenarioRightPannel({
                 );
               }
 
+              // 2. 엔진 분석 중 (PENDING 상태가 되면 애니메이션 수치와 상관없이 텍스트 고정)
+              if (status === "PENDING") {
+                return (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    엔진 분석중...
+                  </>
+                );
+              }
+
+              // 3. 데이터 전송 중 (READY 상태에서 실제로 로직이 실행 중일 때)
+              if (running) {
+                return (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    데이터 전송중... ({animatedProgress}%)
+                  </>
+                );
+              }
+
               // 4. 실패 상태
-              if (selectedScenario.status === "FAIL") {
+              if (status === "FAIL") {
                 return (
                   <>
                     <FastForward size={18} fill="currentColor" />
@@ -344,7 +332,7 @@ export default function ScenarioRightPannel({
                 );
               }
 
-              // 5. 기본 상태 (READY 등)
+              // 5. 기본 상태 (READY)
               return (
                 <>
                   <Play size={18} fill="currentColor" />
