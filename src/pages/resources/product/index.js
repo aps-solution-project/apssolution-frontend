@@ -1,27 +1,13 @@
 import { getProducts, getProductTasks } from "@/api/product-api";
 import {
-  Bar,
-  BarChart,
-  Legend,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
-import { Brain, Pencil } from "lucide-react";
+import { useAccount, useToken } from "@/stores/account-store";
+import { Brain, Pencil, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -68,9 +54,10 @@ export default function ResourcesPage() {
 
   const token = useToken((state) => state.token);
   const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
 
   const fetchProducts = async () => {
-    if (!token) return;
+    if (!token || loginAccount?.role === "WORKER") return;
     setLoading(true);
     try {
       const data = await getProducts(token);
@@ -88,8 +75,38 @@ export default function ResourcesPage() {
   const isProcesses = router.pathname === "/resources/task";
 
   useEffect(() => {
-    fetchProducts();
-  }, [token]);
+    // loginAccount 정보가 들어올 때까지 기다렸다가 호출
+    if (loginAccount) {
+      fetchProducts();
+    }
+  }, [token, loginAccount?.role]);
+
+  if (!loginAccount) return null;
+
+  const userRole = loginAccount.role;
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          품목 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   const loadTasks = async (productId) => {
     if (tasksMap[productId]) return;
@@ -147,8 +164,8 @@ export default function ResourcesPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
           {[
-            { name: "공정", href: "/resources/task", active: isProcesses },
             { name: "품목", href: "/resources/product", active: isProducts },
+            { name: "공정", href: "/resources/task", active: isProcesses },
             { name: "도구", href: "/resources/tool", active: isTools },
             {
               name: "카테고리",
@@ -270,73 +287,81 @@ export default function ResourcesPage() {
 
                 <AccordionContent className="bg-slate-50/30 border-t border-slate-100/50 p-0">
                   <div className="flex flex-col lg:flex-row items-stretch h-[550px]">
-                    {/* 📋 [1/3] 왼쪽 리스트 */}
+                    {/* 📋 [1/3] 왼쪽 리스트 영역 */}
                     <div className="w-full lg:w-1/3 p-6 border-r border-slate-100 flex flex-col">
                       <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">
                         Related Tasks Details
                       </div>
+
                       <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[500px]">
-                        {tasksMap[product.id]?.map((task, idx) => (
-                          <div
-                            key={task.id}
-                            className="bg-white rounded-xl p-4 border border-slate-100 flex flex-col gap-3 shadow-sm hover:border-indigo-200 transition-all group"
-                          >
-                            {/* 상단: 순번과 이름 */}
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
-                                style={{
-                                  backgroundColor: getBlueGradient(
-                                    idx,
-                                    tasksMap[product.id].length,
-                                  ),
-                                }}
-                              >
-                                {task.seq}
-                              </div>
-                              <span className="font-bold text-slate-800 text-xs truncate flex-1">
-                                {task.name}
-                              </span>
-                              {/* 카테고리 배지 */}
-                              <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 uppercase">
-                                {task.toolCategoryId}
-                              </span>
-                            </div>
-
-                            {/* 하단: 시간 및 인원 정보 */}
-                            <div className="flex items-center justify-between border-t pt-2 border-slate-50">
+                        {/* 데이터가 있고, 배열의 길이가 0보다 큰 경우에만 map 실행 */}
+                        {tasksMap[product.id] &&
+                        tasksMap[product.id].length > 0 ? (
+                          tasksMap[product.id].map((task, idx) => (
+                            <div
+                              key={task.id}
+                              className="bg-white rounded-xl p-4 border border-slate-100 flex flex-col gap-3 shadow-sm hover:border-indigo-200 transition-all group"
+                            >
+                              {/* 상단: 순번, 이름, 카테고리 */}
                               <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-bold bg-indigo-50/50 py-0.5 rounded">
-                                  <span>⏱</span>
-                                  <span>{task.duration}분</span>
+                                <div
+                                  className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-sm"
+                                  style={{
+                                    backgroundColor: getBlueGradient(
+                                      idx,
+                                      tasksMap[product.id].length,
+                                    ),
+                                  }}
+                                >
+                                  {task.seq}
                                 </div>
-                                <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold bg-emerald-50/50 py-0.5 rounded">
-                                  <span>👤</span>
-                                  <span>{task.requiredWorkers}명</span>
-                                </div>
+                                <span className="font-bold text-slate-800 text-xs truncate flex-1">
+                                  {task.name}
+                                </span>
+                                <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 uppercase">
+                                  {task.toolCategoryId}
+                                </span>
                               </div>
 
-                              {/* 설명이 있다면 아주 작게 표시 (선택 사항) */}
-                              {task.description && (
-                                <div className="text-[9px] text-slate-400 truncate max-w-[180px]">
-                                  {task.description}
+                              {/* 하단: 시간/인원 정보 */}
+                              <div className="flex items-center justify-between border-t pt-2 border-slate-50">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-bold bg-indigo-50/50 py-0.5 rounded px-1">
+                                    <span>⏱</span>
+                                    <span>{task.duration}분</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold bg-emerald-50/50 py-0.5 rounded px-1">
+                                    <span>👤</span>
+                                    <span>{task.requiredWorkers}명</span>
+                                  </div>
                                 </div>
-                              )}
+                                {task.description && (
+                                  <div className="text-[9px] text-slate-400 truncate max-w-[100px]">
+                                    {task.description}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                        {(!tasksMap[product.id] ||
-                          tasksMap[product.id].length === 0) && (
-                          <div className="py-20 text-center text-slate-400 text-xs font-medium">
-                            등록된 공정이 없습니다.
+                          ))
+                        ) : (
+                          /* 🌟 데이터가 없을 때: 통일감 있는 "없음" UI */
+                          <div className="flex flex-col items-center justify-center py-20 h-full text-center">
+                            <div className="bg-slate-50 p-3 rounded-full mb-3 shadow-sm border border-slate-100">
+                              <div className="text-slate-300 text-xl">📋</div>
+                            </div>
+                            <div className="text-slate-400 text-[13px] font-bold tracking-tight">
+                              등록된 공정이 없습니다.
+                            </div>
+                            <p className="text-slate-300 text-[11px] mt-1">
+                              해당 품목에 연결된 작업 단계가 존재하지 않습니다.
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* 📊 [2/3] 오른쪽 차트 컴포넌트 */}
+                    {/* 📊 [2/3] 오른쪽 차트 영역 (기존 유지) */}
                     <div className="w-full lg:w-2/3 p-6 flex flex-col">
-                      {/* 🌟 3. sticky를 활용하면 전체 스크롤을 내려도 차트가 화면에 고정되어 따라오게 할 수 있습니다. */}
                       <div className="sticky top-6 flex-1 h-[500px]">
                         <ProcessBarChart
                           productName={product.name}

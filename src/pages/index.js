@@ -58,7 +58,6 @@ export default function DashboardPage() {
         const schedules =
           data?.monthlySchedules || data?.schedules || data || [];
         setServerSchedules(Array.isArray(schedules) ? schedules : []);
-        console.log(`${monthNum}월 데이터 로드 완료:`, schedules);
       } catch (err) {
         console.error("❌ 데이터 로드 실패:", err);
       }

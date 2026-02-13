@@ -2,8 +2,8 @@ import { createNotice } from "@/api/notice-api"; // ✅ 공지 작성 API
 import { Button } from "@/components/ui/button";
 import BoardEditor from "@/components/ui/editor";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
-import { FileInput, ListIcon, Save } from "lucide-react";
+import { useAccount, useToken } from "@/stores/account-store";
+import { FileInput, ListIcon, Save, X } from "lucide-react";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
 
@@ -11,12 +11,36 @@ export default function NoticeCreatePage() {
   useAuthGuard();
 
   const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
   const token = useToken((state) => state.token);
   const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          공지사항 생성 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   const goToList = () => {
     router.push("/notice/list");

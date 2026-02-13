@@ -8,18 +8,22 @@ import {
   simulateScenario,
 } from "@/api/scenario-api";
 import { useAuthGuard } from "@/hooks/use-authGuard";
-import { useToken } from "@/stores/account-store";
+import { useAccount, useToken } from "@/stores/account-store";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
 import ScenarioLeftPanel from "@/components/scenario/ScenarioLeftPanel";
 import ScenarioRightPanel from "@/components/scenario/ScenarioRightPanel";
 import { useStomp } from "@/stores/stomp-store";
-import { DraftingCompass } from "lucide-react";
+import { DraftingCompass, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ScenariosCreateForm() {
   useAuthGuard();
   const { token } = useToken();
   const { stomp } = useStomp();
+  const router = useRouter();
+  const loginAccount = useAccount((state) => state.account);
 
   const [scenarioData, setScenarioData] = useState([]);
   const [selectedId, setSelectedId] = useState(0);
@@ -72,16 +76,17 @@ export default function ScenariosCreateForm() {
       console.log("❌ 시나리오 구독 해제");
       sub.unsubscribe();
     };
-  }, [stomp, selectedScenario?.id]);
+  }, [stomp, selectedScenario?.id, loginAccount?.role]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || loginAccount?.role === "WORKER") return;
+
     getScenarios(token).then((res) => setScenarioData(res.scenarios || []));
     getProducts(token).then((res) => setProducts(res.products || []));
-  }, [token]);
+  }, [token, loginAccount?.role]);
 
   useEffect(() => {
-    if (!selectedId || !token) {
+    if (!selectedId || !token || loginAccount?.role === "WORKER") {
       setSelectedScenario(null);
       setIsLoadingScenario(false);
       return;
@@ -127,6 +132,34 @@ export default function ScenariosCreateForm() {
       });
     }, 100);
   };
+
+  const userRole = loginAccount.role;
+  const isAdmin = userRole === "ADMIN";
+  const isPlanner = userRole === "PLANNER";
+  const isWorker = userRole === "WORKER";
+
+  if (loginAccount?.role === "WORKER") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+        <div className="p-4 bg-red-50 rounded-full">
+          <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800">접근 권한 제한</h2>
+        <p className="text-slate-500 font-medium text-center">
+          시나리오 페이지는 관리자(ADMIN) 및 플래너 전용 구역입니다.
+          <br />
+          권한이 필요하시다면 관리자에게 문의하세요.
+        </p>
+        <Button
+          onClick={() => router.push("/")}
+          variant="outline"
+          className="rounded-xl"
+        >
+          메인으로 돌아가기
+        </Button>
+      </div>
+    );
+  }
 
   /* ===================== Handler ===================== */
 

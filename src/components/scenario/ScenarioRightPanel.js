@@ -306,7 +306,7 @@ export default function ScenarioRightPannel({
                 return (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    엔진 분석 중...
+                    엔진 분석중...
                   </>
                 );
               }
@@ -316,7 +316,7 @@ export default function ScenarioRightPannel({
                 return (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    데이터 전송 중...
+                    데이터 전송중...
                   </>
                 );
               }
