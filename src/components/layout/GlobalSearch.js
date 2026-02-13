@@ -44,7 +44,7 @@ export default function GlobalSearch() {
       setLoading(true);
       try {
         const resp = await fetch(
-          `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/search?keyword=${encodeURIComponent(query)}`,
+          `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/search?keyword=${encodeURIComponent(query)}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -184,7 +184,7 @@ function SearchSection({ title, icon, items, path, onLink }) {
           const fullImgPath = rawImg
             ? rawImg.startsWith("http")
               ? rawImg
-              : `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${rawImg}`
+              : `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080${rawImg}`
             : null;
 
           return (

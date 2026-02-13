@@ -12,10 +12,13 @@ async function request(url, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${url}`, {
-    ...options,
-    headers,
-  });
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080${url}`,
+    {
+      ...options,
+      headers,
+    },
+  );
 
   if (!resp.ok) {
     if (resp.status === 401) {

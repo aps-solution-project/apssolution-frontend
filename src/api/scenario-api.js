@@ -1,13 +1,15 @@
-
 async function postScenario(token, data) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
 
   if (!resp.ok) {
     throw new Error("시나리오 등록에 실패했습니다.");
@@ -16,12 +18,15 @@ async function postScenario(token, data) {
 }
 
 async function getScenarios(token) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 조회에 실패했습니다.");
   }
@@ -29,12 +34,15 @@ async function getScenarios(token) {
 }
 
 async function getScenario(token, scenarioId) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 조회에 실패했습니다.");
   }
@@ -42,12 +50,15 @@ async function getScenario(token, scenarioId) {
 }
 
 async function getScenarioResult(token, scenarioId) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/result`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}/result`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 결과 조회에 실패했습니다.");
   }
@@ -55,27 +66,33 @@ async function getScenarioResult(token, scenarioId) {
 }
 
 async function deleteScenario(token, scenarioId) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 삭제에 실패했습니다.");
   }
 }
 
 async function editScenario(token, scenarioId, data) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 수정에 실패했습니다.");
   }
@@ -83,13 +100,16 @@ async function editScenario(token, scenarioId, data) {
 }
 
 async function copyScenario(token, scenarioId) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/clone`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}/clone`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("시나리오 복사에 실패했습니다.");
   }
@@ -98,7 +118,7 @@ async function copyScenario(token, scenarioId) {
 
 async function publishScenario(token, scenarioId) {
   const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/publish`,
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}/publish`,
     {
       method: "PATCH",
       headers: {
@@ -115,7 +135,7 @@ async function publishScenario(token, scenarioId) {
 
 async function unpublishScenario(token, scenarioId) {
   const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/unpublish`,
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}/unpublish`,
     {
       method: "PATCH",
       headers: {
@@ -131,12 +151,15 @@ async function unpublishScenario(token, scenarioId) {
 }
 
 async function getTodaySchedules(token) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/schedules/today`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/schedules/today`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("오늘의 작업 일정 조회에 실패했습니다.");
   }
@@ -145,7 +168,7 @@ async function getTodaySchedules(token) {
 
 async function editScenarioSchedule(token, scenarioScheduleId, data) {
   const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/schedules/${scenarioScheduleId}`,
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/schedules/${scenarioScheduleId}`,
     {
       method: "PATCH",
       headers: {
@@ -163,7 +186,7 @@ async function editScenarioSchedule(token, scenarioScheduleId, data) {
 
 async function simulateScenario(token, scenarioId) {
   const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/${scenarioId}/simulate`,
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/${scenarioId}/simulate`,
     {
       method: "POST",
       headers: {
@@ -179,12 +202,15 @@ async function simulateScenario(token, scenarioId) {
 }
 
 async function getUnreadScenario(token) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/scenarios/worker/unread`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/scenarios/worker/unread`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("unreadCount 조회 실패");
   }

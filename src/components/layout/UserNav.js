@@ -11,7 +11,7 @@ import { useAccount, useToken } from "@/stores/account-store";
 import { FileText, LogOut, UserCog } from "lucide-react";
 import { useRouter } from "next/router";
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}`;
+const API_BASE_URL = `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080`;
 
 const ROLE_CONFIG = {
   ADMIN: {

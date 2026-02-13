@@ -189,7 +189,7 @@ export default function ChatRoom({ chatId }) {
   };
 
   function downloadFile(file) {
-    const downloadUrl = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/chats/files/download?path=${encodeURIComponent(
+    const downloadUrl = `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/chats/files/download?path=${encodeURIComponent(
       file.fileUrl.replace("/apssolution/chatAttachments/", ""),
     )}`;
     window.open(downloadUrl, "_blank");
@@ -333,7 +333,7 @@ export default function ChatRoom({ chatId }) {
                 <Avatar className="size-10 shrink-0 rounded-full overflow-hidden shadow-sm border border-slate-200">
                   <AvatarImage
                     src={
-                      `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}` +
+                      `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080` +
                       msg.talker?.profileImageUrl
                     }
                     className="h-full w-full object-cover"
@@ -384,7 +384,7 @@ export default function ChatRoom({ chatId }) {
                             <img
                               key={file.id || index}
                               onClick={() => downloadFile(file)}
-                              src={`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${file.fileUrl}`}
+                              src={`http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080${file.fileUrl}`}
                               onLoad={() => scrollToBottom("auto")}
                               className="rounded-lg w-full max-w-[220px] object-contain cursor-pointer hover:opacity-90 transition shadow-md border border-slate-100"
                               alt={file.fileName}

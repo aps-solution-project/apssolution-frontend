@@ -83,7 +83,7 @@ export default function AnnouncementDetailPage() {
               <Avatar className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
                 <AvatarImage
                   src={
-                    `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}` +
+                    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080` +
                     notice.writer.profileImageUrl
                   }
                   className="object-cover h-full w-full"
@@ -126,7 +126,7 @@ export default function AnnouncementDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {notice.attachments && notice.attachments.length > 0 ? (
               notice.attachments.map((file, index) => {
-                const downloadUrl = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/files/download?path=${encodeURIComponent(
+                const downloadUrl = `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/notices/files/download?path=${encodeURIComponent(
                   file.fileUrl.replace("/apssolution/notices/", ""),
                 )}`;
 

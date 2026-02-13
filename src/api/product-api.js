@@ -1,16 +1,18 @@
-
 //파일 업로드 api
 async function upLoadFiles(file, token) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/products/xls/parse`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/products/xls/parse`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     },
-    body: formData,
-  });
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -27,14 +29,17 @@ async function bulkUpsertProducts(data, token) {
     products: data,
   };
 
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/products`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/products`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
   if (!resp.ok) {
     const errorData = await resp.json();
@@ -47,11 +52,14 @@ async function bulkUpsertProducts(data, token) {
 //품목 파일 전체조회 api
 const getProducts = async (token) => {
   if (!token) throw new Error("No token");
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/products`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/products`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error("상품 목록 조회에 실패했습니다.");
@@ -61,11 +69,14 @@ const getProducts = async (token) => {
 };
 
 async function getProduct(token, productId) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/products/${productId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/products/${productId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("상품 조회에 실패했습니다.");
   }
@@ -73,11 +84,14 @@ async function getProduct(token, productId) {
 }
 
 async function getProductTasks(productId, token) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/products/${productId}/tasks`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/products/${productId}/tasks`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   if (!resp.ok) {
     throw new Error("상품 작업 조회에 실패했습니다.");
   }

@@ -111,7 +111,7 @@ export default function ChatList() {
                     className="border-2 border-white size-12 shadow-sm"
                   >
                     <AvatarImage
-                      src={`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${user.profileImageUrl}`}
+                      src={`http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080${user.profileImageUrl}`}
                     />
                     <AvatarFallback>
                       <UserCircle />

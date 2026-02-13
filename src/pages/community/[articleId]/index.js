@@ -119,7 +119,7 @@ export default function CommunityDetailPage() {
                 <AvatarImage
                   src={
                     post.writer?.profileImageUrl
-                      ? `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}${post.writer.profileImageUrl}`
+                      ? `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080${post.writer.profileImageUrl}`
                       : undefined
                   }
                   className="object-cover"
@@ -162,7 +162,7 @@ export default function CommunityDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {post.attachments && post.attachments.length > 0 ? (
               post.attachments.map((file, index) => {
-                const downloadUrl = `${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/notices/files/download?path=${encodeURIComponent(
+                const downloadUrl = `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/notices/files/download?path=${encodeURIComponent(
                   file.fileUrl.replace("/apssolution/notices/", ""),
                 )}`;
                 return (

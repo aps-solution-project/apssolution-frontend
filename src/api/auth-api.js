@@ -1,13 +1,15 @@
-
 //로그인
 export const loginUser = async (accountId, pw) => {
-  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  return fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/login`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ accountId, pw }),
     },
-    body: JSON.stringify({ accountId, pw }),
-  }).then((response) => {
+  ).then((response) => {
     if (!response.ok) {
       throw new Error("사원번호와 비밀번호를 확인해주세요.");
     }
@@ -17,14 +19,17 @@ export const loginUser = async (accountId, pw) => {
 
 //사원 추가
 export const createAccount = async (data, token) => {
-  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  return fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  }).then((response) => {
+  ).then((response) => {
     if (!response.ok) {
       throw new Error("사원 추가에 실패했습니다.");
     }
@@ -34,14 +39,17 @@ export const createAccount = async (data, token) => {
 
 //직원 정보 수정 (ADMIN)
 export const updateEmployeeAccount = async (accountId, data, token) => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/${accountId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("직원 정보 수정 실패");
@@ -52,13 +60,16 @@ export const updateEmployeeAccount = async (accountId, data, token) => {
 
 // 본인 정보 수정
 export const updateMyAccount = async (accountId, formData, token) => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/edit`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/${accountId}/edit`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     },
-    body: formData,
-  });
+  );
 
   if (!response.ok) {
     const msg = await response.text();
@@ -72,14 +83,17 @@ export const updateMyAccount = async (accountId, formData, token) => {
 export const changeMyPassword = async (accountId, data, token) => {
   console.log(accountId);
   console.log(data);
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/password`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/${accountId}/password`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
 
   if (!response.ok) {
     throw new Error("비밀번호 변경에 실패했습니다.!!!");
@@ -89,12 +103,15 @@ export const changeMyPassword = async (accountId, data, token) => {
 
 //사원 퇴사 처리
 export const deleteAccount = async (accountId, token) => {
-  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}/resign`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/${accountId}/resign`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  }).then((response) => {
+  ).then((response) => {
     if (!response.ok) {
       throw new Error("퇴사 처리에 실패했습니다.");
     }
@@ -104,12 +121,15 @@ export const deleteAccount = async (accountId, token) => {
 
 //사원 전체 조회
 export const getAllAccounts = async (token) => {
-  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  }).then((response) => {
+  ).then((response) => {
     if (!response.ok) {
       throw new Error("사원 목록 조회에 실패했습니다.");
     }
@@ -119,22 +139,28 @@ export const getAllAccounts = async (token) => {
 
 // 재직중인 사원 조회
 export async function getActiveAccounts(token) {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/active`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const resp = await fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/active`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   if (!resp.ok) throw new Error("사원 목록을 불러오지 못했습니다.");
   return resp.json();
 }
 
 // 사원 상세 조회
 export function getAccountDetail(token, accountId) {
-  return fetch(`${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}/api/accounts/${accountId}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return fetch(
+    `http://${process.env.NEXT_PUBLIC_APS_SURVER_ADDRESS}:8080/api/accounts/${accountId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  }).then((response) => {
+  ).then((response) => {
     if (!response.ok) {
       throw new Error("사원 상세 조회에 실패했습니다.");
     }
