@@ -1,40 +1,14 @@
 // components/chat/ChatLayout.js
-import ChatList from "./ChatList";
-import { MessagesSquare, MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { MessageSquarePlus, MessagesSquare } from "lucide-react";
 import { useRouter } from "next/router";
+import { useState } from "react";
+import ChatList from "./ChatList";
 import CreateChatModal from "./CreateModal";
 
 export default function ChatLayout({ children }) {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [pendingUser, setPendingUser] = useState(null);
-
-  const handleSelectNewUser = (user) => {
-    setIsCreateModalOpen(false);
-  };
-
-  const handleFirstSend = async (content) => {
-    try {
-      // 1) 채팅방 생성 API 호출
-      const result = await startDirectChat(token, pendingUser.accountId);
-      const newChatId = result.chatRoomId || result.id;
-
-      // 2) 첫 메시지 전송
-      await sendMessage(token, newChatId, {
-        type: "TEXT",
-        content: content,
-      });
-
-      // 3) 상태 초기화 및 정식 채팅방 이동
-      setPendingUser(null);
-      router.push(`/chat?chatId=${newChatId}`, undefined, { shallow: true });
-    } catch (err) {
-      console.error("채팅방 생성 실패:", err);
-      alert("채팅방 생성에 실패했습니다.");
-    }
-  };
 
   return (
     <div className="space-y-4 h-[calc(100vh-140px)] flex flex-col">
@@ -77,10 +51,7 @@ export default function ChatLayout({ children }) {
       </div>
 
       {isCreateModalOpen && (
-        <CreateChatModal
-          onClose={() => setIsCreateModalOpen(false)}
-          onSelectUser={handleSelectNewUser}
-        />
+        <CreateChatModal onClose={() => setIsCreateModalOpen(false)} />
       )}
     </div>
   );

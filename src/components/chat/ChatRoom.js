@@ -31,7 +31,7 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
-export default function ChatRoom({ chatId }) {
+export default function ChatRoom({ chatId, initialMessage = null }) {
   const router = useRouter();
   const { forceRefresh } = router.query;
   const { account } = useAccount();
@@ -71,7 +71,24 @@ export default function ChatRoom({ chatId }) {
         const data = await getChatDetail(token, chatId);
 
         setChatInfo(data);
-        const chronologicalMessages = [...(data.messages || [])].reverse();
+        let chronologicalMessages = [...(data.messages || [])].reverse();
+
+        // 처음 생성한 채팅방에서 API가 아직 메시지를 담고 있지 않은 경우,
+        // 부모로부터 전달된 initialMessage를 임시로 보여줍니다.
+        if (initialMessage && chronologicalMessages.length === 0) {
+          chronologicalMessages = [
+            {
+              id: `local-${Date.now()}`,
+              type: "TEXT",
+              content: initialMessage,
+              talker: {
+                userId: account?.accountId,
+                name: account?.name,
+              },
+              talkedAt: new Date().toISOString(),
+            },
+          ];
+        }
 
         setMessages(chronologicalMessages);
 
@@ -90,7 +107,7 @@ export default function ChatRoom({ chatId }) {
     };
 
     loadChatDetail();
-  }, [chatId, token, forceRefresh, router]);
+  }, [chatId, token, forceRefresh, router, initialMessage, account]);
 
   // 2. 실시간 구독
   useEffect(() => {
@@ -166,6 +183,9 @@ export default function ChatRoom({ chatId }) {
       });
 
       setInputText("");
+
+      // 채팅 목록에 최신 메시지가 바로 반영되도록
+      window.dispatchEvent(new Event("chatListRefresh"));
     } catch (e) {
       console.error("메시지 전송 실패:", e);
     }
@@ -198,7 +218,9 @@ export default function ChatRoom({ chatId }) {
   function leaveChatRoom() {
     leaveChat(token, chatId)
       .then(() => {
-        router.push("/chat");
+        // 목록을 즉시 갱신시키도록 이벤트로 신호를 보낸다.
+        window.dispatchEvent(new Event("chatListRefresh"));
+        router.replace("/chat");
       })
       .catch((err) => {
         console.error("채팅방 나가기 실패:", err);
