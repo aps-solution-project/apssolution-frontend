@@ -97,7 +97,7 @@ async function getNotice(token, noticeId) {
 }
 
 async function searchNotice(token, keyword, scenarioId) {
-  const params = new process.env.NEXT_PUBLIC_APS_SURVER_ADDRESSSearchParams();
+  const params = new URLSearchParams();
 
   // keyword 있을 때만 추가
   if (keyword && keyword.trim() !== "") {
@@ -130,7 +130,6 @@ export {
   createNotice,
   deleteNotice,
   editNotice,
-  getMyNotice,
   getNotice,
   getNotices,
   searchNotice,

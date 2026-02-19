@@ -37,6 +37,11 @@ export default function ChatList() {
   /** 1. 최초 로드 */
   useEffect(() => {
     refreshChatList();
+
+    // 컴포넌트 외부에서 목록 갱신을 요청받을 수 있도록 이벤트를 등록
+    const handler = () => refreshChatList();
+    window.addEventListener("chatListRefresh", handler);
+    return () => window.removeEventListener("chatListRefresh", handler);
   }, [token]);
 
   /** 2. 🌟 실시간 구독 로직 수정 */
